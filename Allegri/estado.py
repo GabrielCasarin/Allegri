@@ -1,11 +1,12 @@
 # coding=utf-8
+# Copyright (c) 2016 Gabriel Casarin da Silva, All Rights Reserved.
 
 
 class Estado(object):
     """representa um Estado com suas transições"""
     def __init__(self, nome, final=False):
         super(Estado, self).__init__()
-        self._nome = nome
+        self.nome = nome
         self._transicoes = {}
         self._final = final
 
@@ -18,20 +19,41 @@ class Estado(object):
     def simbolos(self):
         return self._transicoes.keys()
 
-    def __setitem__(self, simbol, prox):
-        self._transicoes[simbol] = prox
+    def merge(self, Sj, com_transicoes_em_vazio=False):
+        for simbolo in Sj.simbolos():
+            if com_transicoes_em_vazio or (not com_transicoes_em_vazio and simbolo != ''):
+                if simbolo in self._transicoes:#Sj[simbolo]:
+                    for estado_destinho in Sj[simbolo]:
+                        if estado_destinho not in self._transicoes[simbolo]:
+                            self._transicoes[simbolo].append(estado_destinho)
+                else:
+                    self._transicoes[simbolo] = list(Sj[simbolo])
 
-    def __getitem__(self, simbol):
-    	return self._transicoes[simbol]
+
+    # def __setitem__(self, simbol, prox):
+    #     self._transicoes[simbol] = prox
+
+    def removeSimbolo(self, simbolo):
+        if simbolo in self._transicoes:
+            del self._transicoes[simbolo]
+
+    def __setitem__(self, simbolo, prox):
+        if simbolo not in self._transicoes:
+            self._transicoes[simbolo] = [prox]
+        else:
+            self._transicoes[simbolo].append(prox)
+
+    def __getitem__(self, simbolo):
+    	return self._transicoes[simbolo]
 
     def __eq__(self, estado):
     	if isinstance(estado, Estado):
-    		return self == estado._nome
+    		return self == estado.nome
     	else:
-    		return self._nome == estado
+    		return self.nome == estado
 
     def __contains__(self, item):
         return item in self._transicoes.keys()
 
     def __str__(self):
-        return self._nome
+        return self.nome
