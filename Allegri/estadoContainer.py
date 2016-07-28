@@ -9,7 +9,7 @@ class EstadoContainer(Estado):
     def __init__(self, conjunto_estados):
         # inicializa-se o objeto como um estado sem nome e não-final
         super(EstadoContainer, self).__init__('', False)
-        # a idéia aqui é encontrar os estados-raiz
+        # a idéia aqui é encontrar os estados-raiz de cada elemento de conjunto_estados
         self.conjunto_estados = []
         for el in conjunto_estados:
             if isinstance(el, EstadoContainer):
@@ -24,5 +24,22 @@ class EstadoContainer(Estado):
 
         for estado in self.conjunto_estados:
             self.nome += estado.nome
-            self._final |= estado.isFinal()
-            self.merge(estado)
+            # self._final |= estado.isFinal()
+            self.merge(estado, True)
+
+    def compara_conjunto(self, conjunto_estados):
+        temp = list(conjunto_estados)
+        for el in conjunto_estados:
+            if isinstance(el, EstadoContainer):
+                temp.remove(el)
+                for estado in el.conjunto_estados:
+                    if estado not in temp:
+                        temp.append(estado)
+        # print('nome:', self.nome, 'conjunto_estados:', temp)
+        if len(self.conjunto_estados) == len(temp):
+            for el in self.conjunto_estados:
+                if el not in temp:
+                    return False
+            return True
+        else:
+            return False

@@ -28,6 +28,7 @@ class Estado(object):
                             self._transicoes[simbolo].append(estado_destinho)
                 else:
                     self._transicoes[simbolo] = list(Sj[simbolo])
+        if Sj.isFinal(): self.setFinal()
 
 
     # def __setitem__(self, simbol, prox):
@@ -56,4 +57,7 @@ class Estado(object):
         return item in self._transicoes.keys()
 
     def __str__(self):
+        return self.nome
+
+    def __repr__(self):
         return self.nome
