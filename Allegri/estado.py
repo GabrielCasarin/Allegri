@@ -30,14 +30,12 @@ class Estado(object):
                     self._transicoes[simbolo] = list(Sj[simbolo])
         if Sj.isFinal(): self.setFinal()
 
-
-    # def __setitem__(self, simbol, prox):
-    #     self._transicoes[simbol] = prox
-
     def removeSimbolo(self, simbolo):
         if simbolo in self._transicoes:
             del self._transicoes[simbolo]
 
+    # def __setitem__(self, simbol, prox):
+    #     self._transicoes[simbol] = prox
     def __setitem__(self, simbolo, prox):
         if simbolo not in self._transicoes:
             self._transicoes[simbolo] = [prox]
