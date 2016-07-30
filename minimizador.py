@@ -4,56 +4,47 @@
 
 from Allegri import *
 
-alfabeto = ['a', 'b', 'c', '']
 
-estados1 = [
-    Estado('q0'),
-    Estado('q1', True),
-    Estado('q2', True),
-    Estado('q3', True),
-]
+def eliminar_transicoes_em_vazio(estados, alfabeto):
 
-tabela = {
-    str(estado) : estado for estado in estados1
-}
+    def epsilon_closure(estado):
+        fecho = [estado]
+        pilha = list(fecho)
+        while pilha:
+            el = pilha.pop()
+            if '' in el:
+                for el2 in el['']:
+                    if el2 not in fecho:
+                        fecho.append(el2)
+                        pilha.append(el2)
+        return fecho
 
-# tabela['q0']['a'] = tabela['q1']
-# tabela['q0']['a'] = tabela['q2']
-#
-# tabela['q2']['a'] = tabela['q0']
-# tabela['q2']['a'] = tabela['q2']
-# tabela['q2']['b'] = tabela['q0']
-# tabela['q2']['b'] = tabela['q1']
+    def delta1(qi, simbolo):
+        D1 = []
+        fecho = epsilon_closure(qi)
+        for qj in fecho:
+            if simbolo in qj:
+                for qk in qj[simbolo]:
+                    for el in epsilon_closure(qk):
+                        if el not in D1:
+                            D1.append(el)
+                        if not qi.isFinal() and el.isFinal():
+                            qi.setFinal()
+        for el in D1:
+            qi[simbolo] = el
 
-
-tabela['q0']['a'] = tabela['q1']
-tabela['q0']['a'] = tabela['q2']
-tabela['q0']['c'] = tabela['q3']
-
-tabela['q1']['a'] = tabela['q0']
-tabela['q1']['b'] = tabela['q0']
-tabela['q1']['b'] = tabela['q1']
-
-tabela['q2']['c'] = tabela['q2']
-
-tabela['q3']['a'] = tabela['q2']
-tabela['q3']['b'] = tabela['q1']
-
-def eliminar_transicoes_em_vazio():
-    # estado qualquer Si
-    for Si in estados1:
-        # se houver transicoes em vazio de Si para Sj, dá merge
-        if '' in Si:
-            for Sj in Si['']:
-                Si.merge(Sj)
-                # e transforma Si em estado final, caso Sj o seja
-                if Sj.isFinal():
-                    Si.setFinal()
-        # elimina-se as coluna desnecessarias
+    for Si in estados:
+        for simbolo in alfabeto:
+            if simbolo != '':
+                delta1(Si, simbolo)
+    for Si in estados:
         Si.removeSimbolo('')
 
-def eliminar_indeterminismos():
+def eliminar_indeterminismos(estados1):
     estados2 = list(estados1)
+    tabela = {
+        str(estado) : estado for estado in estados2
+    }
 
     # cria uma lista inicial de indeterminismos
     lista_indeterminismos = []
@@ -78,32 +69,9 @@ def eliminar_indeterminismos():
                     lista_indeterminismos.remove((estado, simbolo))
                     estado.removeSimbolo(simbolo)
                     estado[simbolo] = novo_estado
-    # i = 6
+
     while lista_indeterminismos:
-    # while i > 0:
         estado, simbolo = lista_indeterminismos[0]
         cria_novo_estado(estado[simbolo])
-        # i-=1
-    estados1 = estados2
 
-print('antes')
-for el in tabela:
-    print(el, ' {', end='')
-    for fl in tabela[el]._transicoes:
-        print(fl,': [', end='')
-        for gl in tabela[el]._transicoes[fl]:
-            print(gl, ', ', sep='', end='')
-        print('], ', end='')
-    print('}')
-
-eliminar_indeterminismos()
-
-print('depois')
-for el in tabela:
-    print(el, ' {', end='')
-    for fl in tabela[el]._transicoes:
-        print(fl,': [', end='')
-        for gl in tabela[el]._transicoes[fl]:
-            print(gl, ', ', sep='', end='')
-        print('], ', end='')
-    print('}')
+    return estados2
