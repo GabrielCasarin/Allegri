@@ -39,7 +39,7 @@ class Estado(object):
     def __setitem__(self, simbolo, prox):
         if simbolo not in self._transicoes:
             self._transicoes[simbolo] = [prox]
-        else:
+        elif prox not in self._transicoes[simbolo]:
             self._transicoes[simbolo].append(prox)
 
     def __getitem__(self, simbolo):
