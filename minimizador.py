@@ -75,3 +75,19 @@ def eliminar_indeterminismos(estados1):
         cria_novo_estado(estado[simbolo])
 
     return estados2
+
+
+def eliminar_estados_inacessiveis(estados, inicial):
+    visitados = []
+    pilha = [inicial]
+    while pilha:
+        estadoAtual = pilha.pop()
+        # if estadoAtual not in visitados:
+        visitados.append(estadoAtual)
+        for simbolo in estadoAtual.simbolos():
+            for proxEstado in estadoAtual[simbolo]:
+                if (proxEstado not in visitados
+                    and proxEstado not in pilha):
+                        pilha.insert(0, proxEstado)
+    return visitados
+
