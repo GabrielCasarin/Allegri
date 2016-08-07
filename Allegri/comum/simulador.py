@@ -1,7 +1,7 @@
 # Copyright (c) 2016 Gabriel Casarin da Silva, All Rights Reserved.
 
 
-from lista_encadeada import ListaEncadeada
+from . lista_encadeada import ListaEncadeada
 
 
 class Simulador:
@@ -11,6 +11,9 @@ class Simulador:
 
     def trata_evento(self, evento):
         pass
+
+    def add_evento(self, evento):
+        self.__listaEventos.insere(evento)
 
     def run(self):
         while self.__listaEventos:

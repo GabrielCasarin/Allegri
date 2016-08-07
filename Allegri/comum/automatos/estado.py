@@ -2,7 +2,7 @@
 # Copyright (c) 2016 Gabriel Casarin da Silva, All Rights Reserved.
 
 
-class Estado(object):
+class Estado:
     """representa um Estado com suas transições"""
     def __init__(self, nome, final=False):
         super(Estado, self).__init__()

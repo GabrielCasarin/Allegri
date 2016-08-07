@@ -2,7 +2,7 @@
 # Copyright (c) 2016 Gabriel Casarin da Silva, All Rights Reserved.
 
 
-from Allegri import Estado
+from . estado import Estado
 
 
 class AutomatoFinito(object):
