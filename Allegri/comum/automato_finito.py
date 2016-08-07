@@ -14,7 +14,7 @@ class AutomatoFinito(object):
         # estados
         if 'estados' in kwargs and kwargs['estados'] is not None:
             self.estados = {
-                nomeEstado: Estado(nomeEstado) for nomeEstado in kwargs['estados']
+                nome_estado: Estado(nome_estado) for nome_estado in kwargs['estados']
             }
         if 'estadoInicial' in kwargs and kwargs['estadoInicial'] is not None:
             self.__estadoInicial = self.estados[kwargs['estadoInicial']]
@@ -43,11 +43,12 @@ class AutomatoFinito(object):
 
     def fazerTransicao(self):
         if self.__simboloAtual != '#':   # se não se consumiu todos os caracteres
-            if (self.__simboloAtual in self.alfabeto) or self.__simboloAtual == '':
-                if self.__simboloAtual in self.__estadoAtual:  # verifica se há transição associada ao simboloAtual in estadoAtual
-                    proxEst = self.__estadoAtual[self.__simboloAtual]
-                    self.__estadoAtual = proxEst
-                    return True
+            if ((self.__simboloAtual in self.alfabeto)
+                or self.__simboloAtual == ''):
+                    if self.__simboloAtual in self.__estadoAtual:  # verifica se há transição associada ao simboloAtual in estadoAtual
+                        proxEst = self.__estadoAtual[self.__simboloAtual][0]
+                        self.__estadoAtual = proxEst
+                        return True
             else:
                 raise ValueError("Erro ao fazer transição: símbolo não pertence ao alfabeto")
 
@@ -64,3 +65,9 @@ class AutomatoFinito(object):
     		return self == name.nome
     	else:
     		return self.nome == maq
+
+    def __getitem__(self, nome_estado):
+        if nome_estado in self.estados:
+            return self.estados[nome_estado]
+        else:
+            return None

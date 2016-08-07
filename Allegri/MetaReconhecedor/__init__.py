@@ -1,4 +1,3 @@
-from Allegri.MetaReconhecedor.automato_finito import AutomatoFinito
-from Allegri.MetaReconhecedor.automato_pilha_estruturado import AutomatoPilhaEstruturado
+from Allegri.MetaReconhecedor.tokenizer import tokenizer
 
-__all__ = ['AutomatoFinito', 'AutomatoPilhaEstruturado']
+__all__ = ['tokenizer']
