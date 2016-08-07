@@ -91,3 +91,32 @@ def eliminar_estados_inacessiveis(estados, inicial):
                         pilha.insert(0, proxEstado)
     return visitados
 
+# estados = [
+#     Estado('q0'),
+#     Estado('q1'),
+#     Estado('q2'),
+#     Estado('q3'),
+#     Estado('q4'),
+#     Estado('q5'),
+# ]
+#
+# estados[0]['a'] = estados[0]
+# estados[0]['b'] = estados[4]
+# estados[0]['c'] = estados[3]
+# estados[1]['a'] = estados[4]
+# estados[1]['d'] = estados[1]
+# estados[2]['b'] = estados[4]
+# estados[2]['e'] = estados[1]
+# estados[3]['e'] = estados[4]
+# estados[4]['d'] = estados[3]
+# estados[4]['f'] = estados[5]
+# estados[5]['c'] = estados[0]
+# estados[5]['g'] = estados[5]
+
+# acessiveis = eliminar_estados_inacessiveis(estados, estados[0])
+# inacessiveis = [x for x in estados if x not in acessiveis]
+# print(inacessiveis)
+
+# estados[][''] = estados[]
+# estados[][''] = estados[]
+# estados[][''] = estados[]
