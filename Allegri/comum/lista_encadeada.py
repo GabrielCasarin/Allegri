@@ -25,10 +25,18 @@ class ListaEncadeada(object):
                 noAtual = noAtual.proximo
             # insere o novo No
             noAtual.proximo = novoNo
+        self.__length += 1
 
     def remove(self):
         noAntigo = self.raiz
         if self.raiz is not None:
             self.raiz = self.raiz.proximo
             noAntigo.proximo = None
+        self.__length -= 1
         return noAntigo
+
+    def __len__(self):
+        return self.__length
+
+    def __bool__(self):
+        return self.__length != 0
