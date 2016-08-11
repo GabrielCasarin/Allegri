@@ -19,21 +19,27 @@ class ListaEncadeada(object):
         if self.raiz is None:
             self.raiz = novoNo
         else:
-            # busca o último No
-            noAtual = self.raiz
-            while noAtual.proximo is not None:
-                noAtual = noAtual.proximo
-            # insere o novo No
-            noAtual.proximo = novoNo
+            novoNo.proximo = self.raiz
+            self.raiz = novoNo
         self.__length += 1
 
     def remove(self):
-        noAntigo = self.raiz
         if self.raiz is not None:
-            self.raiz = self.raiz.proximo
-            noAntigo.proximo = None
-        self.__length -= 1
-        return noAntigo.conteudo
+            if self.raiz.proximo is not None:
+                noAtual = self.raiz
+                # busca o penúltimo No
+                while noAtual.proximo.proximo is not None:
+                    noAtual = noAtual.proximo
+                # retira o último No
+                noRet = noAtual.proximo
+                noAtual.proximo = None
+            else:
+                noRet = self.raiz
+                self.raiz = None
+            self.__length -= 1
+            return noRet.conteudo
+        else:
+            return None
 
     def __len__(self):
         return self.__length
