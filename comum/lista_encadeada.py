@@ -33,7 +33,7 @@ class ListaEncadeada(object):
             self.raiz = self.raiz.proximo
             noAntigo.proximo = None
         self.__length -= 1
-        return noAntigo
+        return noAntigo.conteudo
 
     def __len__(self):
         return self.__length
