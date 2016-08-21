@@ -1,4 +1,3 @@
-# coding=utf-8
 # Copyright (c) 2016 Gabriel Casarin da Silva, All Rights Reserved.
 
 

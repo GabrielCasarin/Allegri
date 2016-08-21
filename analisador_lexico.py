@@ -1,42 +1,79 @@
 # Copyright (c) 2016 Gabriel Casarin da Silva All Rights Reserved.
 
 
-from comum import Simulador
 import math
+import string
+from comum import Simulador
 
 
-class extrai_texto_fonte(Simulador):
+class decompoe_texto_fonte(Simulador):
+
+    def __init__(self, log_decompoe_texto_fonte=False, log_imprimir_linhas=False, log_imprimir_caracteres=False):
+        super(decompoe_texto_fonte, self).__init__()
+        self.log_decompoe_texto_fonte = log_decompoe_texto_fonte
+        self.log_imprimir_linhas = log_imprimir_linhas
+        self.log_imprimir_caracteres = log_imprimir_caracteres
 
     def trata_evento(self, evento):
         if evento == '<LeituraLinha>':
             self.LeituraLinha()
-        if evento == '<FimArquivo>':
+        elif evento == '<FimArquivo>':
             self.FimArquivo()
+        elif evento == '<ChegadaSimbolo>':
+            self.ChegadaSimbolo()
 
     def LeituraLinha(self):
         linha = self.arquivo_fonte.readline()
         if linha != '':
-            self.linhas_indexadas.append((self.cont_linhas, linha[:-1]))
+            self.linhas_indexadas.append((self.cont_linhas, linha))
+            if self.log_imprimir_linhas:
+                print("<LeituraLinha>      {0[0]} {0[1]}".format(self.linhas_indexadas[-1]), end='')
             self.cont_linhas += 1
+            # add eventos
+            self.cursor = 0
+            for char in linha:
+                self.add_evento('<ChegadaSimbolo>')
             self.add_evento('<LeituraLinha>')
         else:
             self.add_evento('<FimArquivo>')
 
     def FimArquivo(self):
-        print('chegou ao fimo do arquivo fonte "%s"'%self.arquivo_fonte.name)
+        if self.log_imprimir_linhas:
+            print("<FimArquivo>        chegou ao fim do arquivo fonte '%s'"%self.arquivo_fonte.name)
         self.arquivo_fonte.close()
         num_linhas = math.ceil(math.log10(len(self.linhas_indexadas)))
-        with open('linhas_indexadas.txt', 'w') as arq_out:
+        with open('./log/linhas_indexadas.txt', 'w') as arq_out:
             for el in self.linhas_indexadas:
-                arq_out.write("{0[0]:{1}} {0[1]}\n".format(el, num_linhas))
+                arq_out.write("{0[0]:{1}} {0[1]}".format(el, num_linhas))
+        with open('./log/caracteres_classificados.txt', 'w') as arq_out:
+            for el in self.caracteres_classificados:
+                arq_out.write("{0[0]} {0[1]}\n".format(el))
 
-    def __call__(self, nome_arquivo_fonte, log_extrai_texto_fonte=False):
-        if log_extrai_texto_fonte:
+    def ChegadaSimbolo(self):
+        num_linha, linha = self.linhas_indexadas[-1]
+        char = linha[self.cursor]
+        if char != '\n':
+            if char in string.digits:
+                classificacao = 'digito'
+            elif char in string.ascii_letters:
+                classificacao = 'letra'
+            elif char in string.punctuation:
+                classificacao = 'pontuacao'
+            elif char in ' \t':
+                classificacao = 'espaco'
+            self.caracteres_classificados.append((char, classificacao))
+            if self.log_imprimir_caracteres:
+                print("<ChegadaSimbolo>    {0[0]} (ascii HEX {1:X}) {0[1]}".format(self.caracteres_classificados[-1], ord(self.caracteres_classificados[-1][0])))
+        self.cursor += 1
+
+    def __call__(self, nome_arquivo_fonte):
+        if self.log_decompoe_texto_fonte:
             print('entrei na sub-rotina de extração de texto fonte...')
 
         try:
             self.cont_linhas = 1
             self.linhas_indexadas = []
+            self.caracteres_classificados = []
             self.arquivo_fonte = open(nome_arquivo_fonte)
             self.add_evento('<LeituraLinha>')
             self.run()
@@ -45,13 +82,14 @@ class extrai_texto_fonte(Simulador):
             print(e)
 
 
-        if log_extrai_texto_fonte:
+        if self.log_decompoe_texto_fonte:
             print('sai na sub-rotina de extração de texto fonte.')
+
+
 
 def analise_lexica(log_analise_lexica=False):
     if log_analise_lexica:
         print('entrei na sub-rotina de análise léxica...')
-
 
 
     if log_analise_lexica:
