@@ -4,7 +4,7 @@
 from . import Estado
 
 
-class AutomatoFinito(object):
+class AutomatoFinito:
     """implementa um Autômato Finito Determinístico"""
     def __init__(self, nome, **kwargs):
         super(AutomatoFinito, self).__init__()
@@ -31,6 +31,8 @@ class AutomatoFinito(object):
         self.__simboloAtual = None
 
     def inicializar(self, estadoInicial=None, simboloInicial=None):
+        # por padrão, inicia no estado inicial constante no arquivo de especificação do autômato,
+        # porém, é possível,nos casos de retorno de sub-máquina, iniciar o autômato em outro estado (estado de retorno, nesse caso)
         self.__estadoAtual = self.__estadoInicial if estadoInicial is None else estadoInicial
         self.__simboloAtual = None if simboloInicial is None else simboloInicial
 
@@ -38,23 +40,20 @@ class AutomatoFinito(object):
         if simbolo in self.alfabeto:
             self.__simboloAtual = simbolo
         else:
-            raise ValueError("Erro ao fazer transição: símbolo não pertence ao alfabeto")
+            raise ValueError("Erro ao atualizar símbolo: não pertence ao alfabeto")
 
     def fazerTransicao(self):
-        if self.__simboloAtual != '#':   # se não se consumiu todos os caracteres
-            if ((self.__simboloAtual in self.alfabeto)
-                or self.__simboloAtual == ''):
-                    if self.__simboloAtual in self.__estadoAtual:  # verifica se há transição associada ao simboloAtual in estadoAtual
-                        proxEst = self.__estadoAtual[self.__simboloAtual][0]
+        if self.__simboloAtual in self.alfabeto:
+            # or self.__simboloAtual == ''): qual a necessidade disso?
+                if self.__simboloAtual in self.__estadoAtual:  # verifica se há transição associada ao simboloAtual in estadoAtual
+                    proxEst = self.__estadoAtual[self.__simboloAtual]
+                    if proxEst is not None:
                         self.__estadoAtual = proxEst
                         return True
-            else:
-                raise ValueError("Erro ao fazer transição: símbolo não pertence ao alfabeto")
+                return False
 
-        # retorna False em dois casos:
-        #    1) atigingiu-se o fim da cadeia; ou
-        #    2) não havia regra associada ao par (estadoAtual, simboloAtual)
-        return False
+        else:
+            raise ValueError("Erro ao fazer transição: símbolo não pertence ao alfabeto")
 
     def mConfiguracao(self):
         return self.__estadoAtual, self.__simboloAtual
