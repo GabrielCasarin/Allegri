@@ -85,21 +85,24 @@ class decompoe_texto_fonte(Simulador):
         if self.log_decompoe_texto_fonte:
             print('sai na sub-rotina de extração de texto fonte.')
 
+class analise_lexica(Simulador):
+    def __init__(self, log_analise_lexica=False):
+        super(analise_lexica, self).__init__()
 
+    def __call__(self):
+        if log_analise_lexica:
+            print('entrei na sub-rotina de análise léxica...')
 
-def analise_lexica(log_analise_lexica=False):
-    if log_analise_lexica:
-        print('entrei na sub-rotina de análise léxica...')
+        if log_analise_lexica:
+            print('sai na sub-rotina de análise léxica.')
 
+class analise_sintatica(Simulador):
+    def __init__(self, log_analise_sintatica=False):
+        super(analise_sintatica, self).__init__()
 
-    if log_analise_lexica:
-        print('sai na sub-rotina de análise léxica.')
+    def __call__(self):
+        if log_analise_sintatica:
+            print('entrei na sub-rotina de análise sintática...')
 
-def analise_sintatica(log_analise_sintatica=False):
-    if log_analise_sintatica:
-        print('entrei na sub-rotina de análise sintática...')
-
-
-
-    if log_analise_sintatica:
-        print('sai na sub-rotina de análise sintática.')
+        if log_analise_sintatica:
+            print('sai na sub-rotina de análise sintática.')
