@@ -50,6 +50,6 @@ Comparacao       =  Expressao (">" | ">=" | "<"| "<=" | "==") Expressao .
 
 Teste            = Comparacao | ExpressaoBool .
 
-DefineFunc       =  "func" Identificador ":" Tipo "\n" {DeclaraParam} Bloco .
+DefineFunc       =  "func" Identificador [":" Tipo] "\n" {DeclaraParam} Bloco .
 
 DeclaraParam     =  "par" Identificador {, Identificador} Tipo .
