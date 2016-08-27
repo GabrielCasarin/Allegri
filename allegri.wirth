@@ -4,7 +4,7 @@ Tipo            =  "int"
                    | "char"
                    | "bool" .
 
-DeclaraVariavel  =  "var" Identificador {, Identificador} Tipo .
+DeclaraVariavel  =  "var" Identificador {"," Identificador} Tipo ["[" Numero "]" ["[" Numero "]"]] .
 
 RefVariavel      =  Identificador ["[" Expressao [":" Expressao] "]"] .
 
@@ -20,6 +20,8 @@ FatorBool        =  ConstBool
                     | "(" ExpressaoBool ")" .
 
 CifraDecimal     =  Algarismo {Algarismo} .
+
+Numero           =  CifraDecimal .
 
 Expressao        =  ["-"] Termo { ("+" | "-") Termo } .
 
