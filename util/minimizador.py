@@ -1,11 +1,25 @@
 # Copyright (c) 2016 Gabriel Casarin da Silva, All Rights Reserved.
 
 
-from Allegri import *
+from comum import Estado
 
+
+def gera_tabela(transicoes):
+    tabela = {}
+    for id_estado, simb, id_proxEstado in transicoes:
+        nomeEstado = 'q' + str(id_estado)
+        if nomeEstado not in tabela:
+            tabela[nomeEstado] = Estado(nomeEstado, deterministico=False)
+        if id_proxEstado != 'pop()':
+            nomeProxEstado = 'q' + str(id_proxEstado)
+            if nomeProxEstado not in tabela:
+                tabela[nomeProxEstado] = Estado(nomeProxEstado, deterministico=False)
+            tabela[nomeEstado][simb] = tabela[nomeProxEstado]
+        else:
+            tabela[nomeEstado].setFinal()
+    return tabela
 
 def eliminar_transicoes_em_vazio(estados, alfabeto):
-
     def epsilon_closure(estado):
         fecho = [estado]
         pilha = list(fecho)
@@ -33,24 +47,54 @@ def eliminar_transicoes_em_vazio(estados, alfabeto):
             qi[simbolo] = el
 
     for Si in estados:
+        # print(Si)
         for simbolo in alfabeto:
             if simbolo != '':
+                # print('antes', simbolo, Si._transicoes)
                 delta1(Si, simbolo)
+                # print('depois', simbolo, Si._transicoes)
+
     for Si in estados:
         Si.removeSimbolo('')
 
 def eliminar_indeterminismos(estados1):
-    estados2 = list(estados1)
-    tabela = {
-        str(estado) : estado for estado in estados2
-    }
+    class EstadoContainer(Estado):
+        def __init__(self, conjunto_estados):
+            # inicializa-se o objeto como um estado sem nome e não-final
+            super(EstadoContainer, self).__init__('', deterministico=False)
+            # a idéia aqui é encontrar os estados-raiz de cada elemento de conjunto_estados
+            self.conjunto_estados = []
+            for el in conjunto_estados:
+                if isinstance(el, EstadoContainer):
+                    for estado in el.conjunto_estados:
+                        if estado not in self.conjunto_estados:
+                            self.conjunto_estados.append(estado)
+                elif isinstance(el, Estado):
+                    if el not in self.conjunto_estados:
+                        self.conjunto_estados.append(el)
 
-    # cria uma lista inicial de indeterminismos
-    lista_indeterminismos = []
-    for estado in estados2:
-        for simbolo in estado.simbolos():
-            if len(estado[simbolo]) > 1:
-                lista_indeterminismos.append((estado, simbolo))
+            self.conjunto_estados = sorted(self.conjunto_estados, key=lambda e: e.nome)
+
+            for estado in self.conjunto_estados:
+                self.nome += estado.nome
+                self.merge(estado, True)
+
+        def compara_conjunto(self, conjunto_estados):
+            temp = list(conjunto_estados)
+            for el in conjunto_estados:
+                if isinstance(el, EstadoContainer):
+                    temp.remove(el)
+                    for estado in el.conjunto_estados:
+                        if estado not in temp:
+                            temp.append(estado)
+            # print('nome:', self.nome, 'conjunto_estados:', temp)
+            if len(self.conjunto_estados) == len(temp):
+                for el in self.conjunto_estados:
+                    if el not in temp:
+                        return False
+                return True
+            else:
+                return False
 
     def cria_novo_estado(conjunto_estados):
         """
@@ -69,12 +113,23 @@ def eliminar_indeterminismos(estados1):
                     estado.removeSimbolo(simbolo)
                     estado[simbolo] = novo_estado
 
+    estados2 = list(estados1)
+    tabela = {
+        str(estado) : estado for estado in estados2
+    }
+
+    # cria uma lista inicial de indeterminismos
+    lista_indeterminismos = []
+    for estado in estados2:
+        for simbolo in estado.simbolos():
+            if len(estado[simbolo]) > 1:
+                lista_indeterminismos.append((estado, simbolo))
+    print('lista de indeterminismos inicial', lista_indeterminismos)
     while lista_indeterminismos:
         estado, simbolo = lista_indeterminismos[0]
         cria_novo_estado(estado[simbolo])
 
     return estados2
-
 
 def eliminar_estados_inacessiveis(estados, inicial):
     visitados = []
@@ -89,33 +144,3 @@ def eliminar_estados_inacessiveis(estados, inicial):
                     and proxEstado not in pilha):
                         pilha.insert(0, proxEstado)
     return visitados
-
-# estados = [
-#     Estado('q0'),
-#     Estado('q1'),
-#     Estado('q2'),
-#     Estado('q3'),
-#     Estado('q4'),
-#     Estado('q5'),
-# ]
-#
-# estados[0]['a'] = estados[0]
-# estados[0]['b'] = estados[4]
-# estados[0]['c'] = estados[3]
-# estados[1]['a'] = estados[4]
-# estados[1]['d'] = estados[1]
-# estados[2]['b'] = estados[4]
-# estados[2]['e'] = estados[1]
-# estados[3]['e'] = estados[4]
-# estados[4]['d'] = estados[3]
-# estados[4]['f'] = estados[5]
-# estados[5]['c'] = estados[0]
-# estados[5]['g'] = estados[5]
-
-# acessiveis = eliminar_estados_inacessiveis(estados, estados[0])
-# inacessiveis = [x for x in estados if x not in acessiveis]
-# print(inacessiveis)
-
-# estados[][''] = estados[]
-# estados[][''] = estados[]
-# estados[][''] = estados[]

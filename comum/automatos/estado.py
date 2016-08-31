@@ -29,7 +29,8 @@ class Estado:
                             if estado_destinho not in self._transicoes[simbolo]:
                                 self._transicoes[simbolo].append(estado_destinho)
                     else:
-                        self._transicoes[simbolo] = list(Sj[simbolo])
+                        if simbolo in Sj._transicoes:
+                            self._transicoes[simbolo] = list(Sj[simbolo])
             if Sj.isFinal(): self.setFinal()
 
     def removeSimbolo(self, simbolo):
