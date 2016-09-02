@@ -1,4 +1,3 @@
-# coding=utf-8
 # Copyright (c) 2016 Gabriel Casarin da Silva, All Rights Reserved.
 
 
@@ -44,7 +43,7 @@ class Estado:
             elif prox not in self._transicoes[simbolo]:
                 self._transicoes[simbolo].append(prox)
         else: # se é determinístico
-            self._transicoes[simbol] = prox
+            self._transicoes[simbolo] = prox
 
     def __getitem__(self, simbolo):
     	return self._transicoes[simbolo]
