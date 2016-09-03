@@ -2,12 +2,13 @@
 
 
 from . import Estado
+from .AbstractAutomato import AbstractAutomato
 
 
-class AutomatoFinito:
+class AutomatoFinito(AbstractAutomato):
     """implementa um Autômato Finito Determinístico"""
     def __init__(self, nome, **kwargs):
-        super(AutomatoFinito, self).__init__()
+        super(AutomatoFinito, self).__init__(deterministico=True)
         # nome do automato
         self.nome = nome
         # estados
@@ -24,8 +25,6 @@ class AutomatoFinito:
         # alfabeto
         if 'alfabeto' in kwargs and kwargs['alfabeto'] is not None:
             self.alfabeto = kwargs['alfabeto']
-        else:
-            self.alfabeto = []
         # m-Configuração
         self.__estadoAtual = None
         self.__simboloAtual = None
