@@ -144,3 +144,47 @@ def eliminar_estados_inacessiveis(estados, inicial):
                     and proxEstado not in pilha):
                         pilha.insert(0, proxEstado)
     return visitados
+
+def minimizador_Hopcroft(automato):
+    '''Retorna uma partição das classes de equivalência do conjunto de estados de um autômato'''
+    def delta_R(P, a):
+        conj = []
+        for q in automato.estados.values():
+            if a in q and q[a] in P:
+                conj.append(q)
+        return conj
+
+    Grupos = [[],[]]
+    for q in automato.estados.values():
+        if q.isFinal():
+         Grupos[1].append(q)
+        else:
+         Grupos[0].append(q)
+
+    Ativo = [list(Grupos[1])]
+
+    while Ativo:
+        A = Ativo.pop()
+        for a in automato.alfabeto:
+            for G in Grupos:
+                delta = delta_R(A, a)
+                # G1 = G inter delta
+                G1 = [x for x in G if x in delta]
+                # G2 = G - G1
+                G2 = [x for x in G if x not in G1]
+
+                if G1 and G2:
+                    Grupos.remove(G)
+                    Grupos.append(G1)
+                    Grupos.append(G2)
+                    if G in Ativo:
+                        Ativo.remove(G)
+                        Ativo.append(G1)
+                        Ativo.append(G2)
+                    else:
+                        if len(G1) < len(G2):
+                            Ativo.append(G1)
+                        else:
+                            Ativo.append(G2)
+
+    return Grupos
