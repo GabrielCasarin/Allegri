@@ -1,18 +1,23 @@
 # Copyright (c) 2016 Gabriel Casarin da Silva All Rights Reserved.
 
 
+import os
 import math
 import string
 from comum import Simulador
+from definicoes import ROOT_DIR
 
 
 class decompoe_texto_fonte(Simulador):
 
-    def __init__(self, log_decompoe_texto_fonte=False, log_imprimir_linhas=False, log_imprimir_caracteres=False):
+    def __init__(self, log_decompoe_texto_fonte=False,
+                 log_imprimir_linhas=False, log_imprimir_caracteres=False,
+                 imprimir_listagem=False):
         super(decompoe_texto_fonte, self).__init__()
         self.log_decompoe_texto_fonte = log_decompoe_texto_fonte
         self.log_imprimir_linhas = log_imprimir_linhas
         self.log_imprimir_caracteres = log_imprimir_caracteres
+        self.imprimir_listagem = imprimir_listagem
 
     def trata_evento(self, evento):
         if evento == '<LeituraLinha>':
@@ -39,15 +44,9 @@ class decompoe_texto_fonte(Simulador):
 
     def FimArquivo(self):
         if self.log_imprimir_linhas:
-            print("<FimArquivo>        chegou ao fim do arquivo fonte '%s'"%self.arquivo_fonte.name)
+            print("<FimArquivo>        chegou ao fim do arquivo fonte '{}'".format(self.arquivo_fonte.name))
         self.arquivo_fonte.close()
-        num_linhas = math.ceil(math.log10(len(self.linhas_indexadas)))
-        with open('./log/linhas_indexadas.txt', 'w') as arq_out:
-            for el in self.linhas_indexadas:
-                arq_out.write("{0[0]:{1}} {0[1]}".format(el, num_linhas))
-        with open('./log/caracteres_classificados.txt', 'w') as arq_out:
-            for el in self.caracteres_classificados:
-                arq_out.write("{0[0]} {0[1]}\n".format(el))
+        #  num_linhas = math.ceil(math.log10(len(self.linhas_indexadas)))
 
     def ChegadaSimbolo(self):
         num_linha, linha = self.linhas_indexadas[-1]
@@ -81,28 +80,50 @@ class decompoe_texto_fonte(Simulador):
         except Exception as e:
             print(e)
 
-
         if self.log_decompoe_texto_fonte:
             print('sai na sub-rotina de extração de texto fonte.')
 
+        if self.imprimir_listagem:
+            LOG_DIR = os.path.join(ROOT_DIR, 'log')
+            with open(os.path.join(LOG_DIR, 'linhas_indexadas.txt'), 'w') as arq_out:
+                for el in self.linhas_indexadas:
+                    arq_out.write("{0[0]:{1}} {0[1]}".format(el, num_linhas))
+            with open(os.path.join(LOG_DIR, 'caracteres_classificados.txt'), 'w') as arq_out:
+                for el in self.caracteres_classificados:
+                    arq_out.write("{0[0]} {0[1]}\n".format(el))
+
+
 class analise_lexica(Simulador):
-    def __init__(self, log_analise_lexica=False):
+    def __init__(self, automato, log_analise_lexica=False):
         super(analise_lexica, self).__init__()
+        self.automato = automato
+        self.automato.inicializar()
+        self.log_analise_lexica = log_analise_lexica
+
+    def trata_evento(self, evento):
+        if evento == '<ChegadaSimbolo>':
+            self.ChegadaSimbolo()
+
+    def ChegadaSimbolo(self):
+        self.automato.atualizarSimbolo()
+        if self.automato.fazerTransicao():
+            pass
 
     def __call__(self):
-        if log_analise_lexica:
+        if self.log_analise_lexica:
             print('entrei na sub-rotina de análise léxica...')
 
-        if log_analise_lexica:
+        if self.log_analise_lexica:
             print('sai na sub-rotina de análise léxica.')
+
 
 class analise_sintatica(Simulador):
     def __init__(self, log_analise_sintatica=False):
         super(analise_sintatica, self).__init__()
 
     def __call__(self):
-        if log_analise_sintatica:
+        if self.log_analise_sintatica:
             print('entrei na sub-rotina de análise sintática...')
 
-        if log_analise_sintatica:
+        if self.log_analise_sintatica:
             print('sai na sub-rotina de análise sintática.')

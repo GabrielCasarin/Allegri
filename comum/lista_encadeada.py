@@ -23,6 +23,17 @@ class ListaEncadeada(object):
             self.raiz = novoNo
         self.__length += 1
 
+    def insere_no_fim(self, conteudo):
+        novoNo = No(conteudo)
+        if self.raiz is not None:
+            noAtual = self.raiz
+            while noAtual.proximo is not None:
+                noAtual = noAtual.proximo
+            noAtual.proximo = novoNo
+        else:
+            self.raiz = novoNo
+        self.__length += 1
+
     def remove(self):
         if self.raiz is not None:
             if self.raiz.proximo is not None:
