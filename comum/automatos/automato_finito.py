@@ -75,9 +75,26 @@ class TransdutorFinito(AutomatoFinito):
     def __init__(self, nome, **kwargs):
         super(TransdutorFinito, self).__init__(nome, **kwargs)
         self.saidas = {}
+        self.saida_gerada = None
+
+    def fazer_transicao(self):
+        # A lógica aqui é meio confusa :-(
+        # Antes, verificamos se, para dados símbolo e estado atuais, existe
+        # alguma saida (transdução) associada a esse par
+        if self._simboloAtual in self.saidas:
+            self.saida_gerada = self.saidas[self._simboloAtual]
+        else:
+            self.saida_gerada = None
+        # assumindo-se que só exista saída para uma transição válida,
+        # então estára tudo sempre ok.
+        # A lógica parece estar invertida, mas fiz isso por dois motivos:
+        # 1. Sempre que há transição possível, o estado atual muda e,
+        #    dado que a saída está sempre associada ao estado anterior,
+        #    teríamos que guardar o estado anterior para fazer a verificação posteriormente à transição,
+        #    de modo que evita-se acrescentar mais variáveis e mais código/lógica à sub-rotina
+        # 2. Reaproveita-se código fazendo desse modo (evita-se ter que alterar a fazer_transicao para acomodar a verficicação de saída)
+        # Tenta fazer a transição
+        return super(TransdutorFinito, self).fazer_transicao()
 
     def add_saida(self, de, com, saida):
         self.saidas[(de, com)] = saida
-
-    def traduzir(self):
-        return self.saidas[(self._estadoAtual.nome, self._simboloAtual)]
