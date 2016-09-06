@@ -1,5 +1,6 @@
 # Copyright (c) 2016 Gabriel Casarin da Silva, All Rights Reserved.
 
+
 from . import Estado
 
 
@@ -24,4 +25,5 @@ class AbstractAutomato:
                 self.alfabeto.add(s)
         for q in self.estados.values():
             for s in self.alfabeto:
-                if s not in q: q[s] = None
+                if s not in q:
+                    q[s] = None

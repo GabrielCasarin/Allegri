@@ -30,9 +30,7 @@ class AutomatoPilhaEstruturado:
 
     def gerar_alfabeto(self):
         for S in self.__automatos.values():
-            # print('{} =>'.format(S.nome), S.alfabeto)
             self.alfabeto.update(S.alfabeto)
-        # print('Final =>', self.alfabeto)
 
     def set_submaquina_inicial(self, sub_maq):
         self.__maquinaInicial = self.__automatos[sub_maq]

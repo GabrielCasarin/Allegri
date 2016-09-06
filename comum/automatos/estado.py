@@ -23,14 +23,15 @@ class Estado:
         if not self.eh_deterministico:
             for simbolo in Sj.simbolos():
                 if com_transicoes_em_vazio or (not com_transicoes_em_vazio and simbolo != ''):
-                    if simbolo in self._transicoes:#Sj[simbolo]:
+                    if simbolo in self._transicoes:
                         for estado_destinho in Sj[simbolo]:
                             if estado_destinho not in self._transicoes[simbolo]:
                                 self._transicoes[simbolo].append(estado_destinho)
                     else:
                         if simbolo in Sj._transicoes:
                             self._transicoes[simbolo] = list(Sj[simbolo])
-            if Sj.isFinal(): self.setFinal()
+            if Sj.isFinal():
+                self.setFinal()
 
     def removeSimbolo(self, simbolo):
         if simbolo in self._transicoes:
@@ -42,17 +43,17 @@ class Estado:
                 self._transicoes[simbolo] = [prox]
             elif prox not in self._transicoes[simbolo]:
                 self._transicoes[simbolo].append(prox)
-        else: # se é determinístico
+        else:  # se for determinístico
             self._transicoes[simbolo] = prox
 
     def __getitem__(self, simbolo):
-    	return self._transicoes[simbolo]
+        return self._transicoes[simbolo]
 
     def __eq__(self, estado):
-    	if isinstance(estado, Estado):
-    		return self == estado.nome
-    	else:
-    		return self.nome == estado
+        if isinstance(estado, Estado):
+            return self == estado.nome
+        else:
+            return self.nome == estado
 
     def __contains__(self, item):
         return item in self._transicoes.keys()
