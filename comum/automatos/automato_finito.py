@@ -58,12 +58,6 @@ class AutomatoFinito(AbstractAutomato):
     def mConfiguracao(self):
         return self._estadoAtual, self._simboloAtual
 
-    def __getitem__(self, nome_estado):
-        if nome_estado in self.estados:
-            return self.estados[nome_estado]
-        else:
-            return None
-
     def __eq__(self, maq):
         if isinstance(maq, AutomatoFinito):
             return self == self.nome
@@ -81,8 +75,8 @@ class TransdutorFinito(AutomatoFinito):
         # A lógica aqui é meio confusa :-(
         # Antes, verificamos se, para dados símbolo e estado atuais, existe
         # alguma saida (transdução) associada a esse par
-        if self._simboloAtual in self.saidas:
-            self.saida_gerada = self.saidas[self._simboloAtual]
+        if (self._estadoAtual.nome, self._simboloAtual) in self.saidas:
+            self.saida_gerada = self.saidas[(self._estadoAtual.nome, self._simboloAtual)]
         else:
             self.saida_gerada = None
         # assumindo-se que só exista saída para uma transição válida,
