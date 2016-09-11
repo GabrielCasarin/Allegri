@@ -70,7 +70,6 @@ class TransdutorFinito(AutomatoFinito):
         super(TransdutorFinito, self).__init__(nome, **kwargs)
         self.saidas = {}
         self.saida_gerada = None
-        self.transicoes_para_submaquinas = {}
 
     def fazer_transicao(self):
         # A lógica aqui é meio confusa :-(
@@ -91,26 +90,5 @@ class TransdutorFinito(AutomatoFinito):
         # Tenta fazer a transição
         return super(TransdutorFinito, self).fazer_transicao()
 
-    def tem_transicao_para_submaquina(self):
-        if self._estadoAtual.nome in self.transicoes_para_submaquinas:
-            return True
-        return False
-
     def add_saida(self, de, com, saida):
         self.saidas[(de, com)] = saida
-
-    def add_chamada_para_submaquina(self, de, para, retorno):
-        self.add_estado(de)
-        self.add_estado(retorno)
-        self.transicoes_para_submaquinas[de] = (para, self.estados[retorno])
-
-    def get_parametros_de_chamada(self):
-        if self._estadoAtual.nome in self.transicoes_para_submaquinas:
-            prox_maq, _ = self.transicoes_para_submaquinas[self._estadoAtual.nome]
-            if (self._estadoAtual.nome, prox_maq.nome) in self.saidas:
-                self.saida_gerada = self.saidas[(self._estadoAtual.nome, prox_maq.nome)]
-            else:
-                self.saida_gerada = None
-            return self.transicoes_para_submaquinas[self._estadoAtual.nome]
-        else:
-            return (None, None)

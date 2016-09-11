@@ -4,6 +4,33 @@
 from . import TransdutorFinito
 
 
+class Submaquina(TransdutorFinito):
+    def __init__(self, nome, **kwargs):
+        super(Submaquina, self).__init__(nome, **kwargs)
+        self.transicoes_para_submaquinas = {}
+
+    def tem_transicao_para_submaquina(self):
+        if self._estadoAtual.nome in self.transicoes_para_submaquinas:
+            return True
+        return False
+
+    def add_chamada_para_submaquina(self, de, para, retorno):
+        self.add_estado(de)
+        self.add_estado(retorno)
+        self.transicoes_para_submaquinas[de] = (para, self.estados[retorno])
+
+    def get_parametros_de_chamada(self):
+        if self._estadoAtual.nome in self.transicoes_para_submaquinas:
+            prox_maq, _ = self.transicoes_para_submaquinas[self._estadoAtual.nome]
+            if (self._estadoAtual.nome, prox_maq.nome) in self.saidas:
+                self.saida_gerada = self.saidas[(self._estadoAtual.nome, prox_maq.nome)]
+            else:
+                self.saida_gerada = None
+            return self.transicoes_para_submaquinas[self._estadoAtual.nome]
+        else:
+            return (None, None)
+
+
 class AutomatoPilhaEstruturado:
     """implementa um Autômato de Pilha Estruturado"""
     def __init__(self, nome, **kwargs):
@@ -13,7 +40,7 @@ class AutomatoPilhaEstruturado:
         # sub-máquinas
         if 'sub_maquinas' in kwargs and kwargs['sub_maquinas'] is not None:
             self.__automatos = {
-                submaq: TransdutorFinito(nome=submaq) for submaq in kwargs['sub_maquinas']
+                submaq: Submaquina(nome=submaq) for submaq in kwargs['sub_maquinas']
             }
             if 'automatoInicial' in kwargs and kwargs['automatoInicial'] is not None:
                 self.__maquinaInicial = kwargs['automatoInicial']
