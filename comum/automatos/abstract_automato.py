@@ -11,22 +11,20 @@ class AbstractAutomato:
         self.estados = {}
         self.deterministico = deterministico
 
-    def add_transicao(self, de, com, para):
-        if de not in self.estados:
-            self.estados[de] = Estado(de, deterministico=self.deterministico)
-        if para not in self.estados:
-            self.estados[para] = Estado(para, deterministico=self.deterministico)
-        self.estados[de][com] = self.estados[para]
-        if com != '':
-            self._gerarAlfabeto()
-
     def add_estado(self, nome_estado, final=False):
         if nome_estado not in self.estados:
             self.estados[nome_estado] = Estado(nome_estado, final, self.deterministico)
 
-    def _gerarAlfabeto(self):
+    def add_transicao(self, de, com, para):
+        self.add_estado(de)
+        self.add_estado(para)
+        self.estados[de][com] = self.estados[para]
+        if com != '':
+            self.gerar_alfabeto()
+
+    def gerar_alfabeto(self):
         for q in self.estados.values():
-            for s in q.simbolos():
+            for s in q._transicoes.keys():
                 if s != '':
                     self.alfabeto.add(s)
         for q in self.estados.values():

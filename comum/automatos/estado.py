@@ -16,20 +16,18 @@ class Estado:
     def isFinal(self):
         return self._final
 
-    def simbolos(self):
-        return self._transicoes.keys()
-
     def merge(self, Sj, com_transicoes_em_vazio=False):
         if not self.eh_deterministico:
-            for simbolo in Sj.simbolos():
-                if com_transicoes_em_vazio or (not com_transicoes_em_vazio and simbolo != ''):
-                    if simbolo in self._transicoes:
-                        for estado_destinho in Sj[simbolo]:
-                            if estado_destinho not in self._transicoes[simbolo]:
-                                self._transicoes[simbolo].append(estado_destinho)
-                    else:
-                        if simbolo in Sj._transicoes:
-                            self._transicoes[simbolo] = list(Sj[simbolo])
+            for simbolo in Sj._transicoes.keys():
+                if (com_transicoes_em_vazio or
+                   (not com_transicoes_em_vazio and simbolo != '')):
+                        if simbolo in self._transicoes:
+                            for estado_destinho in Sj[simbolo]:
+                                if estado_destinho not in self._transicoes[simbolo]:
+                                    self._transicoes[simbolo].append(estado_destinho)
+                        else:
+                            if simbolo in Sj._transicoes:
+                                self._transicoes[simbolo] = list(Sj[simbolo])
             if Sj.isFinal():
                 self.setFinal()
 

@@ -52,16 +52,13 @@ class AutomatoPilhaEstruturado:
         return self.__maquinaAtual.fazer_transicao()
 
     def chama(self):
-        # pega a configuração atual do autômato
-        estadoAtual, simboloAtual = self.__maquinaAtual.mConfiguracao()
         # Pega a próxima sub-máquina e o estado de retorno
-        proxMaquina, estadoRetorno = estadoAtual['']
+        proxMaquina, estadoRetorno = self.__maquinaAtual.get_parametros_de_chamada()
         # Empilha a sub-máquina de retorno e o estado de retorno
         self.__pilha.append((self.__maquinaAtual, estadoRetorno))
         # Troca de sub-máquina e a inicializa
         self.__maquinaAtual = proxMaquina
         self.__maquinaAtual.inicializar()
-        # self.__maquinaAtual.atualizar_simbolo(simboloAtual)
 
     def retorna(self):
         if self.__pilha:
@@ -69,7 +66,6 @@ class AutomatoPilhaEstruturado:
             _, simboloAtual = self.__maquinaAtual.mConfiguracao()
             self.__maquinaAtual = submaqRet
             self.__maquinaAtual.inicializar(estadoRetorno)
-            # self.__maquinaAtual.atualizar_simbolo(simboloAtual)
 
     def mConfiguracao(self):
         temp1, temp2 = self.__maquinaAtual.mConfiguracao()

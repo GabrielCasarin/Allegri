@@ -4,22 +4,7 @@
 from comum import Estado
 
 
-def gera_tabela(transicoes):
-    tabela = {}
-    for id_estado, simb, id_proxEstado in transicoes:
-        nomeEstado = 'q' + str(id_estado)
-        if nomeEstado not in tabela:
-            tabela[nomeEstado] = Estado(nomeEstado, deterministico=False)
-        if id_proxEstado != 'pop()':
-            nomeProxEstado = 'q' + str(id_proxEstado)
-            if nomeProxEstado not in tabela:
-                tabela[nomeProxEstado] = Estado(nomeProxEstado, deterministico=False)
-            tabela[nomeEstado][simb] = tabela[nomeProxEstado]
-        else:
-            tabela[nomeEstado].setFinal()
-    return tabela
-
-def eliminar_transicoes_em_vazio(estados, alfabeto):
+def eliminar_transicoes_em_vazio(automato):
     def epsilon_closure(estado):
         fecho = [estado]
         pilha = list(fecho)
@@ -32,36 +17,36 @@ def eliminar_transicoes_em_vazio(estados, alfabeto):
                         pilha.append(el2)
         return fecho
 
-    def delta1(qi, simbolo):
+    def delta1(qi, simbolo, fecho):
         D1 = []
-        fecho = epsilon_closure(qi)
         for qj in fecho:
             if simbolo in qj:
                 for qk in qj[simbolo]:
                     for el in epsilon_closure(qk):
                         if el not in D1:
                             D1.append(el)
-                        if not qi.isFinal() and el.isFinal():
-                            qi.setFinal()
-        for el in D1:
-            qi[simbolo] = el
+        return D1
 
-    for Si in estados:
-        # print(Si)
-        for simbolo in alfabeto:
+    for Si in automato.estados.values():
+        fecho = epsilon_closure(Si)
+        for simbolo in automato.alfabeto:
             if simbolo != '':
-                # print('antes', simbolo, Si._transicoes)
-                delta1(Si, simbolo)
-                # print('depois', simbolo, Si._transicoes)
+                D1 = delta1(Si, simbolo, fecho)
+                for el in D1:
+                    Si[simbolo] = el
+        for Sj in fecho:
+            if not Si.isFinal() and Sj.isFinal():
+                Si.setFinal()
 
-    for Si in estados:
+    for Si in automato.estados.values():
         Si.removeSimbolo('')
 
-def eliminar_indeterminismos(estados1):
+
+def eliminar_indeterminismos(automato):
     class EstadoContainer(Estado):
         def __init__(self, conjunto_estados):
             # inicializa-se o objeto como um estado sem nome e não-final
-            super(EstadoContainer, self).__init__('', deterministico=False)
+            super(EstadoContainer, self).__init__(nome='', deterministico=False)
             # a idéia aqui é encontrar os estados-raiz de cada elemento de conjunto_estados
             self.conjunto_estados = []
             for el in conjunto_estados:
@@ -87,7 +72,6 @@ def eliminar_indeterminismos(estados1):
                     for estado in el.conjunto_estados:
                         if estado not in temp:
                             temp.append(estado)
-            # print('nome:', self.nome, 'conjunto_estados:', temp)
             if len(self.conjunto_estados) == len(temp):
                 for el in self.conjunto_estados:
                     if el not in temp:
@@ -101,52 +85,64 @@ def eliminar_indeterminismos(estados1):
         cria um novo estado a partir da fusao de dois ou mais outros
         """
         novo_estado = EstadoContainer(conjunto_estados)
-        estados2.append(novo_estado)
-        tabela[novo_estado.nome] = novo_estado
-        for simbolo in novo_estado.simbolos():
+        automato.estados[novo_estado.nome] = novo_estado
+        for simbolo in novo_estado._transicoes.keys():
             if len(novo_estado[simbolo]) > 1:
                 lista_indeterminismos.append((novo_estado, simbolo))
-        for estado in estados2:
-            for simbolo in estado.simbolos():
+        for estado in automato.estados.values():
+            for simbolo in estado._transicoes.keys():
                 if novo_estado.compara_conjunto(estado[simbolo]):
                     lista_indeterminismos.remove((estado, simbolo))
                     estado.removeSimbolo(simbolo)
                     estado[simbolo] = novo_estado
 
-    estados2 = list(estados1)
-    tabela = {
-        str(estado) : estado for estado in estados2
-    }
+    def converter_para_deterministico(automato):
+        for q in automato.estados.values():
+            for s in q._transicoes.keys():
+                temp_lista = q._transicoes[s]
+                q._transicoes[s] = temp_lista[0]
+            q.eh_deterministico = True
+        automato.deterministico = True
 
     # cria uma lista inicial de indeterminismos
     lista_indeterminismos = []
-    for estado in estados2:
-        for simbolo in estado.simbolos():
+    for estado in automato.estados.values():
+        for simbolo in estado._transicoes.keys():
             if len(estado[simbolo]) > 1:
                 lista_indeterminismos.append((estado, simbolo))
-    print('lista de indeterminismos inicial', lista_indeterminismos)
     while lista_indeterminismos:
         estado, simbolo = lista_indeterminismos[0]
         cria_novo_estado(estado[simbolo])
+    converter_para_deterministico(automato)
 
-    return estados2
 
-def eliminar_estados_inacessiveis(estados, inicial):
+def eliminar_estados_inacessiveis(automato, inicial='q0'):
+    estados = list(automato.estados.values())
     visitados = []
-    pilha = [inicial]
+    pilha = [automato.estados[inicial]]
     while pilha:
         estadoAtual = pilha.pop()
-        # if estadoAtual not in visitados:
         visitados.append(estadoAtual)
-        for simbolo in estadoAtual.simbolos():
-            for proxEstado in estadoAtual[simbolo]:
+        for simbolo in estadoAtual._transicoes.keys():
+            if estadoAtual.eh_deterministico:
+                proxEstado = estadoAtual[simbolo]
                 if (proxEstado not in visitados
                     and proxEstado not in pilha):
                         pilha.insert(0, proxEstado)
-    return visitados
+            else: # se não é deterministico
+                for proxEstado in estadoAtual[simbolo]:
+                    if (proxEstado not in visitados
+                        and proxEstado not in pilha):
+                            pilha.insert(0, proxEstado)
+    a_serem_removidos = [q.nome for q in estados if q not in visitados]
+    for estado in a_serem_removidos:
+        del automato.estados[estado]
 
-def minimizador_Hopcroft(automato):
-    '''Retorna uma partição das classes de equivalência do conjunto de estados de um autômato'''
+
+def minimizador_de_Hopcroft(automato):
+    '''Retorna uma partição do conjunto de estados de um autômato
+       correspondente às classes de equivalência obtidas segundo
+       o algoritmo de minimização de Hopcroft.'''
     def delta_R(P, a):
         conj = []
         for q in automato.estados.values():
@@ -188,3 +184,31 @@ def minimizador_Hopcroft(automato):
                             Ativo.append(G2)
 
     return Grupos
+
+
+def particao_para_automato_finito(particao, inicial='q0'):
+    def acha(nome_estado):
+        for i in range(len(particao)):
+            for estado in particao[i]:
+                if estado.nome == nome_estado:
+                    return i
+        return None
+
+    i = acha(inicial)
+    nomes_classes = {
+        i: inicial
+    }
+    pilha = []
+    pilha.append(particao[i][0])
+    cont = 0
+    while len(nomes_classes) < len(particao):
+        estado_atual = pilha.pop()
+        for key, value in estado_atual._transicoes.items():
+            if value is not None:
+                i = acha(value.nome)
+                if not i in nomes_classes:
+                    cont += 1
+                    nova_classe = 'q' + str(cont)
+                    nomes_classes[i] = nova_classe
+                    pilha.append(particao[i][0])
+                print("({}, '{}') -> {}".format(nomes_classes[acha(estado_atual.nome)], key, nomes_classes[acha(value.nome)]))
