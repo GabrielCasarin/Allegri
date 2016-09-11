@@ -12,8 +12,11 @@ class Simulador:
     def trata_evento(self, evento):
         pass
 
-    def add_evento(self, evento):
-        self._listaEventos.insere(evento)
+    def add_evento(self, evento, fim=False):
+        if fim:
+            self._listaEventos.insere_no_fim(evento)
+        else:
+            self._listaEventos.insere(evento)
 
     def run(self):
         while self._listaEventos:

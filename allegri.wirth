@@ -1,0 +1,55 @@
+Identificador   =  Letra {Letra | Algarismo} .
+
+Tipo            =  "int"
+                   | "char"
+                   | "bool" .
+
+DeclaraVariavel  =  "var" Identificador {"," Identificador} Tipo ["[" Numero "]" ["[" Numero "]"]] .
+
+RefVariavel      =  Identificador ["[" Expressao [":" Expressao] "]"] .
+
+ConstBool        =  "True" | "False" .
+
+ExpressaoBool    =  TermoBool { "or" TermoBool } .
+
+TermoBool        =  FatorBool { "and" FatorBool }.
+
+FatorBool        =  ConstBool
+                    | "not" FatorBool
+                    | RefVariavel
+                    | "(" ExpressaoBool ")" .
+
+CifraDecimal     =  Algarismo {Algarismo} .
+
+Numero           =  CifraDecimal .
+
+Expressao        =  ["-"] Termo { ("+" | "-") Termo } .
+
+Termo            =  Fator { ("*" | "/") Fator } .
+
+Fator            =  CifraDecimal
+                    | RefVariavel
+                    | "(" Expressao ")" .
+
+Atribuicao       =  RefVariavel "=" (Expressao | ExpressaoBool) .
+
+Return           =  "return" (Expressao | ExpressaoBool) .
+
+Comando          =  (DeclaraVariavel | Atribuicao | Return | if | while) "\n" {"\n"} .
+
+Bloco            =  "{" {"\n"} {Comando} "}".
+
+if               =  "if" Teste Bloco
+                    [{"elif" Teste Bloco}
+                     ["else" Bloco]
+                    ] .
+
+while            =  "while" Teste Bloco .
+
+Comparacao       =  Expressao (">" | ">=" | "<"| "<=" | "==") Expressao .
+
+Teste            = Comparacao | ExpressaoBool .
+
+DefineFunc       =  "func" Identificador [":" Tipo] "\n" {DeclaraParam} Bloco .
+
+DeclaraParam     =  "par" Identificador {, Identificador} Tipo .

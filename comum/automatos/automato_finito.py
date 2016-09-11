@@ -1,13 +1,13 @@
 # Copyright (c) 2016 Gabriel Casarin da Silva, All Rights Reserved.
 
 
-from . import Estado
+from . import Estado, AbstractAutomato
 
 
-class AutomatoFinito(object):
+class AutomatoFinito(AbstractAutomato):
     """implementa um Autômato Finito Determinístico"""
     def __init__(self, nome, **kwargs):
-        super(AutomatoFinito, self).__init__()
+        super(AutomatoFinito, self).__init__(deterministico=True)
         # nome do automato
         self.nome = nome
         # estados
@@ -15,58 +15,80 @@ class AutomatoFinito(object):
             self.estados = {
                 nome_estado: Estado(nome_estado) for nome_estado in kwargs['estados']
             }
-        if 'estadoInicial' in kwargs and kwargs['estadoInicial'] is not None:
-            self.__estadoInicial = self.estados[kwargs['estadoInicial']]
-        if 'estadosFinais' in kwargs and kwargs['estadosFinais'] is not None:
-            for nomeEstado in kwargs['estadosFinais']:
-                estado = self.estados[nomeEstado]
-                estado.setFinal()
+            if 'estadoInicial' in kwargs and kwargs['estadoInicial'] is not None:
+                self._estadoInicial = self.estados[kwargs['estadoInicial']]
+            if 'estadosFinais' in kwargs and kwargs['estadosFinais'] is not None:
+                for nomeEstado in kwargs['estadosFinais']:
+                    estado = self.estados[nomeEstado]
+                    estado.setFinal()
         # alfabeto
         if 'alfabeto' in kwargs and kwargs['alfabeto'] is not None:
             self.alfabeto = kwargs['alfabeto']
-        else:
-            self.alfabeto = []
         # m-Configuração
-        self.__estadoAtual = None
-        self.__simboloAtual = None
+        self._estadoAtual = None
+        self._simboloAtual = None
+
+    def set_inicial(self, estado):
+        self._estadoInicial = self.estados[estado]
 
     def inicializar(self, estadoInicial=None, simboloInicial=None):
-        self.__estadoAtual = self.__estadoInicial if estadoInicial is None else estadoInicial
-        self.__simboloAtual = None if simboloInicial is None else simboloInicial
+        # por padrão, inicia no estado inicial constante no arquivo de especificação do autômato,
+        # porém, é possível,nos casos de retorno de sub-máquina, iniciar o autômato em outro estado (estado de retorno, nesse caso)
+        self._estadoAtual = self._estadoInicial if estadoInicial is None else estadoInicial
+        self._simboloAtual = None if simboloInicial is None else simboloInicial
 
-    def atualizarSimbolo(self, simbolo):
+    def atualizar_simbolo(self, simbolo):
         if simbolo in self.alfabeto:
-            self.__simboloAtual = simbolo
+            self._simboloAtual = simbolo
+        else:
+            raise ValueError("Erro ao atualizar símbolo: '{}' não pertence ao alfabeto".format(simbolo))
+
+    def fazer_transicao(self):
+        if self._simboloAtual in self.alfabeto:
+            if self._simboloAtual in self._estadoAtual:  # verifica se há transição associada ao simboloAtual in estadoAtual
+                proxEst = self._estadoAtual[self._simboloAtual]
+                if proxEst is not None:
+                    self._estadoAtual = proxEst
+                    return True
+            return False
+
         else:
             raise ValueError("Erro ao fazer transição: símbolo não pertence ao alfabeto")
 
-    def fazerTransicao(self):
-        if self.__simboloAtual != '#':   # se não se consumiu todos os caracteres
-            if ((self.__simboloAtual in self.alfabeto)
-                or self.__simboloAtual == ''):
-                    if self.__simboloAtual in self.__estadoAtual:  # verifica se há transição associada ao simboloAtual in estadoAtual
-                        proxEst = self.__estadoAtual[self.__simboloAtual][0]
-                        self.__estadoAtual = proxEst
-                        return True
-            else:
-                raise ValueError("Erro ao fazer transição: símbolo não pertence ao alfabeto")
-
-        # retorna False em dois casos:
-        #    1) atigingiu-se o fim da cadeia; ou
-        #    2) não havia regra associada ao par (estadoAtual, simboloAtual)
-        return False
-
     def mConfiguracao(self):
-        return self.__estadoAtual, self.__simboloAtual
+        return self._estadoAtual, self._simboloAtual
 
     def __eq__(self, maq):
-    	if isinstance(maq, AutomatoFinito):
-    		return self == name.nome
-    	else:
-    		return self.nome == maq
-
-    def __getitem__(self, nome_estado):
-        if nome_estado in self.estados:
-            return self.estados[nome_estado]
+        if isinstance(maq, AutomatoFinito):
+            return self == self.nome
         else:
-            return None
+            return self.nome == maq
+
+
+class TransdutorFinito(AutomatoFinito):
+    def __init__(self, nome, **kwargs):
+        super(TransdutorFinito, self).__init__(nome, **kwargs)
+        self.saidas = {}
+        self.saida_gerada = None
+
+    def fazer_transicao(self):
+        # A lógica aqui é meio confusa :-(
+        # Antes, verificamos se, para dados símbolo e estado atuais, existe
+        # alguma saida (transdução) associada a esse par
+        if (self._estadoAtual.nome, self._simboloAtual) in self.saidas:
+            self.saida_gerada = self.saidas[(self._estadoAtual.nome, self._simboloAtual)]
+        else:
+            self.saida_gerada = None
+        # assumindo-se que só exista saída para uma transição válida,
+        # então estára tudo sempre ok.
+        # A lógica parece estar invertida, mas fiz isso por dois motivos:
+        # 1. Sempre que há transição possível, o estado atual muda e,
+        #    dado que a saída está sempre associada ao estado anterior,
+        #    teríamos que guardar o estado anterior para fazer a verificação posteriormente à transição,
+        #    de modo que evita-se acrescentar mais variáveis e mais código/lógica à sub-rotina
+        # 2. Reaproveita-se código fazendo desse modo (evita-se ter que alterar a fazer_transicao para acomodar a verficicação de saída)
+        # Tenta fazer a transição
+        return super(TransdutorFinito, self).fazer_transicao()
+
+    def add_saida(self, de, com, saida):
+        self.saidas[(de, com)] = saida

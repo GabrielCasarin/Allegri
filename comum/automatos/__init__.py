@@ -2,5 +2,7 @@
 
 
 from . estado import Estado
+from . abstract_automato import AbstractAutomato
+from . automato_finito import AutomatoFinito, TransdutorFinito
 
-__all__ = ['Estado']
+__all__ = ['Estado', 'AbstractAutomato', 'TransdutorFinito', 'AutomatoFinito']
