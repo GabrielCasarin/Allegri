@@ -6,8 +6,9 @@ def gera_nome(nb_estado):
     return 'q' + str(nb_estado)
 
 class MetaReconhecedor(Simulador):
-    def __init__(self):
+    def __init__(self, saida, log=True):
         super(MetaReconhecedor, self).__init__()
+        self.__log = log
 
         # conjunto de submáquinas geradas pelo meta-reconhecedor
         self.submaquinas = {}
@@ -84,16 +85,16 @@ class MetaReconhecedor(Simulador):
 
     def PartidaInicial(self):
         self.ap.inicializar()
-        print('<PartidaInicial>')
-        print('Sub-maquina atual:', self.ap.mConfiguracao()[0].nome)
-        print()
+        if self.__log:
+            print('<PartidaInicial>')
+            print('Sub-maquina atual:', self.ap.mConfiguracao()[0].nome)
+            print()
 
     def ChegadaSimbolo(self, simbolo):
         try:
             self.ap.atualizar_simbolo(simbolo[1])
             transitou = self.ap.fazer_transicao()
         except Exception as e:
-            print(e)
             transitou = False
 
         if not transitou:
@@ -107,21 +108,24 @@ class MetaReconhecedor(Simulador):
         else:
             self.add_evento(('<ExecutarTransducao>', simbolo[0]), True)
 
-        print('<ChegadaSimbolo>')
-        print('estado atual: {t[1]}\nsimbolo atual: {t[2]}'.format(t=self.ap.mConfiguracao()))
-        print()
+        if self.__log:
+            print('<ChegadaSimbolo>')
+            print('estado atual: {t[1]}\nsimbolo atual: {t[2]}'.format(t=self.ap.mConfiguracao()))
+            print()
 
     def ChamadaSubmaquina(self):
         self.ap.chama()
-        print('<ChamadaSubmaquina>')
-        print('Sub-maquina atual:', self.ap.mConfiguracao()[0].nome)
-        print()
+        if self.__log:
+            print('<ChamadaSubmaquina>')
+            print('Sub-maquina atual:', self.ap.mConfiguracao()[0].nome)
+            print()
 
     def RetornoSubmaquina(self):
         self.ap.retorna()
-        print('<RetornoSubmaquina>')
-        print('Sub-maquina atual:', self.ap.mConfiguracao()[0].nome)
-        print()
+        if self.__log:
+            print('<RetornoSubmaquina>')
+            print('Sub-maquina atual:', self.ap.mConfiguracao()[0].nome)
+            print()
 
     def ExecutarTransducao(self, token):
         rotina = self.ap.mConfiguracao()[0].saida_gerada
@@ -153,9 +157,11 @@ class MetaReconhecedor(Simulador):
 
         elif rotina == 'chamada':
             self.chamada(token)
-        print('<ExecutarTransducao>')
-        print('rotina executada:', rotina)
-        print()
+
+        if self.__log:
+            print('<ExecutarTransducao>')
+            print('rotina executada:', rotina)
+            print()
 
     # ROTINAS SEMÂNTICAS
     def criar_submaquina(self, nome):
