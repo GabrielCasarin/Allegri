@@ -201,7 +201,7 @@ def particao_para_automato_finito(particao, inicial='q0'):
     pilha = []
     pilha.append(particao[i][0])
     cont = 0
-    while len(nomes_classes) < len(particao):
+    while pilha:
         estado_atual = pilha.pop()
         for key, value in estado_atual._transicoes.items():
             if value is not None:
