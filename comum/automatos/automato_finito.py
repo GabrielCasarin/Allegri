@@ -23,7 +23,7 @@ class AutomatoFinito(AbstractAutomato):
                     estado.setFinal()
         # alfabeto
         if 'alfabeto' in kwargs and kwargs['alfabeto'] is not None:
-            self.alfabeto = kwargs['alfabeto']
+            self.alfabeto = set(kwargs['alfabeto'])
         # m-Configuração
         self._estadoAtual = None
         self._simboloAtual = None
