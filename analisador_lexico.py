@@ -9,7 +9,6 @@ from definicoes import ROOT_DIR
 
 
 class decompoe_texto_fonte(Simulador):
-
     def __init__(self, log_decompoe_texto_fonte=False,
                  log_imprimir_linhas=False, log_imprimir_caracteres=False,
                  imprimir_listagem=False):
@@ -24,8 +23,8 @@ class decompoe_texto_fonte(Simulador):
             self.LeituraLinha()
         elif evento == '<FimArquivo>':
             self.FimArquivo()
-        elif evento == '<ChegadaSimbolo>':
-            self.ChegadaSimbolo()
+        elif evento == '<ChegadaCaractere>':
+            self.ChegadaCaractere()
 
     def LeituraLinha(self):
         linha = self.arquivo_fonte.readline()
@@ -37,7 +36,7 @@ class decompoe_texto_fonte(Simulador):
             # add eventos
             self.cursor = 0
             for char in linha:
-                self.add_evento('<ChegadaSimbolo>')
+                self.add_evento('<ChegadaCaractere>')
             self.add_evento('<LeituraLinha>')
         else:
             self.add_evento('<FimArquivo>')
@@ -46,23 +45,24 @@ class decompoe_texto_fonte(Simulador):
         if self.log_imprimir_linhas:
             print("<FimArquivo>        chegou ao fim do arquivo fonte '{}'".format(self.arquivo_fonte.name))
         self.arquivo_fonte.close()
-        #  num_linhas = math.ceil(math.log10(len(self.linhas_indexadas)))
+        # self.caracteres_classificados.append(-1)
 
-    def ChegadaSimbolo(self):
+    def ChegadaCaractere(self):
         num_linha, linha = self.linhas_indexadas[-1]
         char = linha[self.cursor]
-        if char != '\n':
-            if char in string.digits:
-                classificacao = 'digito'
-            elif char in string.ascii_letters:
-                classificacao = 'letra'
-            elif char in string.punctuation:
-                classificacao = 'pontuacao'
-            elif char in ' \t':
-                classificacao = 'espaco'
-            self.caracteres_classificados.append((char, classificacao))
-            if self.log_imprimir_caracteres:
-                print("<ChegadaSimbolo>    {0[0]} (ascii HEX {1:X}) {0[1]}".format(self.caracteres_classificados[-1], ord(self.caracteres_classificados[-1][0])))
+        if char == '\n':
+            classificacao = 'enter'
+        elif char in string.digits:
+            classificacao = 'Algarismo'
+        elif char in string.ascii_letters:
+            classificacao = 'Letra'
+        elif char in string.punctuation:
+            classificacao = char
+        elif char in ' \t':
+            classificacao = 'espaco'
+        self.caracteres_classificados.append((char, classificacao))
+        if self.log_imprimir_caracteres:
+            print("<ChegadaCaractere>    {0[0]} (ascii HEX {1:X}) {0[1]}".format(self.caracteres_classificados[-1], ord(self.caracteres_classificados[-1][0])))
         self.cursor += 1
 
     def __call__(self, nome_arquivo_fonte):
@@ -70,18 +70,19 @@ class decompoe_texto_fonte(Simulador):
             print('entrei na sub-rotina de extração de texto fonte...')
 
         try:
-            self.cont_linhas = 1
+            self.arquivo_fonte = open(nome_arquivo_fonte)
+            self.cont_linhas = 0
             self.linhas_indexadas = []
             self.caracteres_classificados = []
-            self.arquivo_fonte = open(nome_arquivo_fonte)
+
             self.add_evento('<LeituraLinha>')
             self.run()
 
         except Exception as e:
-            print(e)
+            raise e
 
         if self.log_decompoe_texto_fonte:
-            print('sai na sub-rotina de extração de texto fonte.')
+            print('saí da sub-rotina de extração de texto fonte.')
 
         if self.imprimir_listagem:
             LOG_DIR = os.path.join(ROOT_DIR, 'log')
@@ -93,28 +94,145 @@ class decompoe_texto_fonte(Simulador):
                     arq_out.write("{0[0]} {0[1]}\n".format(el))
 
 
-class analise_lexica(Simulador):
-    def __init__(self, automato, log_analise_lexica=False):
-        super(analise_lexica, self).__init__()
-        self.automato = automato
-        self.automato.inicializar()
-        self.log_analise_lexica = log_analise_lexica
+class analisador_lexico(Simulador):
+    def __init__(self, automato, decompositor, log_analise_lexica=False):
+        super(analisador_lexico, self).__init__()
+        self.__automato = automato
+        self.__decompositor = decompositor
+        self.__log = log_analise_lexica
 
     def trata_evento(self, evento):
-        if evento == '<ChegadaSimbolo>':
-            self.ChegadaSimbolo()
+        # no = self._listaEventos.raiz
+        # while no is not None:
+        #     print(no.conteudo, end=' | ')
+        #     no = no.proximo
+        # print()
+        # print()
+        #
+        if evento[0] == '<PartidaInicial>':
+            self.PartidaInicial()
+        elif evento[0] == '<ReiniciarAutomato>':
+            self.ReiniciarAutomato()
+        elif evento[0] == '<ChegadaSimbolo>':
+            self.ChegadaSimbolo(evento[1])
+        elif evento[0] == '<CursorParaDireita>':
+            self.CursorParaDireita()
+        elif evento[0] == '<ExecutarTransducao>':
+            self.ExecutarTransducao(evento[1])
 
-    def ChegadaSimbolo(self):
-        self.automato.atualizarSimbolo()
-        if self.automato.fazerTransicao():
-            pass
+    def PartidaInicial(self):
+        # poe o automato no estado inicial
+        self.__automato.inicializar()
+        # põe os dados na "fita"
+        self.__decompositor('gram_ex.txt')
+        self.__caracteres = iter(self.__decompositor.caracteres_classificados)
+        self.token_atual = None
+        self.token_tipo = None
+        self.tokens = []
+        self.add_evento(('<CursorParaDireita>', ))
+        if self.__log:
+            print('<PartidaInicial>\n')
 
-    def __call__(self):
-        if self.log_analise_lexica:
+    def ReiniciarAutomato(self):
+        self.__automato.inicializar()
+        self.tokens.append((self.token_atual, self.token_tipo))
+        self.token_atual = None
+        if self.__log:
+            print('<ReiniciarAutomato>')
+            print('token reconhecido:', self.token_atual)
+            print()
+
+    def CursorParaDireita(self):
+        try:
+            c = next(self.__caracteres)
+            self.add_evento(('<ChegadaSimbolo>', c))
+            if self.__log:
+                print('<CursorParaDireita>')
+                print('chegou caractere', c)
+                print()
+        except Exception as e:
+            print(e)
+
+    def ChegadaSimbolo(self, c):
+        try:
+            self.__automato.atualizar_simbolo(c[1])
+            transitou = self.__automato.fazer_transicao()
+        except Exception as e:
+            print(e)
+            transitou = False
+
+        if transitou:
+            if self.__automato.saida_gerada is not None:
+                self.add_evento(('<ExecutarTransducao>', c))
+            self.add_evento(('<CursorParaDireita>', ))
+        else:
+            self.add_evento(('<ReiniciarAutomato>', ))
+            self.add_evento(('<ChegadaSimbolo>', c))
+
+        if self.__log:
+            print('<ChegadaSimbolo>')
+            print('estado atual: {t[0]}\nsimbolo atual: {t[1]}'.format(t=self.__automato.mConfiguracao()))
+            print('saida gerada =', self.__automato.saida_gerada)
+            print()
+
+    def ExecutarTransducao(self, c):
+        rotina = self.__automato.saida_gerada
+        if rotina == 'constroi_NT':
+            self.constroi_NT(c[0])
+        elif rotina == 'constroi_TERM':
+            self.constroi_TERM(c[0])
+        elif rotina == 'igual':
+            self.igual(c[0])
+        elif rotina == 'lparen':
+            self.lparen(c[0])
+        elif rotina == 'rparen':
+            self.rparen(c[0])
+        elif rotina == 'lchave':
+            self.lchave(c[0])
+        elif rotina == 'rchave':
+            self.rchave(c[0])
+        elif rotina == 'lcolchete':
+            self.lcolchete(c[0])
+        elif rotina == 'rcolchete':
+            self.rcolchete(c[0])
+        elif rotina == 'ponto_final':
+            self.ponto_final(c[0])
+
+        if self.__log:
+            print('<ExecutarTransducao>')
+            print('rotina executada:', rotina)
+            print()
+
+    def constroi_NT(self, c):
+        if self.token_atual is None:
+            self.token_atual = c
+            self.token_tipo = 'NT'
+        else:
+            self.token_atual += c
+
+    def constroi_TERM(self, c):
+        if self.token_atual is None:
+            self.token_atual = c
+            self.token_tipo = 'TERM'
+        else:
+            self.token_atual += c
+
+    def igual(self, c):
+        self.token_atual = c
+        self.token_tipo = 'igual'
+
+    def pontuacao(self, c):
+        self.token_atual = c
+        self.token_tipo = c        
+
+    def token(self):
+        if self.__log:
             print('entrei na sub-rotina de análise léxica...')
 
-        if self.log_analise_lexica:
-            print('sai na sub-rotina de análise léxica.')
+
+
+        if self.__log:
+            print('saí da sub-rotina de análise léxica.')
 
 
 class analise_sintatica(Simulador):
@@ -126,4 +244,4 @@ class analise_sintatica(Simulador):
             print('entrei na sub-rotina de análise sintática...')
 
         if self.log_analise_sintatica:
-            print('sai na sub-rotina de análise sintática.')
+            print('saí da sub-rotina de análise sintática.')
