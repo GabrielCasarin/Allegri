@@ -90,3 +90,6 @@ ENV/
 
 # texto
 *.txt
+
+# Imagens
+*.png
