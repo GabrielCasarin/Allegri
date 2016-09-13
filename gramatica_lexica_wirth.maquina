@@ -1,0 +1,33 @@
+<A>
+q0 q1 q2 q3 q4 q5 q6 q7 q8 q9 q10 q11 q12 q13
+
+q0
+
+q2 q3 q4 q5 q6 q7 q8 q9 q10 q11 q12 q13
+
+Letra Algarismo = " ( ) { } [ ] | . espaco ; enter
+
+(q0, 'espaco') -> q0
+(q0, 'enter') -> q0
+
+(q0, '"') -> q1
+(q1, 'Letra') -> q1\constroi_TERM
+(q1, 'Algarismo') -> q1\constroi_TERM
+(q1, '"') -> q2
+(q2, '"') -> q1\constroi_TERM
+
+(q0, 'Letra') -> q3\constroi_NT
+(q3, 'Letra') -> q3\constroi_NT
+(q3, 'Algarismo') -> q3\constroi_NT
+
+(q0, '(') -> q4 \ lparen
+(q0, ')') -> q5 \ rparen
+(q0, '{') -> q6 \ lchave
+(q0, '}') -> q7 \ rchave
+(q0, '[') -> q8 \ lcolchete
+(q0, ']') -> q9 \ rcolchete
+(q0, '|') -> q10 \ barra_vertical
+(q0, '.') -> q11 \ ponto_final
+(q0, '=') -> q13 \ igual
+
+</A>
