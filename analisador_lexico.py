@@ -137,10 +137,10 @@ class analisador_lexico(Simulador):
         if self.__automato._estadoAtual.isFinal():
             if self.__automato._estadoAtual == 'q2':
                 self.token_tipo = self.token_atual
-            elif self.__automato._estadoAtual == 'q6':
+            elif self.__automato._estadoAtual == 'TERM':
                 self.token_atual = self.token_atual[1:-1]
                 self.token_tipo = 'TERM'
-            elif self.__automato._estadoAtual == 'q3':
+            elif self.__automato._estadoAtual == 'NT':
                 self.token_tipo = 'NT'
             self.tokens.append((self.token_atual, self.token_tipo))
 
@@ -188,8 +188,10 @@ class analisador_lexico(Simulador):
 
     def ExecutarTransducao(self, c):
         rotina = self.__automato.saida_gerada
-        if rotina == 'E0':
-            self.E0()
+        if rotina == 'aspas':
+            self.aspas()
+        elif rotina == 'limpa':
+            self.limpa()
         # elif rotina == 'constroi_TERM':
         #     self.constroi_TERM(c[0])
         # elif rotina == 'igual':
@@ -214,8 +216,11 @@ class analisador_lexico(Simulador):
             print('rotina executada:', rotina)
             print()
 
-    def E0(self):
+    def aspas(self):
         self.token_atual = self.token_atual[:-1]
+
+    def limpa(self):
+        self.token_atual = ''
 
     # def constroi_NT(self, c):
     #     if self.token_atual is None:
