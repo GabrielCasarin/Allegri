@@ -6,7 +6,7 @@ def gera_nome(nb_estado):
     return 'q' + str(nb_estado)
 
 class MetaReconhecedor(Simulador):
-    def __init__(self, saida, log=True):
+    def __init__(self, log=True):
         super(MetaReconhecedor, self).__init__()
         self.__log = log
 

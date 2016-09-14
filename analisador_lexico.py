@@ -126,7 +126,7 @@ class analisador_lexico(Simulador):
         # põe os dados na "fita"
         self.__decompositor('gram_ex.txt')
         self.__caracteres = iter(self.__decompositor.caracteres_classificados)
-        self.token_atual = None
+        self.token_atual = ''
         self.token_tipo = None
         self.tokens = []
         self.add_evento(('<CursorParaDireita>', ))
@@ -134,13 +134,23 @@ class analisador_lexico(Simulador):
             print('<PartidaInicial>\n')
 
     def ReiniciarAutomato(self):
+        if self.__automato._estadoAtual.isFinal():
+            if self.__automato._estadoAtual == 'q2':
+                self.token_tipo = self.token_atual
+            elif self.__automato._estadoAtual == 'q6':
+                self.token_atual = self.token_atual[1:-1]
+                self.token_tipo = 'TERM'
+            elif self.__automato._estadoAtual == 'q3':
+                self.token_tipo = 'NT'
+            self.tokens.append((self.token_atual, self.token_tipo))
+
         self.__automato.inicializar()
-        self.tokens.append((self.token_atual, self.token_tipo))
-        self.token_atual = None
+
         if self.__log:
             print('<ReiniciarAutomato>')
             print('token reconhecido:', self.token_atual)
             print()
+        self.token_atual = ''
 
     def CursorParaDireita(self):
         try:
@@ -162,6 +172,7 @@ class analisador_lexico(Simulador):
             transitou = False
 
         if transitou:
+            self.token_atual += c[0]
             if self.__automato.saida_gerada is not None:
                 self.add_evento(('<ExecutarTransducao>', c))
             self.add_evento(('<CursorParaDireita>', ))
@@ -177,62 +188,65 @@ class analisador_lexico(Simulador):
 
     def ExecutarTransducao(self, c):
         rotina = self.__automato.saida_gerada
-        if rotina == 'constroi_NT':
-            self.constroi_NT(c[0])
-        elif rotina == 'constroi_TERM':
-            self.constroi_TERM(c[0])
-        elif rotina == 'igual':
-            self.igual(c[0])
-        elif rotina == 'lparen':
-            self.lparen(c[0])
-        elif rotina == 'rparen':
-            self.rparen(c[0])
-        elif rotina == 'lchave':
-            self.lchave(c[0])
-        elif rotina == 'rchave':
-            self.rchave(c[0])
-        elif rotina == 'lcolchete':
-            self.lcolchete(c[0])
-        elif rotina == 'rcolchete':
-            self.rcolchete(c[0])
-        elif rotina == 'ponto_final':
-            self.ponto_final(c[0])
+        if rotina == 'E0':
+            self.E0()
+        # elif rotina == 'constroi_TERM':
+        #     self.constroi_TERM(c[0])
+        # elif rotina == 'igual':
+        #     self.igual(c[0])
+        # elif rotina == 'lparen':
+        #     self.lparen(c[0])
+        # elif rotina == 'rparen':
+        #     self.rparen(c[0])
+        # elif rotina == 'lchave':
+        #     self.lchave(c[0])
+        # elif rotina == 'rchave':
+        #     self.rchave(c[0])
+        # elif rotina == 'lcolchete':
+        #     self.lcolchete(c[0])
+        # elif rotina == 'rcolchete':
+        #     self.rcolchete(c[0])
+        # elif rotina == 'ponto_final':
+        #     self.ponto_final(c[0])
 
         if self.__log:
             print('<ExecutarTransducao>')
             print('rotina executada:', rotina)
             print()
 
-    def constroi_NT(self, c):
-        if self.token_atual is None:
-            self.token_atual = c
-            self.token_tipo = 'NT'
-        else:
-            self.token_atual += c
+    def E0(self):
+        self.token_atual = self.token_atual[:-1]
 
-    def constroi_TERM(self, c):
-        if self.token_atual is None:
-            self.token_atual = c
-            self.token_tipo = 'TERM'
-        else:
-            self.token_atual += c
+    # def constroi_NT(self, c):
+    #     if self.token_atual is None:
+    #         self.token_atual = c
+    #         self.token_tipo = 'NT'
+    #     else:
+    #         self.token_atual += c
+    #
+    # def constroi_TERM(self, c):
+    #     if self.token_atual is None:
+    #         self.token_atual = c
+    #         self.token_tipo = 'TERM'
+    #     else:
+    #         self.token_atual += c
+    #
+    # def igual(self, c):
+    #     self.token_atual = c
+    #     self.token_tipo = 'igual'
+    #
+    # def pontuacao(self, c):
+    #     self.token_atual = c
+    #     self.token_tipo = c
 
-    def igual(self, c):
-        self.token_atual = c
-        self.token_tipo = 'igual'
-
-    def pontuacao(self, c):
-        self.token_atual = c
-        self.token_tipo = c        
-
-    def token(self):
-        if self.__log:
-            print('entrei na sub-rotina de análise léxica...')
-
-
-
-        if self.__log:
-            print('saí da sub-rotina de análise léxica.')
+    # def token(self):
+    #     if self.__log:
+    #         print('entrei na sub-rotina de análise léxica...')
+    #
+    #
+    #
+    #     if self.__log:
+    #         print('saí da sub-rotina de análise léxica.')
 
 
 class analise_sintatica(Simulador):
