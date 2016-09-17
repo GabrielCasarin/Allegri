@@ -200,9 +200,11 @@ def particao_para_automato_finito(particao, inicial='q0'):
     }
     pilha = []
     pilha.append(particao[i][0])
+    finais = []
     cont = 0
     while pilha:
         estado_atual = pilha.pop()
+        # print('estado atual:', estado_atual)
         for key, value in estado_atual._transicoes.items():
             if value is not None:
                 i = acha(value.nome)
@@ -212,3 +214,7 @@ def particao_para_automato_finito(particao, inicial='q0'):
                     nomes_classes[i] = nova_classe
                     pilha.append(particao[i][0])
                 print("({}, '{}') -> {}".format(nomes_classes[acha(estado_atual.nome)], key, nomes_classes[acha(value.nome)]))
+        if estado_atual.isFinal():
+            j = acha(estado_atual.nome)
+            finais.append(nomes_classes[j])
+    print("F =", finais)
