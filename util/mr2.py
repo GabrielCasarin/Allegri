@@ -110,6 +110,7 @@ class MetaReconhecedor(Simulador):
 
         if self.__log:
             print('<ChegadaSimbolo>')
+            print('simbolo chegado:', simbolo[0])
             print('estado atual: {t[1]}\nsimbolo atual: {t[2]}'.format(t=self.ap.mConfiguracao()))
             print()
 
@@ -130,6 +131,8 @@ class MetaReconhecedor(Simulador):
     def ExecutarTransducao(self, token):
         rotina = self.ap.mConfiguracao()[0].saida_gerada
 
+        if rotina != 'criar_submaquina':
+            print('pilha antes:', self.pilha)
         if rotina == 'criar_submaquina':
             self.criar_submaquina(token)
         # elif rotina == 'sinal':
@@ -158,6 +161,7 @@ class MetaReconhecedor(Simulador):
         elif rotina == 'chamada':
             self.chamada(token)
 
+        print('pilha depois:', self.pilha)
         if self.__log:
             print('<ExecutarTransducao>')
             print('rotina executada:', rotina)
@@ -174,6 +178,7 @@ class MetaReconhecedor(Simulador):
         self.pilha = []
         # conjunto de transições obtido pela análise do conjunto de regras da gramática
         self.transicoes = []
+        self.chamadas_entre_submaquinas = {}
         self.contador = itertools.count()
         # estado inicial é o 0
         self.estado = next(self.contador)
@@ -201,12 +206,16 @@ class MetaReconhecedor(Simulador):
         if nome_da_submaq not in self.submaquinas:
             self.submaquinas[nome_da_submaq] = AbstractAutomato(deterministico=False)
 
+        if self.submaquina_atual not in self.chamadas_entre_submaquinas:
+            self.chamadas_entre_submaquinas[self.submaquina_atual] = {}
+
         estado_anterior = self.estado
         self.estado = self.valor_atual
         self.valor_atual = next(self.contador)
         self.transicoes.append((estado_anterior, nome_da_submaq, self.estado))
 
         self.submaquinas[self.submaquina_atual].add_transicao(de=gera_nome(estado_anterior), com=nome_da_submaq, para=gera_nome(self.estado))
+        self.chamadas_entre_submaquinas[self.submaquina_atual][gera_nome(estado_anterior)] = (nome_da_submaq, gera_nome(self.estado))
 
     def lparen(self):
         self.pilha.append((self.estado, self.valor_atual))
@@ -230,9 +239,9 @@ class MetaReconhecedor(Simulador):
 
     def rcolchete(self):
         estadoAtual, proxEstado = self.pilha.pop()
-        self.transicoes.append((estadoAtual, '', proxEstado))
+        self.transicoes.append((self.estado, '', proxEstado))
 
-        self.submaquinas[self.submaquina_atual].add_transicao(de=gera_nome(estadoAtual), com='', para=gera_nome(proxEstado))
+        self.submaquinas[self.submaquina_atual].add_transicao(de=gera_nome(self.estado), com='', para=gera_nome(proxEstado))
 
         self.estado = proxEstado
 
