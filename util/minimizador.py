@@ -1,7 +1,7 @@
 # Copyright (c) 2016 Gabriel Casarin da Silva, All Rights Reserved.
 
 
-from comum import Estado
+from comum import Estado, AutomatoFinito
 
 
 def eliminar_transicoes_em_vazio(automato):
@@ -186,7 +186,7 @@ def minimizador_de_Hopcroft(automato):
     return Grupos
 
 
-def particao_para_automato_finito(particao, inicial='q0'):
+def particao_para_automato_finito(nome, alfabeto, particao, inicial='q0'):
     def acha(nome_estado):
         for i in range(len(particao)):
             for estado in particao[i]:
@@ -194,27 +194,37 @@ def particao_para_automato_finito(particao, inicial='q0'):
                     return i
         return None
 
+    af = AutomatoFinito(nome=nome, estados=[inicial], estadoInicial=inicial, alfabeto=alfabeto)
+
+    pilha = []
+    # finais = []
+
     i = acha(inicial)
     nomes_classes = {
         i: inicial
     }
-    pilha = []
+
     pilha.append(particao[i][0])
-    finais = []
+
     cont = 0
     while pilha:
         estado_atual = pilha.pop()
-        # print('estado atual:', estado_atual)
-        for key, value in estado_atual._transicoes.items():
-            if value is not None:
-                i = acha(value.nome)
+        j = acha(estado_atual.nome)
+        qi = nomes_classes[j]
+        for s, qj in estado_atual._transicoes.items():
+            if qj is not None:
+                # acha o indice do conjunto, dentro da partição, a que pertence qj
+                i = acha(qj.nome)
                 if not i in nomes_classes:
                     cont += 1
                     nova_classe = 'q' + str(cont)
                     nomes_classes[i] = nova_classe
                     pilha.append(particao[i][0])
-                print("({}, '{}') -> {}".format(nomes_classes[acha(estado_atual.nome)], key, nomes_classes[acha(value.nome)]))
+                    af.add_estado(nova_classe)
+                # print("({}, '{}') -> {}".format(nomes_classes[acha(estado_atual.nome)], s, nomes_classes[acha(qj.nome)]))
+                af.add_transicao(de=qi, com=s, para=nomes_classes[i])
         if estado_atual.isFinal():
-            j = acha(estado_atual.nome)
-            finais.append(nomes_classes[j])
-    print("F =", finais)
+            # finais.append(qi)
+            af[qi].setFinal()
+    # print("F =", finais)
+    return af

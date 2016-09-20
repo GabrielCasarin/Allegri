@@ -1,4 +1,4 @@
-# Copyright (c) 2016 Gabriel Casarin da Silva All Rights Reserved.
+# Copyright (c) 2016 Gabriel Casarin da Silva, All Rights Reserved.
 
 
 import os
@@ -17,6 +17,7 @@ class decompoe_texto_fonte(Simulador):
         self.log_imprimir_linhas = log_imprimir_linhas
         self.log_imprimir_caracteres = log_imprimir_caracteres
         self.imprimir_listagem = imprimir_listagem
+        self.categorias = {}
 
     def trata_evento(self, evento):
         if evento == '<LeituraLinha>':
@@ -47,19 +48,18 @@ class decompoe_texto_fonte(Simulador):
         self.arquivo_fonte.close()
         # self.caracteres_classificados.append(-1)
 
+    def add_categoria(self, categoria, conjunto):
+        if categoria not in self.categorias:
+            self.categorias[categoria] = set()
+        for el in conjunto:
+            self.categorias[categoria].add(el)
+
     def ChegadaCaractere(self):
         num_linha, linha = self.linhas_indexadas[-1]
         char = linha[self.cursor]
-        if char == '\n':
-            classificacao = 'enter'
-        elif char in string.digits:
-            classificacao = 'Algarismo'
-        elif char in string.ascii_letters:
-            classificacao = 'Letra'
-        elif char in string.punctuation:
-            classificacao = char
-        elif char in ' \t':
-            classificacao = 'espaco'
+        for categoria, conjunto in self.categorias.items():
+            if char in conjunto:
+                classificacao = categoria
         self.caracteres_classificados.append((char, classificacao))
         if self.log_imprimir_caracteres:
             print("<ChegadaCaractere>    {0[0]} (ascii HEX {1:X}) {0[1]}".format(self.caracteres_classificados[-1], ord(self.caracteres_classificados[-1][0])))
@@ -95,20 +95,14 @@ class decompoe_texto_fonte(Simulador):
 
 
 class analisador_lexico(Simulador):
-    def __init__(self, automato, decompositor, log_analise_lexica=False):
+    def __init__(self, automato, decompositor, arquivo_fonte, log_analise_lexica=False):
         super(analisador_lexico, self).__init__()
         self.__automato = automato
         self.__decompositor = decompositor
         self.__log = log_analise_lexica
+        self.arquivo_fonte = arquivo_fonte
 
     def trata_evento(self, evento):
-        # no = self._listaEventos.raiz
-        # while no is not None:
-        #     print(no.conteudo, end=' | ')
-        #     no = no.proximo
-        # print()
-        # print()
-        #
         if evento[0] == '<PartidaInicial>':
             self.PartidaInicial()
         elif evento[0] == '<ReiniciarAutomato>':
@@ -124,7 +118,7 @@ class analisador_lexico(Simulador):
         # poe o automato no estado inicial
         self.__automato.inicializar()
         # põe os dados na "fita"
-        self.__decompositor('gram_ex.txt')
+        self.__decompositor(self.arquivo_fonte)
         self.__caracteres = iter(self.__decompositor.caracteres_classificados)
         self.token_atual = ''
         self.token_tipo = None
@@ -192,24 +186,6 @@ class analisador_lexico(Simulador):
             self.aspas()
         elif rotina == 'limpa':
             self.limpa()
-        # elif rotina == 'constroi_TERM':
-        #     self.constroi_TERM(c[0])
-        # elif rotina == 'igual':
-        #     self.igual(c[0])
-        # elif rotina == 'lparen':
-        #     self.lparen(c[0])
-        # elif rotina == 'rparen':
-        #     self.rparen(c[0])
-        # elif rotina == 'lchave':
-        #     self.lchave(c[0])
-        # elif rotina == 'rchave':
-        #     self.rchave(c[0])
-        # elif rotina == 'lcolchete':
-        #     self.lcolchete(c[0])
-        # elif rotina == 'rcolchete':
-        #     self.rcolchete(c[0])
-        # elif rotina == 'ponto_final':
-        #     self.ponto_final(c[0])
 
         if self.__log:
             print('<ExecutarTransducao>')
@@ -221,46 +197,3 @@ class analisador_lexico(Simulador):
 
     def limpa(self):
         self.token_atual = ''
-
-    # def constroi_NT(self, c):
-    #     if self.token_atual is None:
-    #         self.token_atual = c
-    #         self.token_tipo = 'NT'
-    #     else:
-    #         self.token_atual += c
-    #
-    # def constroi_TERM(self, c):
-    #     if self.token_atual is None:
-    #         self.token_atual = c
-    #         self.token_tipo = 'TERM'
-    #     else:
-    #         self.token_atual += c
-    #
-    # def igual(self, c):
-    #     self.token_atual = c
-    #     self.token_tipo = 'igual'
-    #
-    # def pontuacao(self, c):
-    #     self.token_atual = c
-    #     self.token_tipo = c
-
-    # def token(self):
-    #     if self.__log:
-    #         print('entrei na sub-rotina de análise léxica...')
-    #
-    #
-    #
-    #     if self.__log:
-    #         print('saí da sub-rotina de análise léxica.')
-
-
-class analise_sintatica(Simulador):
-    def __init__(self, log_analise_sintatica=False):
-        super(analise_sintatica, self).__init__()
-
-    def __call__(self):
-        if self.log_analise_sintatica:
-            print('entrei na sub-rotina de análise sintática...')
-
-        if self.log_analise_sintatica:
-            print('saí da sub-rotina de análise sintática.')

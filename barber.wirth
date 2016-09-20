@@ -27,7 +27,7 @@ Expressao        =  ["-"] Termo { ("+" | "-") Termo } .
 
 Termo            =  Fator { ("*" | "/") Fator } .
 
-Fator            =  CifraDecimal
+Fator            =  Numero
                     | RefVariavel
                     | "(" Expressao ")" .
 

@@ -58,6 +58,13 @@ class AutomatoFinito(AbstractAutomato):
     def mConfiguracao(self):
         return self._estadoAtual, self._simboloAtual
 
+    def finais(self):
+        f = []
+        for estado in self.estados.values():
+            if estado.isFinal():
+                f.append(estado.nome)
+        return f
+
     def __eq__(self, maq):
         if isinstance(maq, AutomatoFinito):
             return self == self.nome

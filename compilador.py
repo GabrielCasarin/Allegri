@@ -1,21 +1,11 @@
 # Copyright (c) 2016 Gabriel Casarin da Silva, All Rights Reserved.
 
 
-from analisador_lexico import decompoe_texto_fonte, analisador_lexico, analise_sintatica
+from analisador_lexico import decompoe_texto_fonte, analisador_lexico
 from analisador_semantico import gerar_codigo_intermediario, otimizador, gerar_codigo_objeto
 
 import re
 from comum import TransdutorFinito
-
-
-# class gerar_codigo_executavel:
-#     def __init__(self):
-#         super(gerar_codigo_executavel, self).__init__()
-#
-#     def __call__(self):
-#         print('entrei na sub-rotina de geração de código executável...')
-#
-#         print('saí da sub-rotina de geração de código executável...')
 
 
 with open('conf.txt') as arq_conf:
@@ -64,7 +54,7 @@ with open('tokenizer_wirth.maquina') as arq:
 
 # front end
 d = decompoe_texto_fonte(log_decompoe_texto_fonte, log_imprimir_linhas, log_imprimir_caracteres)
-anal = analisador_lexico(tf, d, log_analise_lexica)
+anal = analisador_lexico(tf, d, 'id.txt', log_analise_lexica)
 anal.add_evento(('<PartidaInicial>', ))
 anal.run()
 print()

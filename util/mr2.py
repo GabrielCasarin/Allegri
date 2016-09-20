@@ -1,6 +1,10 @@
+# Copyright (c) 2016 Gabriel Casarin da Silva, All Rights Reserved.
+
+
 import itertools
 from comum import Simulador, AutomatoPilhaEstruturado
 from comum.automatos import AbstractAutomato
+
 
 def gera_nome(nb_estado):
     return 'q' + str(nb_estado)
@@ -131,8 +135,8 @@ class MetaReconhecedor(Simulador):
     def ExecutarTransducao(self, token):
         rotina = self.ap.mConfiguracao()[0].saida_gerada
 
-        if rotina != 'criar_submaquina':
-            print('pilha antes:', self.pilha)
+        # if rotina != 'criar_submaquina':
+        #     print('pilha antes:', self.pilha)
         if rotina == 'criar_submaquina':
             self.criar_submaquina(token)
         # elif rotina == 'sinal':
@@ -161,7 +165,7 @@ class MetaReconhecedor(Simulador):
         elif rotina == 'chamada':
             self.chamada(token)
 
-        print('pilha depois:', self.pilha)
+        # print('pilha depois:', self.pilha)
         if self.__log:
             print('<ExecutarTransducao>')
             print('rotina executada:', rotina)
