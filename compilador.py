@@ -1,7 +1,7 @@
 # Copyright (c) 2016 Gabriel Casarin da Silva, All Rights Reserved.
 
 
-from analisador_lexico import decompoe_texto_fonte, analisador_lexico
+from classificador_lexico import decompoe_texto_fonte, classificador_lexico
 from analisador_semantico import gerar_codigo_intermediario, otimizador, gerar_codigo_objeto
 
 import re
@@ -54,7 +54,7 @@ with open('tokenizer_wirth.maquina') as arq:
 
 # front end
 d = decompoe_texto_fonte(log_decompoe_texto_fonte, log_imprimir_linhas, log_imprimir_caracteres)
-anal = analisador_lexico(tf, d, 'id.txt', log_analise_lexica)
+anal = classificador_lexico(tf, d, 'id.txt', log_analise_lexica)
 anal.add_evento(('<PartidaInicial>', ))
 anal.run()
 print()

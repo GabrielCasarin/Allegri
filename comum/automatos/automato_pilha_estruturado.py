@@ -55,6 +55,10 @@ class AutomatoPilhaEstruturado:
         self.alfabeto = set()
         self.__simboloAtual = None
 
+    def add_submaquina(self, nome, estados, estadoInicial, estadosFinais, alfabeto):
+        if nome not in self.__automatos:
+            self.__automatos[nome] = Submaquina(nome=nome, estados=estados, estadoInicial=estadoInicial, estadosFinais=estadosFinais, alfabeto=alfabeto)
+
     def gerar_alfabeto(self):
         for S in self.__automatos.values():
             self.alfabeto.update(S.alfabeto)

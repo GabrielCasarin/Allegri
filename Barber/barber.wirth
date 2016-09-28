@@ -1,4 +1,4 @@
-Identificador   =  Letra {Letra | Algarismo} .
+Identificador   =  "Letra" {"Letra" | "Algarismo"} .
 
 Tipo            =  "int"
                    | "char"
@@ -19,7 +19,7 @@ FatorBool        =  ConstBool
                     | RefVariavel
                     | "(" ExpressaoBool ")" .
 
-CifraDecimal     =  Algarismo {Algarismo} .
+CifraDecimal     =  "Algarismo" {"Algarismo"} .
 
 Numero           =  CifraDecimal .
 
@@ -35,9 +35,9 @@ Atribuicao       =  RefVariavel "=" (Expressao | ExpressaoBool) .
 
 Return           =  "return" (Expressao | ExpressaoBool) .
 
-Comando          =  (DeclaraVariavel | Atribuicao | Return | if | while) "\n" {"\n"} .
+Comando          =  (DeclaraVariavel | Atribuicao | Return | if | while) "enter" {"enter"} .
 
-Bloco            =  "{" {"\n"} {Comando} "}".
+Bloco            =  "{" {"enter"} {Comando} "}".
 
 if               =  "if" Teste Bloco
                     [{"elif" Teste Bloco}
@@ -46,10 +46,10 @@ if               =  "if" Teste Bloco
 
 while            =  "while" Teste Bloco .
 
-Comparacao       =  Expressao (">" | ">=" | "<"| "<=" | "==") Expressao .
+Comparacao       =  Expressao (">" | ">=" | "<"| "<=" | "=="| "!=") Expressao .
 
 Teste            = Comparacao | ExpressaoBool .
 
-DefineFunc       =  "func" Identificador [":" Tipo] "\n" {DeclaraParam} Bloco .
+DefineFunc       =  "func" Identificador [":" Tipo] "enter" {DeclaraParam} Bloco .
 
 DeclaraParam     =  "par" Identificador {, Identificador} Tipo .

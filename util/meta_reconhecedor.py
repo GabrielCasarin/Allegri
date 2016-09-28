@@ -4,19 +4,17 @@
 import itertools
 from comum import Simulador, AutomatoPilhaEstruturado
 from comum.automatos import AbstractAutomato
+__all__ = ['MetaReconhecedor']
 
 
 def gera_nome(nb_estado):
     return 'q' + str(nb_estado)
 
 class MetaReconhecedor(Simulador):
-    def __init__(self, log=True):
+    def __init__(self, classificador_lexico, log=True):
         super(MetaReconhecedor, self).__init__()
         self.__log = log
-
-        # conjunto de submáquinas geradas pelo meta-reconhecedor
-        self.submaquinas = {}
-        self.submaquina_atual = None
+        self.__classificador_lexico = classificador_lexico
 
         # Automato de Pilha que direciona o meta-reconhecimento
         self.ap = AutomatoPilhaEstruturado(nome='wirth', sub_maquinas=['grammar', 'exp'])
@@ -73,6 +71,18 @@ class MetaReconhecedor(Simulador):
         self.ap['exp'].add_saida(de='q1', com='|', saida='|')
 
         self.ap.gerar_alfabeto()
+
+    def __call__(self, arquivo_fonte):
+        # conjunto de submáquinas geradas pelo meta-reconhecedor
+        self.submaquinas = {}
+        self.submaquina_atual = None
+
+        # chama o analisador léxico
+        self.__classificador_lexico(arquivo_fonte)
+        self.add_evento(('<PartidaInicial>', ))
+        for token in self.__classificador_lexico.tokens:
+            self.add_evento(('<ChegadaSimbolo>', token))
+        self.run()
 
     # ROTINAS DE EXECUÇÃO DO AUTÔMATO DE PILHA
     def trata_evento(self, evento):

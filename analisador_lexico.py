@@ -5,7 +5,7 @@ import os
 import math
 import string
 from comum import Simulador
-from definicoes import ROOT_DIR
+from configuracoes import ROOT_DIR
 
 
 class decompoe_texto_fonte(Simulador):
@@ -46,7 +46,6 @@ class decompoe_texto_fonte(Simulador):
         if self.log_imprimir_linhas:
             print("<FimArquivo>        chegou ao fim do arquivo fonte '{}'".format(self.arquivo_fonte.name))
         self.arquivo_fonte.close()
-        # self.caracteres_classificados.append(-1)
 
     def add_categoria(self, categoria, conjunto):
         if categoria not in self.categorias:
@@ -94,13 +93,31 @@ class decompoe_texto_fonte(Simulador):
                     arq_out.write("{0[0]} {0[1]}\n".format(el))
 
 
-class analisador_lexico(Simulador):
-    def __init__(self, automato, decompositor, arquivo_fonte, log_analise_lexica=False):
-        super(analisador_lexico, self).__init__()
+class classificador_lexico(Simulador):
+    def __init__(self, automato, decompositor, log=False):
+        super(classificador_lexico, self).__init__()
         self.__automato = automato
         self.__decompositor = decompositor
-        self.__log = log_analise_lexica
-        self.arquivo_fonte = arquivo_fonte
+        self.__log = log
+        self.__classificacoes = {}
+
+    def __call__(self, arquivo_fonte):
+        self.__decompositor(arquivo_fonte)
+        self.add_evento(('<PartidaInicial>', ))
+        self.run()
+
+    def add_classificacao(self, estado_final, classificacao):
+        self.__classificacoes[estado_final] = classificacao
+
+    def categorizar(self):
+        # por default, o tipo do token é igual a ele mesmo
+        token_tipo = self.token_atual
+        for estado_final, classificacao in self.__classificacoes.items():
+            # até que se prove o contrário
+            if self.__automato._estadoAtual == estado_final:
+                token_tipo = classificacao
+        self.tokens.append((self.token_atual, token_tipo))
+
 
     def trata_evento(self, evento):
         if evento[0] == '<PartidaInicial>':
@@ -118,10 +135,10 @@ class analisador_lexico(Simulador):
         # poe o automato no estado inicial
         self.__automato.inicializar()
         # põe os dados na "fita"
-        self.__decompositor(self.arquivo_fonte)
         self.__caracteres = iter(self.__decompositor.caracteres_classificados)
         self.token_atual = ''
         self.token_tipo = None
+        self.token_valor = 0 # Para numerais
         self.tokens = []
         self.add_evento(('<CursorParaDireita>', ))
         if self.__log:
@@ -129,20 +146,12 @@ class analisador_lexico(Simulador):
 
     def ReiniciarAutomato(self):
         if self.__automato._estadoAtual.isFinal():
-            if self.__automato._estadoAtual == 'q2':
-                self.token_tipo = self.token_atual
-            elif self.__automato._estadoAtual == 'TERM':
-                self.token_atual = self.token_atual[1:-1]
-                self.token_tipo = 'TERM'
-            elif self.__automato._estadoAtual == 'NT':
-                self.token_tipo = 'NT'
-            self.tokens.append((self.token_atual, self.token_tipo))
-
+            self.categorizar()
+        # Põe o autômato no estado inicial
         self.__automato.inicializar()
-
         if self.__log:
             print('<ReiniciarAutomato>')
-            print('token reconhecido:', self.token_atual)
+            print('token reconhecido: {}, categoria {}'.format(self.tokens[-1][0], self.tokens[-1][1]))
             print()
         self.token_atual = ''
 
@@ -193,7 +202,7 @@ class analisador_lexico(Simulador):
             print()
 
     def aspas(self):
-        self.token_atual = self.token_atual[:-1]
+        self.token_atual += '"'
 
     def limpa(self):
-        self.token_atual = ''
+        self.token_atual = self.token_atual[:-1]
