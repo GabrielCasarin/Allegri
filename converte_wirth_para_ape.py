@@ -25,7 +25,6 @@ for el in string.punctuation:
 
 # cria o automato que reconhece os diversos tokens da linguagem
 automato_transdutor_tokenizador_de_wirth = transdutor_finito(os.path.join(ROOT_DIR, 'Wirth', 'tokenizer_wirth.maquina'))
-print(automato_transdutor_tokenizador_de_wirth.saidas)
 
 # analisador léxico
 tokenizer = classificador_lexico(automato_transdutor_tokenizador_de_wirth, decompositor, log_analise_lexica)
@@ -37,21 +36,29 @@ mr = MetaReconhecedor(tokenizer, log=log_analise_sintatica)
 
 mr('id.txt')
 
-print(mr.chamadas_entre_submaquinas)
 
+submaquinas_geradas = {}
 for nome_da_submaq, submaquina in mr.submaquinas.items():
-    print('Submaquina atual:', nome_da_submaq)
+    # print('Submaquina atual:', nome_da_submaq)
+    submaquina.gerar_alfabeto()
     # print('ANTES')
     # for estado in submaquina.estados.values():
-    #     print('{}'.format('*' if estado.isFinal() else ''), estado.nome, '=', estado._transicoes)
+    #     print('{}'.format('*' if estado.final else ''), estado.nome, '=', estado.transicoes)
+
     eliminar_transicoes_em_vazio(submaquina)
-    submaquina.gerar_alfabeto()
-    eliminar_indeterminismos(submaquina)
-    eliminar_estados_inacessiveis(submaquina)
-    # print('\nDEPOIS')
+    # print('\nDEPOIS de eliminar transições em vazio')
     # for estado in submaquina.estados.values():
-    #     print('{}'.format('*' if estado.isFinal() else ''), estado.nome, '=', estado._transicoes)
-    submaquina.gerar_alfabeto()
+    #     print('{}'.format('*' if estado.final else ''), estado.nome, '=', estado.transicoes)
+
+    eliminar_indeterminismos(submaquina)
+    # print('\nDEPOIS de eliminar indeterminismos')
+    # for estado in submaquina.estados.values():
+    #     print('{}'.format('*' if estado.final else ''), estado.nome, '=', estado.transicoes)
+
+    eliminar_estados_inacessiveis(submaquina)
+    # print('\nDEPOIS de eliminar estados inacessiveis')
+    # for estado in submaquina.estados.values():
+    #     print('{}'.format('*' if estado.final else ''), estado.nome, '=', estado.transicoes)
 
     particao = minimizador_de_Hopcroft(submaquina)
     # print()
@@ -61,8 +68,16 @@ for nome_da_submaq, submaquina in mr.submaquinas.items():
     # print('alfabeto', submaquina.alfabeto)
     # print('classes de equivalencia')
     af = particao_para_automato_finito(nome_da_submaq, submaquina.alfabeto, particao)
+    submaquinas_geradas[nome_da_submaq] = af
 
-    with open(os.path.join(ROOT_DIR, 'saida', arquivo_saida), 'w') as f:
+
+with open(os.path.join(ROOT_DIR, 'saida', arquivo_saida), 'w') as f:
+    if mr.eh_ape:
+        f.write('<S>\n')
+        f.write(' '.join(submaquinas_geradas.keys()) + '\n')
+        f.write('{}\n'.format(list(submaquinas_geradas.keys())[0]))
+
+    for af in submaquinas_geradas.values():
         f.write('<{}>\n'.format(af.nome))
 
         # estados
@@ -75,12 +90,17 @@ for nome_da_submaq, submaquina in mr.submaquinas.items():
         f.write(' '.join(af.finais()) + '\n')
 
         # alfabeto
-        f.write(' '.join(af.alfabeto) + '\n')
+        f.write(' '.join(af.alfabeto_sem_chamada_de_submaquina) + '\n')
 
         # transicoes
         for estado_atual in af.estados.values():
             for s in af.alfabeto:
-                if estado_atual[s] is not None:
+                if s in estado_atual.submaquinas_chamadas:
+                    f.write("{} => ({}, {})\n".format(estado_atual.nome, s, estado_atual[s]))
+                elif estado_atual[s] is not None:
                     f.write("({}, '{}') -> {}\n".format(estado_atual.nome, s, estado_atual[s]))
 
         f.write('</{}>\n'.format(af.nome))
+
+    if mr.eh_ape:
+        f.write('</S>\n')

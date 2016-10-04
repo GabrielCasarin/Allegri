@@ -22,9 +22,9 @@ class MetaReconhecedor(Simulador):
         self.ap['grammar'].add_transicao('q2', '=',  'q3')
         self.ap['grammar'].add_transicao('q4', '.',  'q5')
         self.ap['grammar'].add_transicao('q5', 'NT', 'q2')
-        self.ap['grammar'].add_chamada_para_submaquina(de='q3', para=self.ap['exp'], retorno='q4')
+        self.ap['grammar'].add_chamada_para_submaquina(de='q3', para=self.ap['exp'].nome, retorno='q4')
         self.ap['grammar'].set_inicial('q0')
-        self.ap['grammar']['q5'].setFinal()
+        self.ap['grammar']['q5'].final = True
 
         self.ap['exp'].add_transicao('q0', '(', 'q5')
         self.ap['exp'].add_transicao('q0', '[', 'q8')
@@ -41,11 +41,11 @@ class MetaReconhecedor(Simulador):
         self.ap['exp'].add_transicao('q1', 'TERM', 'q1')
         self.ap['exp'].add_transicao('q1', '|', 'q0')
 
-        self.ap['exp'].add_chamada_para_submaquina(de='q5', para=self.ap['exp'], retorno='q6')
-        self.ap['exp'].add_chamada_para_submaquina(de='q8', para=self.ap['exp'], retorno='q9')
-        self.ap['exp'].add_chamada_para_submaquina(de='q11', para=self.ap['exp'], retorno='q12')
+        self.ap['exp'].add_chamada_para_submaquina(de='q5', para=self.ap['exp'].nome, retorno='q6')
+        self.ap['exp'].add_chamada_para_submaquina(de='q8', para=self.ap['exp'].nome, retorno='q9')
+        self.ap['exp'].add_chamada_para_submaquina(de='q11', para=self.ap['exp'].nome, retorno='q12')
         self.ap['exp'].set_inicial('q0')
-        self.ap['exp']['q1'].setFinal()
+        self.ap['exp']['q1'].final = True
 
         self.ap.set_submaquina_inicial('grammar')
         self.ap.inicializar()
@@ -99,6 +99,7 @@ class MetaReconhecedor(Simulador):
 
     def PartidaInicial(self):
         self.ap.inicializar()
+        self.eh_ape = False
         if self.__log:
             print('<PartidaInicial>')
             print('Sub-maquina atual:', self.ap.mConfiguracao()[0].nome)
@@ -116,7 +117,7 @@ class MetaReconhecedor(Simulador):
             if maquina_atual.tem_transicao_para_submaquina():
                 self.add_evento(('<ChegadaSimbolo>', simbolo), True)
                 self.add_evento(('<ChamadaSubmaquina>', ), True)
-            elif estado_atual.isFinal():
+            elif estado_atual.final:
                 self.add_evento(('<ChegadaSimbolo>', simbolo), True)
                 self.add_evento(('<RetornoSubmaquina>', ), True)
         else:
@@ -192,7 +193,6 @@ class MetaReconhecedor(Simulador):
         self.pilha = []
         # conjunto de transições obtido pela análise do conjunto de regras da gramática
         self.transicoes = []
-        self.chamadas_entre_submaquinas = {}
         self.contador = itertools.count()
         # estado inicial é o 0
         self.estado = next(self.contador)
@@ -220,16 +220,14 @@ class MetaReconhecedor(Simulador):
         if nome_da_submaq not in self.submaquinas:
             self.submaquinas[nome_da_submaq] = AbstractAutomato(deterministico=False)
 
-        if self.submaquina_atual not in self.chamadas_entre_submaquinas:
-            self.chamadas_entre_submaquinas[self.submaquina_atual] = {}
-
         estado_anterior = self.estado
         self.estado = self.valor_atual
         self.valor_atual = next(self.contador)
         self.transicoes.append((estado_anterior, nome_da_submaq, self.estado))
 
         self.submaquinas[self.submaquina_atual].add_transicao(de=gera_nome(estado_anterior), com=nome_da_submaq, para=gera_nome(self.estado))
-        self.chamadas_entre_submaquinas[self.submaquina_atual][gera_nome(estado_anterior)] = (nome_da_submaq, gera_nome(self.estado))
+        self.submaquinas[self.submaquina_atual][gera_nome(estado_anterior)].submaquinas_chamadas.add(nome_da_submaq)
+        self.eh_ape = True
 
     def lparen(self):
         self.pilha.append((self.estado, self.valor_atual))

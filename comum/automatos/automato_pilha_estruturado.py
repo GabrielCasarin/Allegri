@@ -7,26 +7,23 @@ from . import TransdutorFinito
 class Submaquina(TransdutorFinito):
     def __init__(self, nome, **kwargs):
         super(Submaquina, self).__init__(nome, **kwargs)
-        self.transicoes_para_submaquinas = {}
 
     def tem_transicao_para_submaquina(self):
-        if self._estadoAtual.nome in self.transicoes_para_submaquinas:
-            return True
-        return False
+        return bool(self._estadoAtual.submaquinas_chamadas)
 
     def add_chamada_para_submaquina(self, de, para, retorno):
         self.add_estado(de)
         self.add_estado(retorno)
-        self.transicoes_para_submaquinas[de] = (para, self.estados[retorno])
+        self[de].add_chamada_para_submaquina(para, self[retorno])
 
     def get_parametros_de_chamada(self):
-        if self._estadoAtual.nome in self.transicoes_para_submaquinas:
-            prox_maq, _ = self.transicoes_para_submaquinas[self._estadoAtual.nome]
-            if (self._estadoAtual.nome, prox_maq.nome) in self.saidas:
-                self.saida_gerada = self.saidas[(self._estadoAtual.nome, prox_maq.nome)]
+        if self.tem_transicao_para_submaquina():
+            prox_maq = list(self._estadoAtual.submaquinas_chamadas)[0]
+            if (self._estadoAtual.nome, prox_maq) in self.saidas:
+                self.saida_gerada = self.saidas[(self._estadoAtual.nome, prox_maq)]
             else:
                 self.saida_gerada = None
-            return self.transicoes_para_submaquinas[self._estadoAtual.nome]
+            return prox_maq, self._estadoAtual[prox_maq]
         else:
             return (None, None)
 
@@ -88,7 +85,7 @@ class AutomatoPilhaEstruturado:
         # Empilha a sub-máquina de retorno e o estado de retorno
         self.__pilha.append((self.__maquinaAtual, estadoRetorno))
         # Troca de sub-máquina e a inicializa
-        self.__maquinaAtual = proxMaquina
+        self.__maquinaAtual = self[proxMaquina]
         self.__maquinaAtual.inicializar()
 
     def retorna(self):

@@ -19,7 +19,7 @@ class Estado:
 
     @property
     def simbolos(self):
-        return set(self.transicoes.keys()).difference(self.submaquinas_chamadas)
+        return set(self.transicoes.keys())
 
     def __delitem__(self, simbolo):
         if simbolo in self.transicoes:
@@ -37,9 +37,6 @@ class Estado:
             return self == estado.nome
         else:
             return self.nome == estado
-
-    def __contains__(self, item):
-        return item in self.transicoes.keys()
 
     def __str__(self):
         return self.nome
@@ -60,10 +57,10 @@ class EstadoNaoDeterministico(Estado):
     def __init__(self, nome, final=False):
         super(EstadoNaoDeterministico, self).__init__(nome, final)
 
-    def merge(self, Sj, omtransicoes_em_vazio=False):
+    def merge(self, Sj, com_transicoes_em_vazio=False):
         for simbolo in Sj.transicoes.keys():
-            if (comtransicoes_em_vazio or
-               (not comtransicoes_em_vazio and simbolo != '')):
+            if (com_transicoes_em_vazio or
+               (not com_transicoes_em_vazio and simbolo != '')):
                     if simbolo in self.transicoes:
                         for estado_destinho in Sj[simbolo]:
                             if estado_destinho not in self.transicoes[simbolo]:
@@ -71,7 +68,8 @@ class EstadoNaoDeterministico(Estado):
                     else:
                         if simbolo in Sj.transicoes:
                             self.transicoes[simbolo] = list(Sj[simbolo])
-        self.final = Sj.final
+        self.final |= Sj.final
+        self.submaquinas_chamadas |= Sj.submaquinas_chamadas
 
     def __setitem__(self, simbolo, prox):
         if simbolo not in self.transicoes:

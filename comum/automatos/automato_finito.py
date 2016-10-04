@@ -13,14 +13,14 @@ class AutomatoFinito(AbstractAutomato):
         # estados
         if 'estados' in kwargs and kwargs['estados'] is not None:
             self.estados = {
-                nome_estado: Estado(nome_estado) for nome_estado in kwargs['estados']
+                nome_estado: Estado.factory(nome_estado) for nome_estado in kwargs['estados']
             }
             if 'estadoInicial' in kwargs and kwargs['estadoInicial'] is not None:
                 self._estadoInicial = self.estados[kwargs['estadoInicial']]
             if 'estadosFinais' in kwargs and kwargs['estadosFinais'] is not None:
                 for nomeEstado in kwargs['estadosFinais']:
                     estado = self.estados[nomeEstado]
-                    estado.setFinal()
+                    estado.final = True
         # alfabeto
         if 'alfabeto' in kwargs and kwargs['alfabeto'] is not None:
             self.alfabeto = set(kwargs['alfabeto'])
@@ -45,7 +45,7 @@ class AutomatoFinito(AbstractAutomato):
 
     def fazer_transicao(self):
         if self._simboloAtual in self.alfabeto:
-            if self._simboloAtual in self._estadoAtual:  # verifica se há transição associada ao simboloAtual in estadoAtual
+            if self._simboloAtual in self._estadoAtual.simbolos:  # verifica se há transição associada ao simboloAtual in estadoAtual
                 proxEst = self._estadoAtual[self._simboloAtual]
                 if proxEst is not None:
                     self._estadoAtual = proxEst
@@ -61,7 +61,7 @@ class AutomatoFinito(AbstractAutomato):
     def finais(self):
         f = []
         for estado in self.estados.values():
-            if estado.isFinal():
+            if estado.final:
                 f.append(estado.nome)
         return f
 

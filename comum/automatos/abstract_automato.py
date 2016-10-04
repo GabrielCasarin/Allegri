@@ -13,7 +13,7 @@ class AbstractAutomato:
 
     def add_estado(self, nome_estado, final=False):
         if nome_estado not in self.estados:
-            self.estados[nome_estado] = Estado(nome_estado, final, self.deterministico)
+            self.estados[nome_estado] = Estado.factory(nome_estado, final, self.deterministico)
 
     def add_transicao(self, de, com, para):
         self.add_estado(de)
@@ -23,17 +23,28 @@ class AbstractAutomato:
             self.gerar_alfabeto()
 
     def gerar_alfabeto(self):
-        for q in self.estados.values():
-            for s in q._transicoes.keys():
+        for q in self:
+            for s in q.simbolos:
                 if s != '':
                     self.alfabeto.add(s)
-        for q in self.estados.values():
+        for q in self:
             for s in self.alfabeto:
-                if self.deterministico and s not in q:
+                if self.deterministico and s not in q.simbolos:
                     q[s] = None
+
+    @property
+    def alfabeto_sem_chamada_de_submaquina(self):
+        chamadas = set()
+        for q in self:
+            chamadas |= q.submaquinas_chamadas
+        return self.alfabeto.difference(chamadas)
 
     def __getitem__(self, nome_estado):
         if nome_estado in self.estados:
             return self.estados[nome_estado]
         else:
             return None
+
+    def __iter__(self):
+        for el in self.estados.values():
+            yield el

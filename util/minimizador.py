@@ -2,6 +2,7 @@
 
 
 from comum import Estado, AutomatoFinito
+from comum.automatos.estado import EstadoNaoDeterministico
 
 
 def eliminar_transicoes_em_vazio(automato):
@@ -10,7 +11,7 @@ def eliminar_transicoes_em_vazio(automato):
         pilha = list(fecho)
         while pilha:
             el = pilha.pop()
-            if '' in el:
+            if '' in el.simbolos:
                 for el2 in el['']:
                     if el2 not in fecho:
                         fecho.append(el2)
@@ -20,14 +21,14 @@ def eliminar_transicoes_em_vazio(automato):
     def delta1(qi, simbolo, fecho):
         D1 = []
         for qj in fecho:
-            if simbolo in qj:
+            if simbolo in qj.simbolos:
                 for qk in qj[simbolo]:
                     for el in epsilon_closure(qk):
                         if el not in D1:
                             D1.append(el)
         return D1
 
-    for Si in automato.estados.values():
+    for Si in automato:
         fecho = epsilon_closure(Si)
         for simbolo in automato.alfabeto:
             if simbolo != '':
@@ -35,18 +36,18 @@ def eliminar_transicoes_em_vazio(automato):
                 for el in D1:
                     Si[simbolo] = el
         for Sj in fecho:
-            if not Si.isFinal() and Sj.isFinal():
-                Si.setFinal()
+            if not Si.final and Sj.final:
+                Si.final = True
 
-    for Si in automato.estados.values():
-        Si.removeSimbolo('')
+    for Si in automato:
+        del Si['']
 
 
 def eliminar_indeterminismos(automato):
-    class EstadoContainer(Estado):
+    class EstadoContainer(EstadoNaoDeterministico):
         def __init__(self, conjunto_estados):
             # inicializa-se o objeto como um estado sem nome e não-final
-            super(EstadoContainer, self).__init__(nome='', deterministico=False)
+            super(EstadoContainer, self).__init__(nome='')
             # a idéia aqui é encontrar os estados-raiz de cada elemento de conjunto_estados
             self.conjunto_estados = []
             for el in conjunto_estados:
@@ -86,33 +87,39 @@ def eliminar_indeterminismos(automato):
         """
         novo_estado = EstadoContainer(conjunto_estados)
         automato.estados[novo_estado.nome] = novo_estado
-        for simbolo in novo_estado._transicoes.keys():
+        for simbolo in novo_estado.transicoes.keys():
             if len(novo_estado[simbolo]) > 1:
                 lista_indeterminismos.append((novo_estado, simbolo))
-        for estado in automato.estados.values():
-            for simbolo in estado._transicoes.keys():
+        for estado in automato:
+            for simbolo in estado.transicoes.keys():
                 if novo_estado.compara_conjunto(estado[simbolo]):
                     lista_indeterminismos.remove((estado, simbolo))
-                    estado.removeSimbolo(simbolo)
+                    del estado[simbolo]
                     estado[simbolo] = novo_estado
 
     def converter_para_deterministico(automato):
-        for q in automato.estados.values():
-            for s in q._transicoes.keys():
-                temp_lista = q._transicoes[s]
-                q._transicoes[s] = temp_lista[0]
-            q.eh_deterministico = True
+        old_estados = automato.estados.values()
         automato.deterministico = True
+        automato.estados = {}
+        for q in old_estados:
+            automato.add_estado(q.nome)
+            automato[q.nome].final = q.final
+            automato[q.nome].submaquinas_chamadas = q.submaquinas_chamadas
+            for s in q.transicoes.keys():
+                automato.add_estado(q[s][0].nome)
+                automato[q.nome][s] = automato[q[s][0].nome]
 
     # cria uma lista inicial de indeterminismos
     lista_indeterminismos = []
-    for estado in automato.estados.values():
-        for simbolo in estado._transicoes.keys():
+    for estado in automato:
+        for simbolo in estado.transicoes.keys():
             if len(estado[simbolo]) > 1:
                 lista_indeterminismos.append((estado, simbolo))
+    # itera por todos os indeterminismos
     while lista_indeterminismos:
         estado, simbolo = lista_indeterminismos[0]
         cria_novo_estado(estado[simbolo])
+    # finalmente
     converter_para_deterministico(automato)
 
 
@@ -123,8 +130,8 @@ def eliminar_estados_inacessiveis(automato, inicial='q0'):
     while pilha:
         estadoAtual = pilha.pop()
         visitados.append(estadoAtual)
-        for simbolo in estadoAtual._transicoes.keys():
-            if estadoAtual.eh_deterministico:
+        for simbolo in estadoAtual.transicoes.keys():
+            if automato.deterministico:
                 proxEstado = estadoAtual[simbolo]
                 if (proxEstado not in visitados
                     and proxEstado not in pilha):
@@ -145,14 +152,14 @@ def minimizador_de_Hopcroft(automato):
        o algoritmo de minimização de Hopcroft.'''
     def delta_R(P, a):
         conj = []
-        for q in automato.estados.values():
-            if a in q and q[a] in P:
+        for q in automato:
+            if a in q.simbolos and q[a] in P:
                 conj.append(q)
         return conj
 
     Grupos = [[],[]]
-    for q in automato.estados.values():
-        if q.isFinal():
+    for q in automato:
+        if q.final:
          Grupos[1].append(q)
         else:
          Grupos[0].append(q)
@@ -211,7 +218,7 @@ def particao_para_automato_finito(nome, alfabeto, particao, inicial='q0'):
         estado_atual = pilha.pop()
         j = acha(estado_atual.nome)
         qi = nomes_classes[j]
-        for s, qj in estado_atual._transicoes.items():
+        for s, qj in estado_atual.transicoes.items():
             if qj is not None:
                 # acha o indice do conjunto, dentro da partição, a que pertence qj
                 i = acha(qj.nome)
@@ -223,8 +230,7 @@ def particao_para_automato_finito(nome, alfabeto, particao, inicial='q0'):
                     af.add_estado(nova_classe)
                 # print("({}, '{}') -> {}".format(nomes_classes[acha(estado_atual.nome)], s, nomes_classes[acha(qj.nome)]))
                 af.add_transicao(de=qi, com=s, para=nomes_classes[i])
-        if estado_atual.isFinal():
-            # finais.append(qi)
-            af[qi].setFinal()
+        af[qi].final = estado_atual.final
+        af[qi].submaquinas_chamadas = estado_atual.submaquinas_chamadas
     # print("F =", finais)
     return af
