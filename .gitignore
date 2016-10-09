@@ -93,9 +93,11 @@ ENV/
 
 # Imagens
 *.png
- saida/
+saida/
 
 *.jar
 *.asm
 *.mvn
 
+# Pasta src de códigos-fonte testes
+src/
