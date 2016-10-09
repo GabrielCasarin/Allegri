@@ -56,6 +56,7 @@ class decompoe_texto_fonte(Simulador):
     def ChegadaCaractere(self):
         num_linha, linha = self.linhas_indexadas[-1]
         char = linha[self.cursor]
+        classificacao = char
         for categoria, conjunto in self.categorias.items():
             if char in conjunto:
                 classificacao = categoria
@@ -96,9 +97,9 @@ class decompoe_texto_fonte(Simulador):
 class classificador_lexico(Simulador):
     def __init__(self, automato, decompositor, log=False):
         super(classificador_lexico, self).__init__()
-        self.__automato = automato
+        self._automato = automato
         self.__decompositor = decompositor
-        self.__log = log
+        self._log = log
         self.__classificacoes = {}
 
     def __call__(self, arquivo_fonte):
@@ -114,7 +115,7 @@ class classificador_lexico(Simulador):
         token_tipo = self.token_atual
         for estado_final, classificacao in self.__classificacoes.items():
             # até que se prove o contrário
-            if self.__automato._estadoAtual == estado_final:
+            if self._automato._estadoAtual == estado_final:
                 token_tipo = classificacao
         self.tokens.append((self.token_atual, token_tipo))
 
@@ -129,37 +130,37 @@ class classificador_lexico(Simulador):
         elif evento[0] == '<CursorParaDireita>':
             self.CursorParaDireita()
         elif evento[0] == '<ExecutarTransducao>':
-            self.ExecutarTransducao(evento[1])
+            self.ExecutarTransducao()
 
     def PartidaInicial(self):
         # poe o automato no estado inicial
-        self.__automato.inicializar()
+        self._automato.inicializar()
         # põe os dados na "fita"
         self.__caracteres = iter(self.__decompositor.caracteres_classificados)
         self.token_atual = ''
-        self.token_tipo = None
-        self.token_valor = 0 # Para numerais
+        self.valor_token = 0 # Para numerais
         self.tokens = []
         self.add_evento(('<CursorParaDireita>', ))
-        if self.__log:
+        if self._log:
             print('<PartidaInicial>\n')
 
     def ReiniciarAutomato(self):
-        if self.__automato._estadoAtual.isFinal():
+        if self._automato._estadoAtual.final:
             self.categorizar()
         # Põe o autômato no estado inicial
-        self.__automato.inicializar()
-        if self.__log:
+        self._automato.inicializar()
+        if self._log:
             print('<ReiniciarAutomato>')
             print('token reconhecido: {}, categoria {}'.format(self.tokens[-1][0], self.tokens[-1][1]))
             print()
         self.token_atual = ''
+        self.valor_token = 0
 
     def CursorParaDireita(self):
         try:
             c = next(self.__caracteres)
             self.add_evento(('<ChegadaSimbolo>', c))
-            if self.__log:
+            if self._log:
                 print('<CursorParaDireita>')
                 print('chegou caractere', c)
                 print()
@@ -168,35 +169,35 @@ class classificador_lexico(Simulador):
 
     def ChegadaSimbolo(self, c):
         try:
-            self.__automato.atualizar_simbolo(c[1])
-            transitou = self.__automato.fazer_transicao()
+            self._automato.atualizar_simbolo(c[1])
+            transitou = self._automato.fazer_transicao()
         except Exception as e:
             print(e)
             transitou = False
 
         if transitou:
             self.token_atual += c[0]
-            if self.__automato.saida_gerada is not None:
-                self.add_evento(('<ExecutarTransducao>', c))
+            if self._automato.saida_gerada is not None:
+                self.add_evento(('<ExecutarTransducao>', ))
             self.add_evento(('<CursorParaDireita>', ))
         else:
             self.add_evento(('<ReiniciarAutomato>', ))
             self.add_evento(('<ChegadaSimbolo>', c))
 
-        if self.__log:
+        if self._log:
             print('<ChegadaSimbolo>')
-            print('estado atual: {t[0]}\nsimbolo atual: {t[1]}'.format(t=self.__automato.mConfiguracao()))
-            print('saida gerada =', self.__automato.saida_gerada)
+            print('estado atual: {t[0]}\nsimbolo atual: {t[1]}'.format(t=self._automato.mConfiguracao()))
+            print('saida gerada =', self._automato.saida_gerada)
             print()
 
-    def ExecutarTransducao(self, c):
-        rotina = self.__automato.saida_gerada
+    def ExecutarTransducao(self):
+        rotina = self._automato.saida_gerada
         if rotina == 'aspas':
             self.aspas()
         elif rotina == 'limpa':
             self.limpa()
 
-        if self.__log:
+        if self._log:
             print('<ExecutarTransducao>')
             print('rotina executada:', rotina)
             print()
@@ -206,3 +207,48 @@ class classificador_lexico(Simulador):
 
     def limpa(self):
         self.token_atual = self.token_atual[:-1]
+
+
+class analisador_lexico(classificador_lexico):
+    def __init__(self, automato, decompositor, tabela_simbolos, log=False, palavras_reservadas=()):
+        super(analisador_lexico, self).__init__(automato, decompositor, log)
+        self.__tabela_simbolos = tabela_simbolos
+        self.__palavras_reservadas = palavras_reservadas
+
+    def categorizar(self):
+        super(analisador_lexico, self).categorizar()
+        self.pos_categorizar()
+
+    def pos_categorizar(self):
+        token_atual, token_tipo = self.tokens[-1]
+
+        if (token_tipo == "NumeroDecimal"
+           or token_tipo == "NumeroHexadecimal"):
+                self.tokens[-1] = (self.valor_token, "Numero")
+        elif token_tipo == "Identificador":
+            if token_atual in self.__palavras_reservadas:
+                self.tokens[-1] = (token_atual, token_atual)
+
+    def ExecutarTransducao(self):
+        rotina = self._automato.saida_gerada
+        if rotina == 'aspas':
+            self.aspas()
+        elif rotina == 'limpa':
+            self.limpa()
+        elif rotina == 'numeroDecimal':
+            self.numeroDecimal()
+        elif rotina == 'numeroHexadecimal':
+            self.numeroHexadecimal()
+
+        if self._log:
+            print('<ExecutarTransducao>')
+            print('rotina executada:', rotina)
+            print()
+
+    def numeroDecimal(self):
+        self.valor_token *= 10
+        self.valor_token += int(self.token_atual[-1])
+
+    def numeroHexadecimal(self):
+        self.valor_token *= 16
+        self.valor_token += int(self.token_atual[-1], 16)

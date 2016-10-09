@@ -1,12 +1,19 @@
 <tokenizer>
-    q32 q30 q13 q7 q22 q36 q11 q17 q24 q6 q27 q37 q3 q34 q1 q38 q29 q26 q19 q4 q9 q15 q20
+    q32 q30 q13 q7 q22 q36 q11 q17 q24 q6 q27 q37 q3 q34 q1 q38 q29 q26 q19 q4 q9 q15 q20 q39 q40 q41 q42 q43
 
     q37
 
-    q32 q30 q13 q7 q22 q36 q11 q17 q24 q27 q34 q1 q38 q29 q4 q9 q15 q20
+    q32 q30 q13 q7 q22 q36 q11 q17 q24 q27 q34 q1 q38 q29 q4 q9 q15 q20 q39 q40 q41 q42 q43
 
-    ( DecAlg HexAlg ) ! , Menor > Igual Maior Zero < ] [ Letra = { : }
+    ( DecAlg HexAlg ) ! , > Zero < ] [ Letra = { : } espaco enter + - * /
 
+    (q37, 'espaco') -> q37\limpa
+    (q37, 'enter') -> q39
+
+    (q37, '+') -> q40
+    (q37, '-') -> q41
+    (q37, '*') -> q42
+    (q37, '/') -> q43
 
     (q37, '>') -> q36
     (q36, '=') -> q7
@@ -23,11 +30,11 @@
     (q37, '(') -> q13
     (q37, ')') -> q32
 
-    (q37, 'Zero') -> q30
+    (q37, 'Zero') -> q30\numeroDecimal
     
-    (q37, 'DecAlg') -> q29
-    (q29, 'DecAlg') -> q29
-    (q29, 'Zero') -> q29
+    (q37, 'DecAlg') -> q29\numeroDecimal
+    (q29, 'DecAlg') -> q29\numeroDecimal
+    (q29, 'Zero') -> q29\numeroDecimal
     
     (q37, ']') -> q9
     (q37, '[') -> q38
