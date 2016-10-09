@@ -193,7 +193,7 @@ def minimizador_de_Hopcroft(automato):
     return Grupos
 
 
-def particao_para_automato_finito(nome, alfabeto, particao, inicial='q0'):
+def particao_para_automato_finito(particao, nome=None, alfabeto=None, inicial=0, apendice=None):
     def acha(nome_estado):
         for i in range(len(particao)):
             for estado in particao[i]:
@@ -201,19 +201,27 @@ def particao_para_automato_finito(nome, alfabeto, particao, inicial='q0'):
                     return i
         return None
 
-    af = AutomatoFinito(nome=nome, estados=[inicial], estadoInicial=inicial, alfabeto=alfabeto)
+    def gera_nome(n):
+        return 'q' + str(n)
+
+    if apendice is None:
+        af = AutomatoFinito(nome=nome, estados=[gera_nome(inicial)], estadoInicial=gera_nome(inicial), alfabeto=alfabeto)
+    else:
+        af = apendice
 
     pilha = []
-    # finais = []
 
-    i = acha(inicial)
+    finais = []
+    transicoes_chamada = []
+
+    i = acha('q0')
     nomes_classes = {
-        i: inicial
+        i: gera_nome(inicial)
     }
 
     pilha.append(particao[i][0])
 
-    cont = 0
+    cont = inicial
     while pilha:
         estado_atual = pilha.pop()
         j = acha(estado_atual.nome)
@@ -224,13 +232,17 @@ def particao_para_automato_finito(nome, alfabeto, particao, inicial='q0'):
                 i = acha(qj.nome)
                 if not i in nomes_classes:
                     cont += 1
-                    nova_classe = 'q' + str(cont)
+                    nova_classe = gera_nome(cont)
                     nomes_classes[i] = nova_classe
                     pilha.append(particao[i][0])
                     af.add_estado(nova_classe)
-                # print("({}, '{}') -> {}".format(nomes_classes[acha(estado_atual.nome)], s, nomes_classes[acha(qj.nome)]))
                 af.add_transicao(de=qi, com=s, para=nomes_classes[i])
+                if s in estado_atual.submaquinas_chamadas:
+                    transicoes_chamada.append((qi, s, nomes_classes[i]))
         af[qi].final = estado_atual.final
+        if af[qi].final: finais.append(qi)
         af[qi].submaquinas_chamadas = estado_atual.submaquinas_chamadas
-    # print("F =", finais)
-    return af
+    if apendice is None:
+        return af
+    else:
+        return cont, transicoes_chamada, finais

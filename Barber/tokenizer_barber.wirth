@@ -1,0 +1,17 @@
+Identificador = ("Letra" | "HexAlg") { "Letra" | "HexAlg" | "Zero" | "DecAlg" }.
+Numero = "DecAlg" {"Zero" | "DecAlg" } | "Zero" .
+Igual = "=" .
+Igualdade = Igual "=" .
+Diferente = "!" "=" .
+Maior = ">" .
+MaiorIgual = Maior "=" .
+Menor = "<" .
+MenorIgual = Menor "=" .
+DoisPontos = ":" .
+LColch = "[" .
+LChave = "{" .
+LParen = "(" .
+RColch = "]" .
+RChave = "}" .
+RParen = ")" .
+Virgula = "," .

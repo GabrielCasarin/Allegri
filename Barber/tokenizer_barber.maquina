@@ -1,0 +1,49 @@
+<tokenizer>
+    q32 q30 q13 q7 q22 q36 q11 q17 q24 q6 q27 q37 q3 q34 q1 q38 q29 q26 q19 q4 q9 q15 q20
+
+    q37
+
+    q32 q30 q13 q7 q22 q36 q11 q17 q24 q27 q34 q1 q38 q29 q4 q9 q15 q20
+
+    ( DecAlg HexAlg ) ! , Menor > Igual Maior Zero < ] [ Letra = { : }
+
+
+    (q37, '>') -> q36
+    (q36, '=') -> q7
+
+    (q37, '<') -> q22
+    (q22, '=') -> q20
+    
+    (q37, '=') -> q34
+    (q34, '=') -> q4
+    
+    (q37, '!') -> q26
+    (q26, '=') -> q27
+    
+    (q37, '(') -> q13
+    (q37, ')') -> q32
+
+    (q37, 'Zero') -> q30
+    
+    (q37, 'DecAlg') -> q29
+    (q29, 'DecAlg') -> q29
+    (q29, 'Zero') -> q29
+    
+    (q37, ']') -> q9
+    (q37, '[') -> q38
+    
+    
+    (q37, ',') -> q11
+    
+    (q37, '{') -> q17
+    (q37, '}') -> q1
+    
+    (q37, ':') -> q24
+    
+    (q37, 'Letra') -> q15
+    (q37, 'HexAlg') -> q15
+    (q15, 'HexAlg') -> q15
+    (q15, 'DecAlg') -> q15
+    (q15, 'Letra') -> q15
+    (q15, 'Zero') -> q15
+</tokenizer>
