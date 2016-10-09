@@ -94,3 +94,8 @@ ENV/
 # Imagens
 *.png
  saida/
+
+*.jar
+*.asm
+*.mvn
+
