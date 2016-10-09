@@ -12,7 +12,6 @@ from util.meta_reconhecedor import MetaReconhecedor
 from util.minimizador import *
 
 
-
 # leitor e classificador de caracteres do arquivo fonte
 decompositor = decompoe_texto_fonte(log_decompoe_texto_fonte, log_imprimir_linhas, log_imprimir_caracteres)
 # define as categorias possíveis em que os caracteres poderão ser classificados

@@ -1,7 +1,6 @@
 # Copyright (c) 2016 Gabriel Casarin da Silva, All Rights Reserved.
 
 
-
 class Simbolo:
 	def __init__(self, nome, tipo):
 		super(Simbolo, self).__init__()
@@ -20,12 +19,12 @@ class Simbolo:
 # 		self.valor
 
 class TabelaSimbolos:
+
 	class Escopo:
 		def __init__(self, pai):
 			super(TabelaSimbolos.Escopo, self).__init__()
 			self.pai = pai
 			self.simbolos = []
-
 
 	def __init__(self):
 			super(TabelaSimbolos, self).__init__()
