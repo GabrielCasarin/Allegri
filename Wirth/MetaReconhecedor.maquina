@@ -1,6 +1,6 @@
 <MetaReconhecedor>
-grammar exp
-grammar
+	grammar exp
+	grammar
 
 	<grammar>
 		q0 q2 q3 q4 q5
