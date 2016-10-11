@@ -4,11 +4,11 @@
 import os
 import math
 import string
-from comum import Simulador
+from comum import AbstractSimulador
 from configuracoes import ROOT_DIR
 
 
-class decompoe_texto_fonte(Simulador):
+class decompoe_texto_fonte(AbstractSimulador):
     def __init__(self, log_decompoe_texto_fonte=False,
                  log_imprimir_linhas=False, log_imprimir_caracteres=False,
                  imprimir_listagem=False):
@@ -94,7 +94,7 @@ class decompoe_texto_fonte(Simulador):
                     arq_out.write("{0[0]} {0[1]}\n".format(el))
 
 
-class classificador_lexico(Simulador):
+class classificador_lexico(AbstractSimulador):
     def __init__(self, automato, decompositor, log=False):
         super(classificador_lexico, self).__init__()
         self._automato = automato

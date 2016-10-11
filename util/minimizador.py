@@ -1,8 +1,8 @@
 # Copyright (c) 2016 Gabriel Casarin da Silva, All Rights Reserved.
 
 
-from comum import Estado, AutomatoFinito
-from comum.automatos.estado import EstadoNaoDeterministico
+from comum.automatos import AutomatoFinito
+from comum.automatos.estado import Estado, EstadoNaoDeterministico
 
 
 def eliminar_transicoes_em_vazio(automato):

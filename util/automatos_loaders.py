@@ -2,7 +2,7 @@
 
 
 import re
-from comum import AutomatoPilhaEstruturado, TransdutorFinito
+from comum.automatos import AutomatoPilhaEstruturado, TransdutorFinito
 
 
 def parse_tf(espec):

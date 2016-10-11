@@ -2,8 +2,8 @@
 
 
 import itertools
-from comum import Simulador, AutomatoPilhaEstruturado
-from comum.automatos import AbstractAutomato
+from comum import Simulador
+from comum.automatos import AbstractAutomato, AutomatoPilhaEstruturado
 __all__ = ['MetaReconhecedor']
 
 

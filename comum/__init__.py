@@ -1,6 +1,4 @@
-from comum.simulador import Simulador
-from comum.automatos.estado import Estado
-from comum.automatos.automato_finito import AutomatoFinito, TransdutorFinito
-from comum.automatos.automato_pilha_estruturado import AutomatoPilhaEstruturado
+from comum.abstract_simulador import AbstractSimulador
+from comum.simulador_ape import SimuladorAutomatoPilhaEstruturado
 
-__all__ = ['Simulador', 'Estado', 'AutomatoFinito', 'TransdutorFinito', 'AutomatoPilhaEstruturado']
+__all__ = ['AbstractSimulador', 'SimuladorAutomatoPilhaEstruturado']

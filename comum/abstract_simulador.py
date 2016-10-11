@@ -4,9 +4,9 @@
 from . lista_encadeada import ListaEncadeada
 
 
-class Simulador:
+class AbstractSimulador:
     def __init__(self):
-        super(Simulador, self).__init__()
+        super(AbstractSimulador, self).__init__()
         self._listaEventos = ListaEncadeada()
 
     def trata_evento(self, evento):
