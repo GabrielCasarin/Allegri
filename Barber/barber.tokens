@@ -13,4 +13,4 @@ if
 elif
 else
 while
-func
+def
