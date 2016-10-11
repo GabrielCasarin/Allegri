@@ -2,21 +2,34 @@
 
 
 class Simbolo:
-	def __init__(self, nome, tipo):
-		super(Simbolo, self).__init__()
+	def __init__(self, nome, especie, tipo):
 		self.nome = nome
 		self.tipo = tipo
+		self.especie = especie
 		self.posicao = None
 		self.referenciado = False
 		self.utilizado = False
 
-# class IntSimbolo:
-# 	tamanho = 1
-# 	tipo = "INT"
-# 	def __init__(self):
-# 		super(Simbolo, self).__init__()
 
-# 		self.valor
+class TipoBasico:
+	def __init__(self, s, tamanho):
+		super(Tipo, self).__init__()
+		self.s = s
+		self.tamanho = tamanho
+
+
+class TipoArray:
+	def __init__(self, de, comprimento):
+		super(TipoArray, self).__init__()
+		self.de = de
+		self.comprimento = comprimento
+
+
+class TipoStruct:
+	def __init__(self, campos):
+		super(TipoArray, self).__init__()
+		self.campos = campos
+
 
 class TabelaSimbolos:
 

@@ -6,6 +6,7 @@ import string
 from configuracoes import *
 
 from analisador_lexico import decompoe_texto_fonte, analisador_lexico
+from analisador_sintatico import analise_sintatica
 
 from util.automatos_loaders import transdutor_finito
 
@@ -31,6 +32,10 @@ tokenizer.add_classificacao('q15', 'Identificador')
 tokenizer.add_classificacao('q29', 'NumeroDecimal')
 tokenizer.add_classificacao('q30', 'NumeroDecimal')
 
-tokenizer(os.path.join('src', 'main.barber'))
+# instancia um analisador sintático
+automato_sintatico = transdutor_finito(os.path.join(ROOT_DIR, 'dev', 'simples_funcao.maquina'))
+analisador_lexico = analise_sintatica(automato_sintatico, tokenizer, log=log_analise_sintatica)
 
-print(tokenizer.tokens)
+analisador_sintatico(os.path.join('src', 'main.barber'))
+
+# print(tokenizer.tokens)
