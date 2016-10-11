@@ -1,0 +1,12 @@
+K_MM		>
+K_LD		>
+WORD_TAM	>
+
+
+& /0000
+
+K_MM		MM 		/0000
+K_LD		LD 		/0000
+WORD_TAM	K 		/0002
+
+# CONST
