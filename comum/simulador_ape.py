@@ -9,7 +9,7 @@ class SimuladorAutomatoPilhaEstruturado(AbstractSimulador):
     def __init__(self, automato, log=False):
         super(SimuladorAutomatoPilhaEstruturado, self).__init__()
         self.ap = automato
-        self.__log = log
+        self._log = log
 
 
     # ROTINAS DE EXECUÇÃO DO AUTÔMATO DE PILHA
@@ -30,7 +30,7 @@ class SimuladorAutomatoPilhaEstruturado(AbstractSimulador):
 
     def PartidaInicial(self):
         self.ap.inicializar()
-        if self.__log:
+        if self._log:
             print('<PartidaInicial>')
             print('Sub-maquina atual:', self.ap.sub_maquina_atual.nome)
             print()
@@ -40,14 +40,14 @@ class SimuladorAutomatoPilhaEstruturado(AbstractSimulador):
 
     def ChamadaSubmaquina(self):
         self.ap.chama()
-        if self.__log:
+        if self._log:
             print('<ChamadaSubmaquina>')
             print('Sub-maquina atual:', self.ap.sub_maquina_atual.nome)
             print()
 
     def RetornoSubmaquina(self):
         self.ap.retorna()
-        if self.__log:
+        if self._log:
             print('<RetornoSubmaquina>')
             print('Sub-maquina atual:', self.ap.sub_maquina_atual.nome)
             print()
@@ -60,17 +60,18 @@ class SimuladorAutomatoPilhaEstruturado(AbstractSimulador):
             transitou = False
 
         if not transitou:
-            maquina_atual, estado_atual, _ = self.ap.mConfiguracao()
-            if maquina_atual.tem_transicao_para_submaquina():
+            estado_atual, _ = self.ap.mConfiguracao()
+            if self.ap.sub_maquina_atual.tem_transicao_para_submaquina():
                 self.add_evento(('<ChegadaSimbolo>', simbolo), True)
                 self.add_evento(('<ChamadaSubmaquina>', ), True)
             elif estado_atual.final:
                 self.add_evento(('<ChegadaSimbolo>', simbolo), True)
                 self.add_evento(('<RetornoSubmaquina>', ), True)
         else:
+            self.add_evento(('<CursorParaDireita>', ), True)
             self.add_evento(('<ExecutarTransducao>', simbolo[0]), True)
 
-        if self.__log:
+        if self._log:
             print('<ChegadaSimbolo>')
             print('simbolo chegado:', simbolo[0])
             print('estado atual: {t[0]}\nsimbolo atual: {t[1]}'.format(t=self.ap.mConfiguracao()))
@@ -81,7 +82,7 @@ class SimuladorAutomatoPilhaEstruturado(AbstractSimulador):
     def ExecutarTransducao(self, token):
         rotina = self.ap.saida_gerada
 
-        if self.__log:
+        if self._log:
             print('<ExecutarTransducao>')
             print('rotina executada:', rotina)
             print()

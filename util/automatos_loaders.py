@@ -51,16 +51,14 @@ def automato_pilha_estruturado(nome_arquivo):
         texto = f.read()
         texto = re.sub(r'\n+', '\n', texto)
 
-        match_automato = re.compile(r'<(?P<nome>\w+)>\n(.*)</(?P=nome)>', re.DOTALL | re.MULTILINE)
+        match_automato = re.compile(r'[\s\t]*<(?P<nome>\w+)>\n(.*)</(?P=nome)>', re.DOTALL | re.MULTILINE)
 
         mo1 = match_automato.search(texto)
         nome_automato = mo1.group(1)
-        maquinas, maquina_inicial = mo1.group(2).split('\n')[:2]
-        maquinas = maquinas.split()
+        linhas = mo1.group(2).split('\n')[:2]
 
-        print(nome_automato)
-        print(maquinas)
-        print(maquina_inicial)
+        maquinas = re.sub(r'^[\s\t]+', r'', linhas[0]).split()
+        maquina_inicial = re.sub(r'^[\s\t]+', r'', linhas[1])
 
         ape = AutomatoPilhaEstruturado(nome=nome_automato)
 
