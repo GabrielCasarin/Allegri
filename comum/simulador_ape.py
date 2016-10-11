@@ -32,7 +32,7 @@ class SimuladorAutomatoPilhaEstruturado(AbstractSimulador):
         self.ap.inicializar()
         if self.__log:
             print('<PartidaInicial>')
-            print('Sub-maquina atual:', self.ap.mConfiguracao()[0].nome)
+            print('Sub-maquina atual:', self.ap.sub_maquina_atual.nome)
             print()
 
     def CursorParaDireita(self):
@@ -42,14 +42,14 @@ class SimuladorAutomatoPilhaEstruturado(AbstractSimulador):
         self.ap.chama()
         if self.__log:
             print('<ChamadaSubmaquina>')
-            print('Sub-maquina atual:', self.ap.mConfiguracao()[0].nome)
+            print('Sub-maquina atual:', self.ap.sub_maquina_atual.nome)
             print()
 
     def RetornoSubmaquina(self):
         self.ap.retorna()
         if self.__log:
             print('<RetornoSubmaquina>')
-            print('Sub-maquina atual:', self.ap.mConfiguracao()[0].nome)
+            print('Sub-maquina atual:', self.ap.sub_maquina_atual.nome)
             print()
 
     def ChegadaSimbolo(self, simbolo):

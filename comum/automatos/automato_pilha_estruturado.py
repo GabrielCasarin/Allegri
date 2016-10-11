@@ -96,11 +96,19 @@ class AutomatoPilhaEstruturado:
             self.__maquinaAtual.inicializar(estadoRetorno)
 
     def mConfiguracao(self):
-        temp1, temp2 = self.__maquinaAtual.mConfiguracao()
-        return self.__maquinaAtual, temp1, temp2
+        return self.__maquinaAtual.mConfiguracao()
+
+    @property
+    def saida_gerada(self):
+        return self.__maquinaAtual.saida_gerada
+
+    @property
+    def sub_maquina_atual(self):
+        return self.__maquinaAtual
 
     def __getitem__(self, sub_maq):
         if sub_maq in self.__automatos:
             return self.__automatos[sub_maq]
         else:
             return None
+
