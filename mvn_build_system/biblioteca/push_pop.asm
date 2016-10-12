@@ -12,7 +12,7 @@ WORD_TAM <
 
 
 SP			K		/0FFE
-SP_MAX 		K 		/0FFE
+SP_MAX 		K 		/1000
 TEMP		K 		/0000
 
 
@@ -38,11 +38,13 @@ POP 		$ 		/0001
 			+		WORD_TAM
 			MM 		SP
 			; verifica se o topo estourou
-			- 		SP_MAX
+			LD 		SP_MAX
+			-		SP
 			; testa se eh zero o resultado
 POP_IF		JZ		POP_THEN
 POP_ELSE	JP		POP_END_IF
 POP_THEN	LD 		SP_MAX
+			-		WORD_TAM
 			MM 		SP
 			; le o topo da pilha
 POP_END_IF	LD		K_LD

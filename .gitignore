@@ -96,8 +96,11 @@ ENV/
 saida/
 
 *.jar
-*.asm
 *.mvn
+*.run
+*.lst
 
 # Pasta src de códigos-fonte testes
 src/
+dev/
+
