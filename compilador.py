@@ -36,6 +36,7 @@ tokenizer.add_classificacao('q30', 'NumeroDecimal')
 automato_sintatico = automato_pilha_estruturado(os.path.join(ROOT_DIR, 'dev', 'simples_funcao.maquina'))
 analisador_sintatico = analise_sintatica(automato_sintatico, tokenizer, log=log_analise_sintatica)
 
+# Executa a Transdução a partir DAQUI
 analisador_sintatico(os.path.join('src', 'main.barber'))
 
 # print(tokenizer.tokens)

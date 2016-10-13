@@ -91,7 +91,7 @@ def automato_pilha_estruturado(nome_arquivo):
                     subm.add_saida(de=qi, com=s, saida=saida)
             for match_output_3 in match_chamadas.finditer(spec):
                 qi, Sj, qj, saida = match_output_3.groups()
-                subm.add_chamada_para_submaquina(de=qi, para=S, retorno=qj)
+                subm.add_chamada_para_submaquina(de=qi, para=Sj, retorno=qj)
                 # por enquanto, ignora saida
 
         match_iter = match_automato.finditer(mo1.group(2))

@@ -78,11 +78,11 @@ class SimuladorAutomatoPilhaEstruturado(AbstractSimulador):
             print()
 
 
-
     def ExecutarTransducao(self, token):
-        rotina = self.ap.saida_gerada
+        r = self.ap.saida_gerada
 
         if self._log:
             print('<ExecutarTransducao>')
-            print('rotina executada:', rotina)
+            print('saida gerada:', r)
             print()
+
