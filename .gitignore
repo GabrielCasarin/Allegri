@@ -104,3 +104,6 @@ saida/
 src/
 dev/
 
+### IPythonNotebook ###
+# Temporary data
+.ipynb_checkpoints/

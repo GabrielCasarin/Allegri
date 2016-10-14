@@ -11,7 +11,6 @@ class SimuladorAutomatoPilhaEstruturado(AbstractSimulador):
         self.ap = automato
         self._log = log
 
-
     # ROTINAS DE EXECUÇÃO DO AUTÔMATO DE PILHA
     def trata_evento(self, evento):
         if evento[0] == '<PartidaInicial>':
@@ -26,7 +25,6 @@ class SimuladorAutomatoPilhaEstruturado(AbstractSimulador):
             self.RetornoSubmaquina()
         elif evento[0] == '<ExecutarTransducao>':
             self.ExecutarTransducao(evento[1])
-
 
     def PartidaInicial(self):
         self.ap.inicializar()
@@ -76,7 +74,6 @@ class SimuladorAutomatoPilhaEstruturado(AbstractSimulador):
             print('simbolo chegado:', simbolo[0])
             print('estado atual: {t[0]}\nsimbolo atual: {t[1]}'.format(t=self.ap.mConfiguracao()))
             print()
-
 
     def ExecutarTransducao(self, token):
         r = self.ap.saida_gerada

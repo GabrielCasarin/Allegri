@@ -13,7 +13,7 @@ class Simbolo:
 
 class TipoBasico:
 	def __init__(self, s, tamanho):
-		super(Tipo, self).__init__()
+		super(TipoBasico, self).__init__()
 		self.s = s
 		self.tamanho = tamanho
 
@@ -27,7 +27,7 @@ class TipoArray:
 
 class TipoStruct:
 	def __init__(self, campos):
-		super(TipoArray, self).__init__()
+		super(TipoStruct, self).__init__()
 		self.campos = campos
 
 
@@ -38,6 +38,9 @@ class TabelaSimbolos:
 			super(TabelaSimbolos.Escopo, self).__init__()
 			self.pai = pai
 			self.simbolos = []
+
+		def __getitem__(self, k):
+			return self.simbolos[k]
 
 	def __init__(self):
 			super(TabelaSimbolos, self).__init__()

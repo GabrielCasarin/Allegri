@@ -2,14 +2,13 @@
 
 
 from comum import SimuladorAutomatoPilhaEstruturado
-from tabela_simbolos import TabelaSimbolos
 
 
 class analise_sintatica(SimuladorAutomatoPilhaEstruturado):
-    def __init__(self, automato, analisador_lexico, log=False):
+    def __init__(self, automato, analisador_lexico, gerador_codigo, log=False):
         super(analise_sintatica, self).__init__(automato, log)
         self.__analisador_lexico = analisador_lexico
-        # self.__tabela_simbolos = TabelaSimbolos()
+        self.__gerador_codigo = gerador_codigo
 
     def PartidaInicial(self):
         self.__tokens = iter(self.__analisador_lexico.tokens)
@@ -25,7 +24,17 @@ class analise_sintatica(SimuladorAutomatoPilhaEstruturado):
                 print('chegou token', tok)
                 print()
         except Exception as e:
-            print(e)
+            if self._log:
+                print("Terminaram-se os tokens")
+
+    def ExecutarTransducao(self, token):
+        rotina = self.ap.saida_gerada
+        self.__gerador_codigo(rotina, token)
+
+        if self._log:
+            print('<ExecutarTransducao>')
+            print('rotina executada:', rotina)
+            print()
 
     def __call__(self, arquivo_fonte):
         if self._log:
