@@ -1,14 +1,15 @@
 ; exportacoes
 PUSH	>
 POP		>
+SP 		>
 
 ; importacoes
 K_MM 	<
 K_LD	<
-WORD_TAM <
+WORD_TAM 	<
 
 
-& 			/0000
+			&		/0000
 
 
 SP			K		/0FFE
