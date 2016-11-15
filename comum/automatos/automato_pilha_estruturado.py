@@ -77,11 +77,14 @@ class AutomatoPilhaEstruturado:
 
     def fazer_transicao(self):
         # tenta fazer uma transição dentro da sub-máquina atual
-        return self.__maquinaAtual.fazer_transicao()
+        transitou = self.__maquinaAtual.fazer_transicao()
+        self.__saida_gerada = self.__maquinaAtual.saida_gerada
+        return transitou
 
     def chama(self):
         # Pega a próxima sub-máquina e o estado de retorno
         proxMaquina, estadoRetorno = self.__maquinaAtual.get_parametros_de_chamada()
+        self.__saida_gerada = self.__maquinaAtual.saida_gerada
         # Empilha a sub-máquina de retorno e o estado de retorno
         self.__pilha.append((self.__maquinaAtual, estadoRetorno))
         # Troca de sub-máquina e a inicializa
@@ -91,7 +94,11 @@ class AutomatoPilhaEstruturado:
     def retorna(self):
         if self.__pilha:
             submaqRet, estadoRetorno = self.__pilha.pop()
-            _, simboloAtual = self.__maquinaAtual.mConfiguracao()
+            estadoAtual, _ = self.__maquinaAtual.mConfiguracao()
+            if (estadoAtual.nome, 'pop') in self.__maquinaAtual.saidas:
+                self.__saida_gerada = self.__maquinaAtual.saidas[(estadoAtual.nome, 'pop')]
+            else:
+                self.__saida_gerada = None
             self.__maquinaAtual = submaqRet
             self.__maquinaAtual.inicializar(estadoRetorno)
 
@@ -100,7 +107,7 @@ class AutomatoPilhaEstruturado:
 
     @property
     def saida_gerada(self):
-        return self.__maquinaAtual.saida_gerada
+        return self.__saida_gerada
 
     @property
     def sub_maquina_atual(self):
@@ -112,3 +119,5 @@ class AutomatoPilhaEstruturado:
         else:
             return None
 
+    def tem_retorno_a_realizar(self):
+        return bool(self.__pilha)

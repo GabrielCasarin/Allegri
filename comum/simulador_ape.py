@@ -5,7 +5,6 @@ from comum import AbstractSimulador
 
 
 class SimuladorAutomatoPilhaEstruturado(AbstractSimulador):
-    """docstring for SimuladorAutomatoPilhaEstruturado"""
     def __init__(self, automato, log=False):
         super(SimuladorAutomatoPilhaEstruturado, self).__init__()
         self.ap = automato
@@ -25,19 +24,39 @@ class SimuladorAutomatoPilhaEstruturado(AbstractSimulador):
             self.RetornoSubmaquina()
         elif evento[0] == '<ExecutarTransducao>':
             self.ExecutarTransducao(evento[1])
+        elif evento[0] == '<FimEntrada>':
+            self.FimEntrada()
+        elif evento[0] == '<Erro>':
+            self.Erro()
 
     def PartidaInicial(self):
         self.ap.inicializar()
+        self.add_evento(('<CursorParaDireita>', ))
         if self._log:
             print('<PartidaInicial>')
             print('Sub-maquina atual:', self.ap.sub_maquina_atual.nome)
             print()
 
     def CursorParaDireita(self):
-        pass
+        try:
+            tok = next(self._tokens)
+            self.add_evento(('<ChegadaSimbolo>', tok))
+            if self._log:
+                print('<CursorParaDireita>: lido o token', tok)
+                print()
+        except Exception as e:
+            self.add_evento(('<FimEntrada>',))
+            if self._log:
+                print("<CursorParaDireita>: terminaram-se os tokens")
+                print()
+            if self.ap.tem_retorno_a_realizar():
+                self.add_evento(('<CursorParaDireita>', ), no_fim=True)
+                self.add_evento(('<RetornoSubmaquina>', ), no_fim=True)
 
     def ChamadaSubmaquina(self):
         self.ap.chama()
+        if self.ap.saida_gerada is not None:
+            self.add_evento(('<ExecutarTransducao>', None), no_fim=True)
         if self._log:
             print('<ChamadaSubmaquina>')
             print('Sub-maquina atual:', self.ap.sub_maquina_atual.nome)
@@ -45,6 +64,8 @@ class SimuladorAutomatoPilhaEstruturado(AbstractSimulador):
 
     def RetornoSubmaquina(self):
         self.ap.retorna()
+        if self.ap.saida_gerada is not None:
+            self.add_evento(('<ExecutarTransducao>', None), no_fim=True)
         if self._log:
             print('<RetornoSubmaquina>')
             print('Sub-maquina atual:', self.ap.sub_maquina_atual.nome)
@@ -59,15 +80,21 @@ class SimuladorAutomatoPilhaEstruturado(AbstractSimulador):
 
         if not transitou:
             estado_atual, _ = self.ap.mConfiguracao()
+            # tentar fazer chamda de sub-maquina
             if self.ap.sub_maquina_atual.tem_transicao_para_submaquina():
-                self.add_evento(('<ChegadaSimbolo>', simbolo), True)
-                self.add_evento(('<ChamadaSubmaquina>', ), True)
+                self.add_evento(('<ChegadaSimbolo>', simbolo), no_fim=True)
+                self.add_evento(('<ChamadaSubmaquina>', ), no_fim=True)
+            # senao, tenta voltar a uma suposta maquina anterior
             elif estado_atual.final:
-                self.add_evento(('<ChegadaSimbolo>', simbolo), True)
-                self.add_evento(('<RetornoSubmaquina>', ), True)
+                self.add_evento(('<ChegadaSimbolo>', simbolo), no_fim=True)
+                self.add_evento(('<RetornoSubmaquina>', ), no_fim=True)
+            # se nenhuma das duas opcoes deu ceerto, entao emite um sinal de erro
+            else:
+                self.add_evento(('<Erro>', ), no_fim=True)
         else:
-            self.add_evento(('<CursorParaDireita>', ), True)
-            self.add_evento(('<ExecutarTransducao>', simbolo[0]), True)
+            self.add_evento(('<CursorParaDireita>', ), no_fim=True)
+            if self.ap.saida_gerada is not None:
+                self.add_evento(('<ExecutarTransducao>', simbolo[0]), no_fim=True)
 
         if self._log:
             print('<ChegadaSimbolo>')
@@ -83,3 +110,20 @@ class SimuladorAutomatoPilhaEstruturado(AbstractSimulador):
             print('saida gerada:', r)
             print()
 
+    def FimEntrada(self):
+        estado_atual, _ = self.ap.mConfiguracao()
+        if self._log:
+            print('<FimEntrada>')
+            if not self.ap.tem_retorno_a_realizar() and estado_atual.final:
+                print('resultado: CADEIA ACEITA')
+            else:
+                print('resultado: CADEIA REJEITADA')
+            print()
+
+    def Erro(self):
+        if self._log:
+            print('<Erro>')
+            print('Sub-máquina atual:', self.ap.sub_maquina_atual.nome)
+            print('Estado: {0[0]}\nSimbolo: {0[1]}'.format(self.ap.mConfiguracao()))
+            print('resultado: CADEIA REJEITADA')
+            print()

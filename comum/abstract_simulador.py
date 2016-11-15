@@ -12,8 +12,8 @@ class AbstractSimulador:
     def trata_evento(self, evento):
         pass
 
-    def add_evento(self, evento, fim=False):
-        if fim:
+    def add_evento(self, evento, no_fim=False):
+        if no_fim:
             self._listaEventos.insere_no_fim(evento)
         else:
             self._listaEventos.insere(evento)
