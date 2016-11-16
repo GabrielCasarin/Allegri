@@ -11,29 +11,15 @@ class analise_sintatica(SimuladorAutomatoPilhaEstruturado):
         self.__gerador_codigo = gerador_codigo
 
     def PartidaInicial(self):
-        self.__tokens = iter(self.__analisador_lexico.tokens)
+        self._tokens = iter(self.__analisador_lexico.tokens)
         super(analise_sintatica, self).PartidaInicial()
-        self.add_evento(('<CursorParaDireita>', ))
-
-    def CursorParaDireita(self):
-        try:
-            tok = next(self.__tokens)
-            self.add_evento(('<ChegadaSimbolo>', tok))
-            if self._log:
-                print('<CursorParaDireita>')
-                print('chegou token', tok)
-                print()
-        except Exception as e:
-            if self._log:
-                print("Terminaram-se os tokens")
 
     def ExecutarTransducao(self, token):
         rotina = self.ap.saida_gerada
         self.__gerador_codigo(rotina, token)
 
         if self._log:
-            print('<ExecutarTransducao>')
-            print('rotina executada:', rotina)
+            print('<ExecutarTransducao>: executada rotina', rotina)
             print()
 
     def __call__(self, arquivo_fonte):

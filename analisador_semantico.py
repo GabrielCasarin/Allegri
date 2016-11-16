@@ -8,15 +8,16 @@ import tabela_simbolos as ST
 class gerar_codigo_assembly(AbstractSimulador):
     def __init__(self, log=False):
         super(gerar_codigo_assembly, self).__init__()
-        self.__tabela_simbolos = ST.TabelaSimbolos()
+        self.tabela_simbolos = ST.TabelaSimbolos()
         self.tipos = {
                 "int": ST.TipoBasico("int", 2),
-                "char": ST.TipoBasico("char", 1),
+                "char": ST.TipoBasico("char", 2),
                 "bool": ST.TipoBasico("bool", 2),
                 "void": ST.TipoBasico("void", 0),
         }
         self.pilha_operandos = []
         self.pilha_operadores = []
+        self.__func_atual = None
         self.__log = log
 
     def __call__(self, rotina, token=None):

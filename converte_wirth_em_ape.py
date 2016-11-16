@@ -35,8 +35,11 @@ mr = MetaReconhecedor(tokenizer, log=log_analise_sintatica)
 
 # rotina MAIN
 if __name__ == '__main__':
-    arquivo_saida = 'out.maquina'
-    if len(sys.argv) > 1:
+    arquivo_saida = 'out'
+    if len(sys.argv) >= 3:
+        mr(os.path.join('.', sys.argv[1]))
+        arquivo_saida = sys.argv[2]
+    elif len(sys.argv) == 2:
         mr(os.path.join('.', sys.argv[1]))
     else:
         nome_input = input('Arquivo da Gramática: ')
@@ -75,8 +78,9 @@ if __name__ == '__main__':
         af = particao_para_automato_finito(particao, nome=nome_da_submaq, alfabeto=submaquina.alfabeto)
         submaquinas_geradas[nome_da_submaq] = af
 
-
-    with open(os.path.join(ROOT_DIR, 'saida', arquivo_saida), 'w') as f:
+    mr.eh_ape = True # xD
+    
+    with open(os.path.join(ROOT_DIR, 'saida', arquivo_saida + '.maquina'), 'w') as f:
         if mr.eh_ape:
             f.write('<S>\n')
             f.write(' '.join(submaquinas_geradas.keys()) + '\n')
