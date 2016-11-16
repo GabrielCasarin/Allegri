@@ -11,6 +11,18 @@ class Simbolo:
 		self.utilizado = False
 
 
+class SimboloConst(Simbolo):
+	def __init__(self, nome, especie, tipo, valor):
+		super(SimboloConst, self).__init__(nome, especie, tipo)
+		self.valor = valor
+
+
+class SimboloFunc(Simbolo):
+	def __init__(self, nome, tipo):
+		super(SimboloFunc, self).__init__(nome, "func", tipo)
+		self.pilha_offset = 0
+
+
 class TipoBasico:
 	def __init__(self, s, tamanho):
 		super(TipoBasico, self).__init__()
@@ -66,3 +78,18 @@ class TabelaSimbolos:
 					return p, s
 			p = p.pai
 		return None, None
+
+	def procurar_const(self, label):
+		for simbolo in self.escopo_global.simbolos:
+			if simbolo.nome == label:
+				return True
+		return False
+
+	def procurar_localmente(self, label):
+		for simbolo in self.escopo_atual.simbolos:
+			if simbolo.nome == label:
+				return simbolo
+		return None
+
+	def inserir_const(self, simbolo):
+		self.escopo_global.simbolos.append(simbolo)
