@@ -49,8 +49,10 @@ gca.log_tabela()
 with open(os.path.join('mvn_build_system', 'src', 'aout.asm'), 'w') as aout:
 	for line in gca.preambulo:
 		aout.write(line + '\n')
+	aout.write('; declaracao de CONSTANTES\n')
 	for line in gca.constantes:
 		aout.write(line + '\n')
+	aout.write('; declaracao de FUNCOES\n')
 	for line in gca.codigo:
 		aout.write(line + '\n')
 	# aout.write('FIM_MAIN HM FIM_MAIN\n')
