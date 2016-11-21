@@ -9,6 +9,8 @@ class Simbolo:
 		self.posicao = None
 		self.referenciado = False
 		self.utilizado = False
+	def __repr__(self):
+		return self.nome
 
 
 class SimboloConst(Simbolo):
@@ -75,11 +77,11 @@ class TabelaSimbolos:
 		while p is not None:
 			for s in range(len(p.simbolos)):
 				if p.simbolos[s].nome == simbolo:
-					return p, s
+					return p[s]
 			p = p.pai
-		return None, None
+		return None
 
-	def procurar_const(self, label):
+	def existe(self, label):
 		for simbolo in self.escopo_global.simbolos:
 			if simbolo.nome == label:
 				return True
