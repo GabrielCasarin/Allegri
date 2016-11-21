@@ -19,6 +19,8 @@ class gerar_codigo_assembly(AbstractSimulador):
         self.pilha_operadores = []
         self.__func_atual = None
 
+        self.__fp_em_base = False
+
         # código necessário a todos os programas compilados
         self.preambulo = [
             "PUSH    <",
@@ -32,10 +34,15 @@ class gerar_codigo_assembly(AbstractSimulador):
             "OP1   <",
             "OP2   <",
             "GET_VECT    <",
-            "SET_VET     <",
+            "SET_VECT     <",
             "GET_OFFSET  <",
             "SET_OFFSET  <",
-            "K_0  <",
+            "PUSHDOWN_SUM    <",
+            "PUSHDOWN_DIF    <",
+            "PUSHDOWN_MUL    <",
+            "PUSHDOWN_DIV    <",
+            "BASE    <",
+            "K_0000  <",
             "WORD_TAM <",
             "&    /0000",
             "LD   SP",
@@ -68,13 +75,7 @@ class gerar_codigo_assembly(AbstractSimulador):
             ST.Simbolo("OR", "func", self.tipos["bool"])
         )
         self.tabela_simbolos.inserir_simbolo(
-            ST.Simbolo("ACESSO_VET", "func", self.tipos["int"])
-        )
-        self.tabela_simbolos.inserir_simbolo(
-            ST.Simbolo("ATTR_VET", "func", self.tipos["void"])
-        )
-        self.tabela_simbolos.inserir_simbolo(
-            ST.SimboloConst("K_0", "const", self.tipos["int"], 0)
+            ST.SimboloConst("K_0000", "const", self.tipos["int"], 0)
         )
 
         # armazena o código referente a declarações de constantes 
@@ -91,8 +92,6 @@ class gerar_codigo_assembly(AbstractSimulador):
         # EXPRESSÕES MATEMÁTICAS
         if rotina == 'iniciar_expressao_mat':
             self.iniciar_expressao_mat()
-        elif rotina == 'recebe_operador_normal':
-            self.recebe_operador_normal(token)
         elif rotina == 'mais_ou_menos':
             self.mais_ou_menos(token)
         elif rotina == 'vezes_ou_dividir':
@@ -116,8 +115,8 @@ class gerar_codigo_assembly(AbstractSimulador):
             self.declaracao_funcao(token)
         elif rotina == 'definir_tipo_funcao':
             self.definir_tipo_funcao(token)
-        elif rotina == 'inicia_declaracao_parametro':
-            self.inicia_declaracao_parametro()
+        elif rotina == 'inicia_declaracao_parametros':
+            self.inicia_declaracao_parametros()
         elif rotina == 'novo_par':
             self.novo_par(token)
         elif rotina == 'fecha_declaracao_parametro':
@@ -160,7 +159,7 @@ class gerar_codigo_assembly(AbstractSimulador):
 
     def get_const_num_repr(self, num):
         label = "K_" + gerar_codigo_assembly.hex_repr(int(num))
-        const_existe = self.tabela_simbolos.procurar_const(label)
+        const_existe = self.tabela_simbolos.existe(label)
         if not const_existe:
             nova_const = ST.SimboloConst(label, "const", self.tipos["int"], num)
             nova_const.referenciado = True
@@ -177,12 +176,25 @@ class gerar_codigo_assembly(AbstractSimulador):
                 print("{0.nome}    {0.tipo.s}    {0.especie}    {0.posicao}".format(s))
             print()
             escopo = escopo.pai
+    
+    def load_val(self, operando):
+        if (operando.especie == "var"
+            or operando.especie == "par"):
+                if not self.__fp_em_base:
+                    self.codigo.append("LD FP")
+                    self.codigo.append("MM BASE")
+                self.codigo.append('LD {}'.format(self.get_const_num_repr(operando.posicao)))
+                self.codigo.append('SC PUSH')
+                self.codigo.append('SC GET_VECT')
+        elif operando.especie == "const":
+            self.codigo.append('LD {}'.format(operando.nome))
+        self.codigo.append('SC PUSH')
     # FIM FUNÇÕES AUXILIARES
 
     # DECLARAÇÃO DE FUNÇÕES
     def declaracao_funcao(self, nome_func):
-        _, simb = self.tabela_simbolos.procurar(nome_func)
-        if simb is None:
+        func_existe = self.tabela_simbolos.existe(nome_func)
+        if not func_existe:
             self.__func_atual = ST.SimboloFunc(nome_func, self.tipos["void"]) # toda função é procedimento até que se prove o contrário
             self.tabela_simbolos.inserir_simbolo(self.__func_atual)
             self.tabela_simbolos.novo_escopo()
@@ -192,7 +204,7 @@ class gerar_codigo_assembly(AbstractSimulador):
         if tipo_retorno in self.tipos:
             self.__func_atual.tipo = self.tipos[tipo_retorno]
 
-    def inicia_declaracao_parametro(self):
+    def inicia_declaracao_parametros(self):
         self.__lista_parametros = []
 
     def novo_par(self, nome_par):
@@ -200,8 +212,8 @@ class gerar_codigo_assembly(AbstractSimulador):
 
     def fecha_declaracao_parametro(self, tipo_par):
         for nome_par in self.__lista_parametros:
-            _, simb = self.tabela_simbolos.procurar(nome_par)
-            if simb is None:
+            parametro_existe = self.tabela_simbolos.existe(nome_par)
+            if not parametro_existe:
                 par_simb = ST.Simbolo(nome_par, "par", self.tipos[tipo_par])
                 par_simb.posicao = self.__func_atual.pilha_offset
                 self.__func_atual.pilha_offset += par_simb.tipo.tamanho
@@ -226,8 +238,8 @@ class gerar_codigo_assembly(AbstractSimulador):
 
     def fecha_declaracao_variavel(self, tipo_var):
         for nome_var in self.__lista_variaveis_a_declarar:
-            _, simb = self.tabela_simbolos.procurar(nome_var)
-            if simb is None:
+            variavel_existe = self.tabela_simbolos.existe(nome_var)
+            if not variavel_existe:
                 var_simb = ST.Simbolo(nome_var, "var", self.tipos[tipo_var])
                 var_simb.posicao = self.__func_atual.pilha_offset
                 self.tabela_simbolos.inserir_simbolo(var_simb)
@@ -237,67 +249,84 @@ class gerar_codigo_assembly(AbstractSimulador):
     # EXPRESSÕES MATEMÁTICAS
     def iniciar_expressao_mat(self):
         self.pilha_operadores.append('LD')
+        if not self.__fp_em_base:
+            self.codigo.append("LD FP")
+            self.codigo.append("MM BASE")
+            self.__fp_em_base = True
 
-    def recebe_operador_normal(self, operador):
-        print('{} {}'.format(self.pilha_operadores.pop(), self.pilha_operandos.pop()))
+    def mais_ou_menos(self, operador):
+        operador_old = self.pilha_operadores.pop()
+        if operador_old == '+':
+            self.codigo.append('SC PUSHDOWN_SUM')
+        elif operador_old == '-':
+            self.codigo.append('SC PUSHDOWN_DIF')
         self.pilha_operadores.append(operador)
 
     def vezes_ou_dividir(self, operador):
+        operador_old = self.pilha_operadores[-1]
+        if operador_old == '*':
+            self.codigo.append('SC PUSHDOWN_MUL')
+            self.pilha_operadores.pop()
+        elif operador_old == '/':
+            self.codigo.append('SC PUSHDOWN_DIV')
+            self.pilha_operadores.pop()
+        elif operador_old == 'LD':
+            self.pilha_operadores.pop()
         self.pilha_operadores.append(operador)
-        print('SC PUSH')
-        self.pilha_operadores.append('LD')
-        print('{} {}'.format(self.pilha_operadores.pop(), self.pilha_operandos.pop()))
-        self.pilha_operandos.append('ACC_AUX')
 
     def recebe_operando_var(self, operando):
-        self.pilha_operandos.append(operando)
+        s = self.tabela_simbolos.procurar(operando)
+        if s is not None:
+            self.load_val(s)
+            # self.pilha_operandos.append(s)
 
     def recebe_operando_num(self, num):
         label = self.get_const_num_repr(num)
-        print(label, 'oiaqui')
-        self.pilha_operandos.append(label)
+        # self.pilha_operandos.append(self.tabela_simbolos.procurar(label))
+        self.load_val(self.tabela_simbolos.procurar(label))
 
     def finalizar_expressao_mat(self):
-        while len(self.pilha_operandos) > 1:
-            # termina a operacap de * ou /
-            print('{} {}'.format(self.pilha_operadores.pop(), self.pilha_operandos.pop()))
-            # guarda em X
-            print('MM ACC_AUX')
-            print('SC POP')
-            # entrega tudo bonitinho no acc
-        print('{} {}'.format(self.pilha_operadores.pop(), self.pilha_operandos.pop()))
+        operador_old = self.pilha_operadores.pop()
+        if operador_old == '+':
+            self.codigo.append('SC PUSHDOWN_SUM')
+        elif operador_old == '-':
+            self.codigo.append('SC PUSHDOWN_DIF')
+        elif operador_old == '*':
+            self.codigo.append('SC PUSHDOWN_MUL')
+        elif operador_old == '/':
+            self.codigo.append('SC PUSHDOWN_DIV')
+        self.__fp_em_base = False
 
     def abre_parenteses(self):
-        self.pilha_operandos.append('ACC_AUX')
         self.pilha_operadores.append('(')
-        print('SC PUSH')
 
     def fecha_parenteses(self):
         # finaliza a expressão interna
         while self.pilha_operadores[-1] != '(':
-            print('{} {}'.format(self.pilha_operadores.pop(), self.pilha_operandos.pop()))
-            # restaura o estado anterior
-            print('MM ACC_AUX')
-            print('SC POP')
+            self.finalizar_expressao_mat()
         self.pilha_operadores.pop() # retira o '('
 
     def sai_termo(self):
         # termina a operacap de * ou /
-        print('{} {}'.format(self.pilha_operadores.pop(), self.pilha_operandos.pop()))
-        # guarda em X
-        print('MM ACC_AUX')
-        print('SC POP')
+        operador = self.pilha_operadores.pop()
+        if operador == '*':
+            self.codigo.append('SC PUSHDOWN_MUL')
+        elif operador == '/':
+            self.codigo.append('SC PUSHDOWN_DIV')
+
+        if not self.pilha_operadores:
+            self.pilha_operadores.append('LD')
     # FIM EXPRESSÕES MATEMÁTICAS
 
     # ACESSO A VARIÁVEIS
     def ref_var_01(self, nome_var):
-        escopo, pos = self.tabela_simbolos.procurar(nome_var)
+        s = self.tabela_simbolos.procurar(nome_var)
         if pos is not None:
             self.codigo.append('LD FP')
             self.codigo.append('SC PUSH')
-            self.codigo.append('LD K_{}'.format(escopo[pos].posicao))
+            self.codigo.append('LD K_{}'.format(s.posicao))
             self.codigo.append('SC PUSH')
-            self.codigo.append('LD K_{}'.format(escopo[pos].tipo.tamanho))
+            self.codigo.append('LD K_{}'.format(s.tipo.tamanho))
             self.codigo.append('SC PUSH')
             self.codigo.append('SC ACESSO_VET')
 
@@ -312,20 +341,35 @@ class gerar_codigo_assembly(AbstractSimulador):
     # COMANDO SIMPLES
     def inicia_comando_simples(self, identificador):
         # procura o identificador na tabela
-        escopo, indice = self.tabela_simbolos.procurar(identificador)
+        s = self.tabela_simbolos.procurar(identificador)
         # se encontrou em algum escopo
-        if escopo is not None and indice is not None:
-            self.__identificador_atual = escopo[indice]
+        if s is not None:
+            self.__identificador_atual = s
             self.__identificador_atual.utilizado = True
 
     def comando_atribuicao(self):
-        self.codigo.append("LD K_0028")
-        self.codigo.append("SC PUSH")
-        self.codigo.append("LD FP")
-        self.codigo.append("SC PUSH")
+        self.finalizar_expressao_mat()
+        if not self.__fp_em_base:
+            self.codigo.append("LD FP")
+            self.codigo.append("MM BASE")
         self.codigo.append("LD {}".format(self.get_const_num_repr(self.__identificador_atual.posicao)))
         self.codigo.append("SC PUSH")
-        self.codigo.append("SC SET_OFFSET")
-
-
+        self.codigo.append("SC SET_VECT")
     # FIM COMANDO SIMPLES
+
+    # CHAMADA DE PROCEDIMENTOS
+    def call_func(self, nome_func):
+        f = self.tabela_simbolos.procurar(nome_func)
+        if f is not None:
+            # salva o estado atual no frame record da função chamadora
+            self.codigo.append("LD {}".format(self.__func_atual.nome))
+            self.codigo.append("SC PUSH")
+            self.codigo.append("LD FP")
+            self.codigo.append("SC PUSH")
+            # cria um novo frame record para a função chamada
+            self.codigo.append("LD SP")
+            self.codigo.append("MM FP")
+            # agora a pilha está pronta para receber os parâmetros
+            # que devem ser passados para a função chamada via frame record
+
+    # FIM CHAMADA DE PROCEDIMENTOS
