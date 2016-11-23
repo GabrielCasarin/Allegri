@@ -131,14 +131,12 @@ class gerar_codigo_assembly(AbstractSimulador):
             self.encerra_funcao()
         # DECLARAÇÃO DE FUNÇÕES
 
-        # ACESSO A VARIÁVEIS
-        elif rotina == 'ref_var_01':
-            self.ref_var_01(token)
-        elif rotina == 'ref_var_02':
-            self.ref_var_02()
-        elif rotina == 'ref_var_03':
-            self.ref_var_03()
-        # FIM ACESSO A VARIÁVEIS
+        # CHAMADA DE FUNÇÃO
+        elif rotina == 'iniciar_frame':
+            self.iniciar_frame()
+        elif rotina == 'chamar_funcao':
+            self.chamar_funcao()
+        # FIM CHAMADA DE FUNÇÃO
 
         # COMANDO SIMPLES
         elif rotina == 'inicia_comando_simples':
@@ -203,6 +201,7 @@ class gerar_codigo_assembly(AbstractSimulador):
     def definir_tipo_funcao(self, tipo_retorno):
         if tipo_retorno in self.tipos:
             self.__func_atual.tipo = self.tipos[tipo_retorno]
+            self.__func_atual.pilha_offset += self.__func_atual.tipo.tamanho
 
     def inicia_declaracao_parametros(self):
         self.__lista_parametros = []
@@ -320,25 +319,26 @@ class gerar_codigo_assembly(AbstractSimulador):
             self.codigo.append('SC PUSHDOWN_DIV')
     # FIM EXPRESSÕES MATEMÁTICAS
 
-    # ACESSO A VARIÁVEIS
-    def ref_var_01(self, nome_var):
-        s = self.tabela_simbolos.procurar(nome_var)
-        if pos is not None:
-            self.codigo.append('LD FP')
+    # CHAMADA DE FUNÇÃO
+    def iniciar_frame(self):
+        zero = False
+        for b in range(0, self.__identificador_atual.tipo.tamanho, 2):
+            if not zero:
+                self.codigo.append('LD K_0000')
+                zero = True
             self.codigo.append('SC PUSH')
-            self.codigo.append('LD K_{}'.format(s.posicao))
-            self.codigo.append('SC PUSH')
-            self.codigo.append('LD K_{}'.format(s.tipo.tamanho))
-            self.codigo.append('SC PUSH')
-            self.codigo.append('SC ACESSO_VET')
 
-    def ref_var_02(self):
-        print('MM BASE')
-
-    def ref_var_03(self):
-        print('MM OFFSET')
-        print('SC ACESSO_VET')
-    # FIM ACESSO A VARIÁVEIS
+    def chamar_funcao(self):
+        # empilha o endereço de retorno
+        self.codigo.append("LD {}".format(self.__func_atual.nome))
+        self.codigo.append("SC PUSH")
+        # empilha o FP
+        self.codigo.append("LD FP")
+        self.codigo.append("SC PUSH")
+        # atualiza FP com seu novo valor
+        self.codigo.append("LD SP")
+        self.codigo.append("MM FP")
+    # FIM CHAMADA DE FUNÇÃO
 
     # COMANDO SIMPLES
     def inicia_comando_simples(self, identificador):

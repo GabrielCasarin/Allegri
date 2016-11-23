@@ -2,7 +2,7 @@
 DefineFunc EXP
 DefineFunc
 <DefineFunc>
-q8 q11 q5 q12 q7 q2 q10 q9 q13 q0 q4 q6 q3 q1 q14 q15
+q8 q11 q5 q12 q7 q2 q10 q9 q13 q0 q4 q6 q3 q1 q14 q15 q16 q17 q18
 q0
 q9
 par var } def = enter { , Identificador int
@@ -15,14 +15,15 @@ par var } def = enter { , Identificador int
 	(q4, 'var') -> q10\inicia_declaracao_variavel
 	(q4, '}') -> q9
 	(q4, 'enter') -> q4
-	(q4, 'Identificador') -> q8
+	(q4, 'Identificador') -> q8\inicia_comando_simples
 	(q5, 'par') -> q6\inicia_declaracao_parametros
 	(q5, 'enter') -> q5
 	(q5, '{') -> q4
 	(q6, 'Identificador') -> q7\novo_par
 	(q8, '=') -> q11
+	(q8, '(')-> q16\iniciar_frame
 	q11 => (EXP, q12)\iniciar_expressao_mat
-	(q12, 'enter') -> q13
+	(q12, 'enter') -> q13\comando_atribuicao
 	(q7, ',') -> q6
 	(q7, 'int') -> q3\fecha_declaracao_parametro
 	(q2, 'enter') -> q5
@@ -32,7 +33,12 @@ par var } def = enter { , Identificador int
 	(q15, 'enter') -> q4
 	(q13, '}') -> q9\encerra_funcao
 	(q13, 'enter') -> q13
-	(q13, 'Identificador') -> q8
+	(q13, 'Identificador') -> q8\inicia_comando_simples
+	(q16, ')') -> q17
+	q16 => (EXP, q18)
+	(q18, ',') -> q16
+	(q18, ')') -> q17
+	(q17, 'enter') -> q13\chamar_funcao
 </DefineFunc>
 <EXP>
 q3 q1 q0 q2
