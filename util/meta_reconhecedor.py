@@ -2,7 +2,7 @@
 
 
 import itertools
-from comum import Simulador
+from comum import SimuladorAutomatoPilhaEstruturado
 from comum.automatos import AbstractAutomato, AutomatoPilhaEstruturado
 __all__ = ['MetaReconhecedor']
 
@@ -10,10 +10,9 @@ __all__ = ['MetaReconhecedor']
 def gera_nome(nb_estado):
     return 'q' + str(nb_estado)
 
-class MetaReconhecedor(Simulador):
+class MetaReconhecedor(SimuladorAutomatoPilhaEstruturado):
     def __init__(self, classificador_lexico, log=True):
-        super(MetaReconhecedor, self).__init__()
-        self.__log = log
+        super(MetaReconhecedor, self).__init__(automato=None, log=log)
         self.__classificador_lexico = classificador_lexico
 
         # Automato de Pilha que direciona o meta-reconhecimento
@@ -80,77 +79,18 @@ class MetaReconhecedor(Simulador):
         # chama o analisador léxico
         self.__classificador_lexico(arquivo_fonte)
         self.add_evento(('<PartidaInicial>', ))
-        for token in self.__classificador_lexico.tokens:
-            self.add_evento(('<ChegadaSimbolo>', token))
         self.run()
 
-    # ROTINAS DE EXECUÇÃO DO AUTÔMATO DE PILHA
-    def trata_evento(self, evento):
-        if evento[0] == '<PartidaInicial>':
-            self.PartidaInicial()
-        elif evento[0] == '<ChegadaSimbolo>':
-            self.ChegadaSimbolo(evento[1])
-        elif evento[0] == '<ChamadaSubmaquina>':
-            self.ChamadaSubmaquina()
-        elif evento[0] == '<RetornoSubmaquina>':
-            self.RetornoSubmaquina()
-        elif evento[0] == '<ExecutarTransducao>':
-            self.ExecutarTransducao(evento[1])
-
     def PartidaInicial(self):
-        self.ap.inicializar()
+        self._tokens = iter(self.__classificador_lexico.tokens)
         self.eh_ape = False
-        if self.__log:
-            print('<PartidaInicial>')
-            print('Sub-maquina atual:', self.ap.sub_maquina_atual.nome)
-            print()
-
-    def ChegadaSimbolo(self, simbolo):
-        try:
-            self.ap.atualizar_simbolo(simbolo[1])
-            transitou = self.ap.fazer_transicao()
-        except Exception as e:
-            transitou = False
-
-        if not transitou:
-            maquina_atual, estado_atual, _ = self.ap.mConfiguracao()
-            if maquina_atual.tem_transicao_para_submaquina():
-                self.add_evento(('<ChegadaSimbolo>', simbolo), True)
-                self.add_evento(('<ChamadaSubmaquina>', ), True)
-            elif estado_atual.final:
-                self.add_evento(('<ChegadaSimbolo>', simbolo), True)
-                self.add_evento(('<RetornoSubmaquina>', ), True)
-        else:
-            self.add_evento(('<ExecutarTransducao>', simbolo[0]), True)
-
-        if self.__log:
-            print('<ChegadaSimbolo>')
-            print('simbolo chegado:', simbolo[0])
-            print('estado atual: {t[1]}\nsimbolo atual: {t[2]}'.format(t=self.ap.mConfiguracao()))
-            print()
-
-    def ChamadaSubmaquina(self):
-        self.ap.chama()
-        if self.__log:
-            print('<ChamadaSubmaquina>')
-            print('Sub-maquina atual:', self.ap.sub_maquina_atual.nome)
-            print()
-
-    def RetornoSubmaquina(self):
-        self.ap.retorna()
-        if self.__log:
-            print('<RetornoSubmaquina>')
-            print('Sub-maquina atual:', self.ap.sub_maquina_atual.nome)
-            print()
+        super(MetaReconhecedor, self).PartidaInicial()
 
     def ExecutarTransducao(self, token):
         rotina = self.ap.saida_gerada
 
-        # if rotina != 'criar_submaquina':
-        #     print('pilha antes:', self.pilha)
         if rotina == 'criar_submaquina':
             self.criar_submaquina(token)
-        # elif rotina == 'sinal':
         elif rotina == '.':
             self.ponto_final()
         elif rotina == '=':
@@ -176,8 +116,7 @@ class MetaReconhecedor(Simulador):
         elif rotina == 'chamada':
             self.chamada(token)
 
-        # print('pilha depois:', self.pilha)
-        if self.__log:
+        if self._log:
             print('<ExecutarTransducao>')
             print('rotina executada:', rotina)
             print()
@@ -217,8 +156,8 @@ class MetaReconhecedor(Simulador):
         self.submaquinas[self.submaquina_atual].add_transicao(de=gera_nome(estado_anterior), com=valor_do_terminal, para=gera_nome(self.estado))
 
     def chamada(self, nome_da_submaq):
-        if nome_da_submaq not in self.submaquinas:
-            self.submaquinas[nome_da_submaq] = AbstractAutomato(deterministico=False)
+        # if nome_da_submaq not in self.submaquinas:
+        #     self.submaquinas[nome_da_submaq] = AbstractAutomato(deterministico=False)
 
         estado_anterior = self.estado
         self.estado = self.valor_atual

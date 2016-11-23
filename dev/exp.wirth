@@ -1,0 +1,1 @@
+EXP = (["+"|"-"] ("Numero" | "Identificador" | "(" EXP ")")) {("+"|"-"|"*"|"/") ("Numero" | "Identificador" | "(" EXP ")")} .

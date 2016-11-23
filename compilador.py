@@ -2,13 +2,15 @@
 
 
 import os
+import sys
 import string
 from configuracoes import *
 
 from analisador_lexico import decompoe_texto_fonte, analisador_lexico
 from analisador_sintatico import analise_sintatica
+from analisador_semantico import gerar_codigo_assembly
 
-from util.automatos_loaders import transdutor_finito
+from util.automatos_loaders import transdutor_finito, automato_pilha_estruturado
 
 
 decompositor = decompoe_texto_fonte(log_decompoe_texto_fonte, log_imprimir_linhas, log_imprimir_caracteres)
@@ -32,10 +34,27 @@ tokenizer.add_classificacao('q15', 'Identificador')
 tokenizer.add_classificacao('q29', 'NumeroDecimal')
 tokenizer.add_classificacao('q30', 'NumeroDecimal')
 
-# instancia um analisador sintático
-automato_sintatico = transdutor_finito(os.path.join(ROOT_DIR, 'dev', 'simples_funcao.maquina'))
-analisador_lexico = analise_sintatica(automato_sintatico, tokenizer, log=log_analise_sintatica)
+# instancia o gerador de codigo MVN
+gca = gerar_codigo_assembly(True)
 
+# instancia um analisador sintático
+automato_sintatico = automato_pilha_estruturado(os.path.join(ROOT_DIR, 'dev', 'func.maq'))
+analisador_sintatico = analise_sintatica(automato_sintatico, tokenizer, gca, log=log_analise_sintatica)
+
+
+# Executa a compilação a partir DAQUI
 analisador_sintatico(os.path.join('src', 'main.barber'))
 
-# print(tokenizer.tokens)
+gca.log_tabela()
+
+with open(os.path.join('mvn_build_system', 'src', 'aout.asm'), 'w') as aout:
+	for line in gca.preambulo:
+		aout.write(line + '\n')
+	aout.write('; declaracao de CONSTANTES\n')
+	for line in gca.constantes:
+		aout.write(line + '\n')
+	aout.write('; declaracao de FUNCOES\n')
+	for line in gca.codigo:
+		aout.write(line + '\n')
+	# aout.write('FIM_MAIN HM FIM_MAIN\n')
+	aout.write('# FIM\n')

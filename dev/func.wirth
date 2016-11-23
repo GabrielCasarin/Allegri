@@ -1,0 +1,2 @@
+DefineFunc = "func" "Identificador" ["int"] {"enter" ["par" "Identificador" {"," "Identificador"} "int"]} "{" {"enter" ["var" "Identificador" {"," "Identificador"} "int" "enter"]} {"Identificador" "=" EXP "enter"} "}" .
+EXP = (["+"|"-"] ("Numero" | "Identificador" | "(" EXP ")")) {("+"|"-"|"*"|"/") ("Numero" | "Identificador" | "(" EXP ")")} .

@@ -9,11 +9,25 @@ class Simbolo:
 		self.posicao = None
 		self.referenciado = False
 		self.utilizado = False
+	def __repr__(self):
+		return self.nome
+
+
+class SimboloConst(Simbolo):
+	def __init__(self, nome, especie, tipo, valor):
+		super(SimboloConst, self).__init__(nome, especie, tipo)
+		self.valor = valor
+
+
+class SimboloFunc(Simbolo):
+	def __init__(self, nome, tipo):
+		super(SimboloFunc, self).__init__(nome, "func", tipo)
+		self.pilha_offset = 0
 
 
 class TipoBasico:
 	def __init__(self, s, tamanho):
-		super(Tipo, self).__init__()
+		super(TipoBasico, self).__init__()
 		self.s = s
 		self.tamanho = tamanho
 
@@ -27,7 +41,7 @@ class TipoArray:
 
 class TipoStruct:
 	def __init__(self, campos):
-		super(TipoArray, self).__init__()
+		super(TipoStruct, self).__init__()
 		self.campos = campos
 
 
@@ -38,6 +52,9 @@ class TabelaSimbolos:
 			super(TabelaSimbolos.Escopo, self).__init__()
 			self.pai = pai
 			self.simbolos = []
+
+		def __getitem__(self, k):
+			return self.simbolos[k]
 
 	def __init__(self):
 			super(TabelaSimbolos, self).__init__()
@@ -60,6 +77,21 @@ class TabelaSimbolos:
 		while p is not None:
 			for s in range(len(p.simbolos)):
 				if p.simbolos[s].nome == simbolo:
-					return p, s
+					return p[s]
 			p = p.pai
-		return None, None
+		return None
+
+	def existe(self, label):
+		for simbolo in self.escopo_global.simbolos:
+			if simbolo.nome == label:
+				return True
+		return False
+
+	def procurar_localmente(self, label):
+		for simbolo in self.escopo_atual.simbolos:
+			if simbolo.nome == label:
+				return simbolo
+		return None
+
+	def inserir_const(self, simbolo):
+		self.escopo_global.simbolos.append(simbolo)

@@ -96,8 +96,13 @@ ENV/
 saida/
 
 *.jar
-*.asm
 *.mvn
+*.run
+*.lst
 
 # Pasta src de códigos-fonte testes
 src/
+
+### IPythonNotebook ###
+# Temporary data
+.ipynb_checkpoints/

@@ -51,21 +51,19 @@ def automato_pilha_estruturado(nome_arquivo):
         texto = f.read()
         texto = re.sub(r'\n+', '\n', texto)
 
-        match_automato = re.compile(r'<(?P<nome>\w+)>\n(.*)</(?P=nome)>', re.DOTALL | re.MULTILINE)
+        match_automato = re.compile(r'[\s\t]*<(?P<nome>\w+)>\n(.*)</(?P=nome)>', re.DOTALL | re.MULTILINE)
 
         mo1 = match_automato.search(texto)
         nome_automato = mo1.group(1)
-        maquinas, maquina_inicial = mo1.group(2).split('\n')[:2]
-        maquinas = maquinas.split()
+        linhas = mo1.group(2).split('\n')[:2]
 
-        print(nome_automato)
-        print(maquinas)
-        print(maquina_inicial)
+        maquinas = re.sub(r'^[\s\t]+', r'', linhas[0]).split()
+        maquina_inicial = re.sub(r'^[\s\t]+', r'', linhas[1])
 
         ape = AutomatoPilhaEstruturado(nome=nome_automato)
 
         match_transicoes = re.compile(r"\(([a-zA-Z]\w*)\s*,\s*'(.+)'\s*\)\s*->\s*([a-zA-Z]\w*)(?:\s*\\\s*(\w+))?\n")
-        match_chamadas = re.compile(r"([a-zA-Z]\w*)\s*=>\s*\((\w+)\s*,\s*([a-zA-Z]\w*)\)(?:\s*\\\s*(\w+))?\n")
+        match_chamadas = re.compile(r"([a-zA-Z]\w*)\s*=>\s*(?:(pop\(\))|(?:\((\w+)\s*,\s*([a-zA-Z]\w*)\)))(?:\s*\\\s*(\w+))?\n")
         def parse_submaquina(spec, nome, ape):
 
             linhas = spec.split('\n')
@@ -92,9 +90,15 @@ def automato_pilha_estruturado(nome_arquivo):
                 if saida is not None:
                     subm.add_saida(de=qi, com=s, saida=saida)
             for match_output_3 in match_chamadas.finditer(spec):
-                qi, Sj, qj, saida = match_output_3.groups()
-                subm.add_chamada_para_submaquina(de=qi, para=S, retorno=qj)
-                # por enquanto, ignora saida
+                qi, pop, Sj, qj, saida = match_output_3.groups()
+                if pop is None:
+                    subm.add_chamada_para_submaquina(de=qi, para=Sj, retorno=qj)
+                    if saida is not None:
+                        # print('saida ignorada:', saida)
+                        subm.add_saida(de=qi, com=Sj, saida=saida)
+                else: # se é pop()
+                    if saida is not None:
+                        subm.add_saida(de=qi, com='pop', saida=saida)
 
         match_iter = match_automato.finditer(mo1.group(2))
         for mo in match_iter:

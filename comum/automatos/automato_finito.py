@@ -71,6 +71,9 @@ class AutomatoFinito(AbstractAutomato):
         else:
             return self.nome == maq
 
+    def __repr__(self):
+        return self.nome
+
 
 class TransdutorFinito(AutomatoFinito):
     def __init__(self, nome, **kwargs):
