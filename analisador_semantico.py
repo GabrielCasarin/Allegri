@@ -248,30 +248,34 @@ class gerar_codigo_assembly(AbstractSimulador):
 
     # EXPRESSÕES MATEMÁTICAS
     def iniciar_expressao_mat(self):
-        self.pilha_operadores.append('LD')
+        # self.pilha_operadores.append('LD')
         if not self.__fp_em_base:
             self.codigo.append("LD FP")
             self.codigo.append("MM BASE")
             self.__fp_em_base = True
 
     def mais_ou_menos(self, operador):
-        operador_old = self.pilha_operadores.pop()
-        if operador_old == '+':
-            self.codigo.append('SC PUSHDOWN_SUM')
-        elif operador_old == '-':
-            self.codigo.append('SC PUSHDOWN_DIF')
+        if self.pilha_operadores:
+            if (self.pilha_operadores[-1] == '*'
+                or self.pilha_operadores[-1] =='/'):
+                    self.sai_termo()
+            if self.pilha_operadores and self.pilha_operadores[-1] != '(':
+                operador_old = self.pilha_operadores.pop()
+                if operador_old == '+':
+                    self.codigo.append('SC PUSHDOWN_SUM')
+                elif operador_old == '-':
+                    self.codigo.append('SC PUSHDOWN_DIF')
         self.pilha_operadores.append(operador)
 
     def vezes_ou_dividir(self, operador):
-        operador_old = self.pilha_operadores[-1]
-        if operador_old == '*':
-            self.codigo.append('SC PUSHDOWN_MUL')
-            self.pilha_operadores.pop()
-        elif operador_old == '/':
-            self.codigo.append('SC PUSHDOWN_DIV')
-            self.pilha_operadores.pop()
-        elif operador_old == 'LD':
-            self.pilha_operadores.pop()
+        if self.pilha_operadores:
+            operador_old = self.pilha_operadores[-1]
+            if operador_old == '*':
+                self.codigo.append('SC PUSHDOWN_MUL')
+                self.pilha_operadores.pop()
+            elif operador_old == '/':
+                self.codigo.append('SC PUSHDOWN_DIV')
+                self.pilha_operadores.pop()
         self.pilha_operadores.append(operador)
 
     def recebe_operando_var(self, operando):
@@ -286,16 +290,17 @@ class gerar_codigo_assembly(AbstractSimulador):
         self.load_val(self.tabela_simbolos.procurar(label))
 
     def finalizar_expressao_mat(self):
-        operador_old = self.pilha_operadores.pop()
-        if operador_old == '+':
-            self.codigo.append('SC PUSHDOWN_SUM')
-        elif operador_old == '-':
-            self.codigo.append('SC PUSHDOWN_DIF')
-        elif operador_old == '*':
-            self.codigo.append('SC PUSHDOWN_MUL')
-        elif operador_old == '/':
-            self.codigo.append('SC PUSHDOWN_DIV')
-        self.__fp_em_base = False
+        if self.pilha_operadores:
+            if (self.pilha_operadores[-1] == '*'
+                or self.pilha_operadores[-1] =='/'):
+                    self.sai_termo()
+            if self.pilha_operadores and self.pilha_operadores[-1] != '(':
+                operador_old = self.pilha_operadores.pop()
+                if operador_old == '+':
+                    self.codigo.append('SC PUSHDOWN_SUM')
+                elif operador_old == '-':
+                    self.codigo.append('SC PUSHDOWN_DIF')
+        # self.__fp_em_base = False
 
     def abre_parenteses(self):
         self.pilha_operadores.append('(')
@@ -313,9 +318,6 @@ class gerar_codigo_assembly(AbstractSimulador):
             self.codigo.append('SC PUSHDOWN_MUL')
         elif operador == '/':
             self.codigo.append('SC PUSHDOWN_DIV')
-
-        if not self.pilha_operadores:
-            self.pilha_operadores.append('LD')
     # FIM EXPRESSÕES MATEMÁTICAS
 
     # ACESSO A VARIÁVEIS
