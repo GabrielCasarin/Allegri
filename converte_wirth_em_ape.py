@@ -80,7 +80,7 @@ if __name__ == '__main__':
 
     mr.eh_ape = True # xD
     
-    with open(os.path.join(ROOT_DIR, 'saida', arquivo_saida + '.maquina'), 'w') as f:
+    with open(os.path.join(ROOT_DIR, 'dev', arquivo_saida + '.maq'), 'w') as f:
         if mr.eh_ape:
             f.write('<S>\n')
             f.write(' '.join(submaquinas_geradas.keys()) + '\n')

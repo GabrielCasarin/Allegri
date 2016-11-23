@@ -2,6 +2,7 @@
 
 
 import os
+import sys
 import string
 from configuracoes import *
 
@@ -37,7 +38,7 @@ tokenizer.add_classificacao('q30', 'NumeroDecimal')
 gca = gerar_codigo_assembly(True)
 
 # instancia um analisador sintático
-automato_sintatico = automato_pilha_estruturado(os.path.join(ROOT_DIR, 'saida', 'defunc.maquina'))
+automato_sintatico = automato_pilha_estruturado(os.path.join(ROOT_DIR, 'dev', 'func.maq'))
 analisador_sintatico = analise_sintatica(automato_sintatico, tokenizer, gca, log=log_analise_sintatica)
 
 
