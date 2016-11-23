@@ -102,7 +102,6 @@ saida/
 
 # Pasta src de códigos-fonte testes
 src/
-dev/
 
 ### IPythonNotebook ###
 # Temporary data
