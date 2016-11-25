@@ -22,8 +22,22 @@ class SimboloConst(Simbolo):
 class SimboloFunc(Simbolo):
 	def __init__(self, nome, tipo):
 		super(SimboloFunc, self).__init__(nome, "func", tipo)
-		self.pilha_offset = 0
+		self.offset_end_retorno = -2 # End. Ret. == F[-1]
+		self.offset_fp_old = 0 # FP_OLD == FP[0]
+		self.pilha_parametros_offset = -4 # Parâmetros começam apenas em FP[-2] para baixo
+		self.pilha_variaveis_offset = 0 # esse valor será atualizado a cada variável recebida
+		self.offset_valor_retorno = 0 # esse valor depende da quantidade de parâmetros
+		self.variaveis = {}
+		self.parametros = {}
 
+	def add_parametro(self, simb):
+		i = len(self.parametros)
+		self.parametros[i] = simb
+		print(self.parametros)
+
+	def add_variavel(self, simb):
+		i = len(self.variaveis)
+		self.variaveis[i] = simb
 
 class TipoBasico:
 	def __init__(self, s, tamanho):

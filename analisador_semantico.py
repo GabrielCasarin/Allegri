@@ -44,11 +44,11 @@ class gerar_codigo_assembly(AbstractSimulador):
             "BASE    <",
             "K_0000  <",
             "WORD_TAM <",
-            "&    /0000",
-            "LD   SP",
-            "MM   FP",
-            "SC main",
-            "FIM HM FIM",
+            "&     /0000",
+            "LD    SP",
+            "MM    FP",
+            "SC    main",
+            "FIM   HM FIM",
             "FP    $ =1",
         ]
 
@@ -129,13 +129,13 @@ class gerar_codigo_assembly(AbstractSimulador):
             self.fecha_declaracao_variavel(token)
         elif rotina == 'encerra_funcao':
             self.encerra_funcao()
+        elif rotina == 'calcular_end_parametros': self.calcular_end_parametros()
         # DECLARAÇÃO DE FUNÇÕES
 
         # CHAMADA DE FUNÇÃO
-        elif rotina == 'iniciar_frame':
-            self.iniciar_frame()
-        elif rotina == 'chamar_funcao':
-            self.chamar_funcao()
+        elif rotina == 'iniciar_frame': self.iniciar_frame()
+        elif rotina == 'chamar_funcao': self.chamar_funcao()
+        elif rotina == 'guarda_parametro': self.guarda_parametro()
         # FIM CHAMADA DE FUNÇÃO
 
         # COMANDO SIMPLES
@@ -143,6 +143,8 @@ class gerar_codigo_assembly(AbstractSimulador):
             self.inicia_comando_simples(token)
         elif rotina == 'comando_atribuicao':
             self.comando_atribuicao()
+        elif rotina == 'comando_retorno':
+            self.comando_retorno()
         # FIM COMANDO SIMPLES
 
         if self.__log:
@@ -156,14 +158,14 @@ class gerar_codigo_assembly(AbstractSimulador):
             return "{:0>4X}".format(num)
 
     def get_const_num_repr(self, num):
-        label = "K_" + gerar_codigo_assembly.hex_repr(int(num))
+        label = "K_" + gerar_codigo_assembly.hex_repr(int(num)).upper()
         const_existe = self.tabela_simbolos.existe(label)
         if not const_existe:
             nova_const = ST.SimboloConst(label, "const", self.tipos["int"], num)
             nova_const.referenciado = True
             nova_const.utilizado = True
             self.tabela_simbolos.inserir_const(nova_const)
-            self.constantes.append("{nome}\tK /{val:04X}".format(nome=nova_const.nome, val=nova_const.valor))
+            self.constantes.append("{nome}\tK /{val}".format(nome=nova_const.nome, val=nova_const.nome[2:]))
         return label
 
     def log_tabela(self):
@@ -201,7 +203,6 @@ class gerar_codigo_assembly(AbstractSimulador):
     def definir_tipo_funcao(self, tipo_retorno):
         if tipo_retorno in self.tipos:
             self.__func_atual.tipo = self.tipos[tipo_retorno]
-            self.__func_atual.pilha_offset += self.__func_atual.tipo.tamanho
 
     def inicia_declaracao_parametros(self):
         self.__lista_parametros = []
@@ -214,19 +215,22 @@ class gerar_codigo_assembly(AbstractSimulador):
             parametro_existe = self.tabela_simbolos.existe(nome_par)
             if not parametro_existe:
                 par_simb = ST.Simbolo(nome_par, "par", self.tipos[tipo_par])
-                par_simb.posicao = self.__func_atual.pilha_offset
-                self.__func_atual.pilha_offset += par_simb.tipo.tamanho
                 self.tabela_simbolos.inserir_simbolo(par_simb)
+                self.__func_atual.add_parametro(par_simb)
 
     def encerra_funcao(self):
         escopo = self.tabela_simbolos.escopo_atual
         print()
         for s in escopo.simbolos:
             print("{0.nome}    {0.tipo.s}    {0.especie}    {0.posicao}".format(s))
-        print()
+        print('return:', self.__func_atual.offset_valor_retorno)
         self.tabela_simbolos.remover_escopo()
+        self.codigo.append("LD FP")
+        self.codigo.append("-  WORD_TAM")
+        self.codigo.append("MM SP")
         self.codigo.append("RET_{0}\tRS\t{0}".format(self.__func_atual.nome))
         self.__func_atual = None
+        self.__fp_em_base = False # ?
 
     def inicia_declaracao_variavel(self):
         self.__lista_variaveis_a_declarar = []
@@ -240,9 +244,21 @@ class gerar_codigo_assembly(AbstractSimulador):
             variavel_existe = self.tabela_simbolos.existe(nome_var)
             if not variavel_existe:
                 var_simb = ST.Simbolo(nome_var, "var", self.tipos[tipo_var])
-                var_simb.posicao = self.__func_atual.pilha_offset
+                self.__func_atual.pilha_variaveis_offset += var_simb.tipo.tamanho
+                var_simb.posicao = self.__func_atual.pilha_variaveis_offset
                 self.tabela_simbolos.inserir_simbolo(var_simb)
-                self.__func_atual.pilha_offset += var_simb.tipo.tamanho
+                self.__func_atual.add_variavel(var_simb)
+                for b in range(0, var_simb.tipo.tamanho, 2):
+                    self.codigo.append('LD K_0000')
+                    self.codigo.append('SC PUSH  ; var %s'%var_simb.nome)
+
+    def calcular_end_parametros(self):
+        for i in range(len(self.__func_atual.parametros)-1, -1, -1):
+            par_simb = self.__func_atual.parametros[i]
+            par_simb.posicao = self.__func_atual.pilha_parametros_offset
+            self.__func_atual.pilha_parametros_offset -= par_simb.tipo.tamanho
+        self.__func_atual.offset_valor_retorno = self.__func_atual.pilha_parametros_offset
+
     # FIM DECLARAÇÃO DE FUNÇÕES
 
     # EXPRESSÕES MATEMÁTICAS
@@ -319,14 +335,19 @@ class gerar_codigo_assembly(AbstractSimulador):
             self.codigo.append('SC PUSHDOWN_DIV')
     # FIM EXPRESSÕES MATEMÁTICAS
 
-    # CHAMADA DE FUNÇÃO
+    # CHAMADA DE PROCEDIMENTOS
     def iniciar_frame(self):
-        zero = False
+        self.codigo.append('; espaco para valor de retorno')
         for b in range(0, self.__identificador_atual.tipo.tamanho, 2):
-            if not zero:
-                self.codigo.append('LD K_0000')
-                zero = True
+            self.codigo.append('LD K_0000')
             self.codigo.append('SC PUSH')
+        # reserva espaço para os parâmetros
+        self.__contador_parametros_atribuidos = 0
+        # for i in range(len(self.__identificador_atual.parametros)):
+        #     par = self.__identificador_atual.parametros[i]
+        #     for b in range(0, par.tipo.tamanho, 2):
+        #         self.codigo.append('LD K_0000')
+        #         self.codigo.append('SC PUSH  ; par %s'%par.nome)
 
     def chamar_funcao(self):
         # empilha o endereço de retorno
@@ -336,9 +357,30 @@ class gerar_codigo_assembly(AbstractSimulador):
         self.codigo.append("LD FP")
         self.codigo.append("SC PUSH")
         # atualiza FP com seu novo valor
+        self.codigo.append("; troca o contexto")
         self.codigo.append("LD SP")
+        self.codigo.append("+ WORD_TAM")
         self.codigo.append("MM FP")
-    # FIM CHAMADA DE FUNÇÃO
+        self.codigo.append("SC {}".format(self.__identificador_atual.nome))
+        self.codigo.append("SC POP")
+        self.codigo.append("MM FP")
+        self.codigo.append("SC POP")
+        self.codigo.append("MM {}".format(self.__func_atual.nome))
+        for i in range(self.__contador_parametros_atribuidos):
+            self.codigo.append("SC POP")
+        self.__fp_em_base = False
+
+    def guarda_parametro(self):
+        par = self.__identificador_atual.parametros[self.__contador_parametros_atribuidos]
+        # if not self.__fp_em_base:
+        #     self.codigo.append("LD FP")
+        #     self.codigo.append("MM BASE")
+        # self.codigo.append("LD {}".format(self.get_const_num_repr(par.posicao)))
+        # self.codigo.append("SC PUSH")
+        # self.codigo.append("SC SET_VECT")
+        self.codigo.append("; par %s"%par.nome)
+        self.__contador_parametros_atribuidos += 1
+    # FIM CHAMADA DE PROCEDIMENTOS
 
     # COMANDO SIMPLES
     def inicia_comando_simples(self, identificador):
@@ -350,28 +392,20 @@ class gerar_codigo_assembly(AbstractSimulador):
             self.__identificador_atual.utilizado = True
 
     def comando_atribuicao(self):
-        self.finalizar_expressao_mat()
+        # self.finalizar_expressao_mat()
         if not self.__fp_em_base:
             self.codigo.append("LD FP")
             self.codigo.append("MM BASE")
         self.codigo.append("LD {}".format(self.get_const_num_repr(self.__identificador_atual.posicao)))
         self.codigo.append("SC PUSH")
         self.codigo.append("SC SET_VECT")
-    # FIM COMANDO SIMPLES
+        self.__identificador_atual = None
 
-    # CHAMADA DE PROCEDIMENTOS
-    def call_func(self, nome_func):
-        f = self.tabela_simbolos.procurar(nome_func)
-        if f is not None:
-            # salva o estado atual no frame record da função chamadora
-            self.codigo.append("LD {}".format(self.__func_atual.nome))
-            self.codigo.append("SC PUSH")
+    def comando_retorno(self):
+        if not self.__fp_em_base:
             self.codigo.append("LD FP")
-            self.codigo.append("SC PUSH")
-            # cria um novo frame record para a função chamada
-            self.codigo.append("LD SP")
-            self.codigo.append("MM FP")
-            # agora a pilha está pronta para receber os parâmetros
-            # que devem ser passados para a função chamada via frame record
-
-    # FIM CHAMADA DE PROCEDIMENTOS
+            self.codigo.append("MM BASE")
+        self.codigo.append("LD {}".format(self.get_const_num_repr(self.__func_atual.offset_valor_retorno)))
+        self.codigo.append("SC PUSH")
+        self.codigo.append("SC SET_VECT")
+    # FIM COMANDO SIMPLES

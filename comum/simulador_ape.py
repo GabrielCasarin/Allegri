@@ -69,6 +69,7 @@ class SimuladorAutomatoPilhaEstruturado(AbstractSimulador):
         if self._log:
             print('<RetornoSubmaquina>')
             print('Sub-maquina atual:', self.ap.sub_maquina_atual.nome)
+            print('Estado atual:', self.ap.sub_maquina_atual.mConfiguracao()[0])
             print()
 
     def ChegadaSimbolo(self, simbolo):
@@ -85,7 +86,7 @@ class SimuladorAutomatoPilhaEstruturado(AbstractSimulador):
                 self.add_evento(('<ChegadaSimbolo>', simbolo), no_fim=True)
                 self.add_evento(('<ChamadaSubmaquina>', ), no_fim=True)
             # senao, tenta voltar a uma suposta maquina anterior
-            elif estado_atual.final:
+            elif estado_atual.final and self.ap.tem_retorno_a_realizar():
                 self.add_evento(('<ChegadaSimbolo>', simbolo), no_fim=True)
                 self.add_evento(('<RetornoSubmaquina>', ), no_fim=True)
             # se nenhuma das duas opcoes deu ceerto, entao emite um sinal de erro

@@ -11,14 +11,14 @@ par var } def = enter { , Identificador int
 	(q2, '{') -> q4
 	(q2, 'int') -> q3\definir_tipo_funcao
 	(q3, 'enter') -> q5
-	(q3, '{') -> q4
+	(q3, '{') -> q4\calcular_end_parametros
 	(q4, 'var') -> q10\inicia_declaracao_variavel
 	(q4, '}') -> q9
 	(q4, 'enter') -> q4
 	(q4, 'Identificador') -> q8\inicia_comando_simples
 	(q5, 'par') -> q6\inicia_declaracao_parametros
 	(q5, 'enter') -> q5
-	(q5, '{') -> q4
+	(q5, '{') -> q4\calcular_end_parametros
 	(q6, 'Identificador') -> q7\novo_par
 	(q8, '=') -> q11
 	(q8, '(')-> q16\iniciar_frame
@@ -36,24 +36,30 @@ par var } def = enter { , Identificador int
 	(q13, 'Identificador') -> q8\inicia_comando_simples
 	(q16, ')') -> q17
 	q16 => (EXP, q18)
-	(q18, ',') -> q16
-	(q18, ')') -> q17
+	(q18, ',') -> q16\guarda_parametro
+	(q18, ')') -> q17\guarda_parametro
 	(q17, 'enter') -> q13\chamar_funcao
+	(q9, 'enter') -> q9
+	(q9, 'def') -> q1
+	(q4, 'return') -> q19
+	(q13, 'return') -> q19
+	q19 => (EXP, q20)\iniciar_expressao_mat
+	(q20, 'enter') -> q13\comando_retorno
 </DefineFunc>
 <EXP>
 q3 q1 q0 q2
 q0
 q1
 - Numero ) Identificador ( + / *
-(q3, ')') -> q1\fecha_parenteses
-(q1, '-') -> q0\mais_ou_menos
-(q1, '+') -> q0\mais_ou_menos
-(q1, '/') -> q0\vezes_ou_dividir
-(q1, '*') -> q0\vezes_ou_dividir
-(q0, 'Numero') -> q1\recebe_operando_num
-(q0, 'Identificador') -> q1\recebe_operando_var
-(q0, '(') -> q2\abre_parenteses
-q2 => (EXP, q3)
-q1 => pop()\finalizar_expressao_mat
+	(q0, 'Numero') -> q1\recebe_operando_num
+	(q0, 'Identificador') -> q1\recebe_operando_var
+	(q0, '(') -> q2\abre_parenteses
+	(q1, '-') -> q0\mais_ou_menos
+	(q1, '+') -> q0\mais_ou_menos
+	(q1, '/') -> q0\vezes_ou_dividir
+	(q1, '*') -> q0\vezes_ou_dividir
+	q1 => pop()\finalizar_expressao_mat
+	q2 => (EXP, q3)
+	(q3, ')') -> q1\fecha_parenteses
 </EXP>
 </S>
