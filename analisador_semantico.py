@@ -31,8 +31,6 @@ class gerar_codigo_assembly(AbstractSimulador):
             "AND   <",
             "OR    <",
             "NOT   <",
-            "OP1   <",
-            "OP2   <",
             "GET_VECT    <",
             "SET_VECT     <",
             "GET_OFFSET  <",
@@ -43,6 +41,8 @@ class gerar_codigo_assembly(AbstractSimulador):
             "PUSHDOWN_DIV    <",
             "BASE    <",
             "K_0000  <",
+            "K_0001  <",
+            "K_0002  <",
             "WORD_TAM <",
             "&     /0000",
             "LD    SP",
@@ -77,6 +77,12 @@ class gerar_codigo_assembly(AbstractSimulador):
         )
         self.tabela_simbolos.inserir_simbolo(
             ST.SimboloConst("K_0000", "const", self.tipos["int"], 0)
+        )
+        self.tabela_simbolos.inserir_simbolo(
+            ST.SimboloConst("K_0001", "const", self.tipos["int"], 1)
+        )
+        self.tabela_simbolos.inserir_simbolo(
+            ST.SimboloConst("K_0002", "const", self.tipos["int"], 2)
         )
 
         # armazena o código referente a declarações de constantes 

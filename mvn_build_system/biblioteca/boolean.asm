@@ -2,43 +2,49 @@
 AND 	>
 OR 		>
 NOT 	>
-OP1 	>
-OP2 	>
 
 ; importacoes
 TRUE	<
 FALSE	<
 
-		&		/0000
+PUSH 			<
+POP 			<
+ACC_AUX 		<
 
-OP1		K		/0000
-OP2		K		/0000
+		&		/0000
 
 
 ; operacao de AND
 AND		$		/0001
-		LD		OP1
-		*		OP2
+		SC		POP
+		MM 		ACC_AUX
+		SC 		POP
+		*		ACC_AUX
 		JZ		FIM_AND
 		LD		TRUE
-FIM_AND	RS		AND
+FIM_AND SC 		PUSH
+		RS		AND
 
 
 ; operacao de OR
 OR		$		/0001
-		LD		OP1
-		+		OP2
+		SC 		POP
+		MM 		ACC_AUX
+		SC 		POP
+		+		ACC_AUX
 		JZ		FIM_OR
 		LD		TRUE
-FIM_OR	RS		OR
+FIM_OR	SC 		PUSH
+		RS		OR
 
 
 ; operacao de NOT
 NOT		$		/0001
-		LD		OP1
+		SC 		POP
 		-		TRUE
 		JZ		FIM_NOT
 		+		TRUE
-FIM_NOT	RS		NOT
+FIM_NOT	SC 		PUSH
+		RS		NOT
 
 # BOOLEAN_OP
