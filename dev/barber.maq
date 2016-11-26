@@ -47,12 +47,12 @@ par var } def = enter { , Identificador int
 	(q20, 'enter') -> q13\comando_retorno
 </DefineFunc>
 <EXP>
-q3 q1 q0 q2
+q0 q1 q2 q3 q4 q5
 q0
 q1
 - Numero ) Identificador ( + / *
 	(q0, 'Numero') -> q1\recebe_operando_num
-	(q0, 'Identificador') -> q1\recebe_operando_var
+	(q0, 'Identificador') -> q1\recebe_operando_id
 	(q0, '(') -> q2\abre_parenteses
 	(q1, '-') -> q0\mais_ou_menos
 	(q1, '+') -> q0\mais_ou_menos
@@ -61,5 +61,10 @@ q1
 	q1 => pop()\finalizar_expressao_mat
 	q2 => (EXP, q3)
 	(q3, ')') -> q1\fecha_parenteses
+	(q1, '(') -> q4\iniciar_frame
+	q4 => (EXP, q5)
+	(q4, ')' ) -> q1
+	(q5, ',') -> q4\separa_argumentos
+	(q5, ')') -> q1\guarda_parametro_e_chamar_funcao
 </EXP>
 </S>

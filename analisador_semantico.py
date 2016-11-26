@@ -46,6 +46,7 @@ class gerar_codigo_assembly(AbstractSimulador):
             "WORD_TAM <",
             "&     /0000",
             "LD    SP",
+            "+     WORD_TAM",
             "MM    FP",
             "SC    main",
             "FIM   HM FIM",
@@ -82,6 +83,9 @@ class gerar_codigo_assembly(AbstractSimulador):
         self.constantes = []
         # armazena todo o código gerado
         self.codigo = []
+
+        self.__identificador_atual = []
+        self.__contador_parametros_atribuidos = []
         
         self.__log = log
 
@@ -96,8 +100,8 @@ class gerar_codigo_assembly(AbstractSimulador):
             self.mais_ou_menos(token)
         elif rotina == 'vezes_ou_dividir':
             self.vezes_ou_dividir(token)
-        elif rotina == 'recebe_operando_var':
-            self.recebe_operando_var(token)
+        elif rotina == 'recebe_operando_id':
+            self.recebe_operando_id(token)
         elif rotina == 'recebe_operando_num':
             self.recebe_operando_num(token)
         elif rotina == 'finalizar_expressao_mat':
@@ -135,7 +139,9 @@ class gerar_codigo_assembly(AbstractSimulador):
         # CHAMADA DE FUNÇÃO
         elif rotina == 'iniciar_frame': self.iniciar_frame()
         elif rotina == 'chamar_funcao': self.chamar_funcao()
+        elif rotina == 'guarda_parametro_e_chamar_funcao': self.guarda_parametro_e_chamar_funcao()
         elif rotina == 'guarda_parametro': self.guarda_parametro()
+        elif rotina == 'separa_argumentos': self.separa_argumentos()
         # FIM CHAMADA DE FUNÇÃO
 
         # COMANDO SIMPLES
@@ -293,11 +299,15 @@ class gerar_codigo_assembly(AbstractSimulador):
                 self.pilha_operadores.pop()
         self.pilha_operadores.append(operador)
 
-    def recebe_operando_var(self, operando):
+    def recebe_operando_id(self, operando):
         s = self.tabela_simbolos.procurar(operando)
         if s is not None:
-            self.load_val(s)
-            # self.pilha_operandos.append(s)
+            if s.especie == "func":
+                self.__identificador_atual.append(s)
+                self.pilha_operadores.append('(')
+                # print(self.pilha_operadores)
+            else:
+                self.load_val(s)
 
     def recebe_operando_num(self, num):
         label = self.get_const_num_repr(num)
@@ -315,6 +325,7 @@ class gerar_codigo_assembly(AbstractSimulador):
                     self.codigo.append('SC PUSHDOWN_SUM')
                 elif operador_old == '-':
                     self.codigo.append('SC PUSHDOWN_DIF')
+        print(self.pilha_operadores)
         # self.__fp_em_base = False
 
     def abre_parenteses(self):
@@ -333,21 +344,23 @@ class gerar_codigo_assembly(AbstractSimulador):
             self.codigo.append('SC PUSHDOWN_MUL')
         elif operador == '/':
             self.codigo.append('SC PUSHDOWN_DIV')
+
+    def separa_argumentos(self):
+        if self.pilha_operadores:
+            # print(self.pilha_operadores[-1])
+            while self.pilha_operadores[-1] != '(':
+                self.finalizar_expressao_mat()
+        self.guarda_parametro()
     # FIM EXPRESSÕES MATEMÁTICAS
 
     # CHAMADA DE PROCEDIMENTOS
     def iniciar_frame(self):
         self.codigo.append('; espaco para valor de retorno')
-        for b in range(0, self.__identificador_atual.tipo.tamanho, 2):
+        for b in range(0, self.__identificador_atual[-1].tipo.tamanho, 2):
             self.codigo.append('LD K_0000')
             self.codigo.append('SC PUSH')
         # reserva espaço para os parâmetros
-        self.__contador_parametros_atribuidos = 0
-        # for i in range(len(self.__identificador_atual.parametros)):
-        #     par = self.__identificador_atual.parametros[i]
-        #     for b in range(0, par.tipo.tamanho, 2):
-        #         self.codigo.append('LD K_0000')
-        #         self.codigo.append('SC PUSH  ; par %s'%par.nome)
+        self.__contador_parametros_atribuidos.append(0)
 
     def chamar_funcao(self):
         # empilha o endereço de retorno
@@ -361,25 +374,27 @@ class gerar_codigo_assembly(AbstractSimulador):
         self.codigo.append("LD SP")
         self.codigo.append("+ WORD_TAM")
         self.codigo.append("MM FP")
-        self.codigo.append("SC {}".format(self.__identificador_atual.nome))
+        self.codigo.append("SC {}".format(self.__identificador_atual[-1].nome))
         self.codigo.append("SC POP")
         self.codigo.append("MM FP")
         self.codigo.append("SC POP")
         self.codigo.append("MM {}".format(self.__func_atual.nome))
-        for i in range(self.__contador_parametros_atribuidos):
+        for i in range(self.__contador_parametros_atribuidos[-1]):
             self.codigo.append("SC POP")
         self.__fp_em_base = False
+        self.__identificador_atual.pop()
+        self.__contador_parametros_atribuidos.pop()
 
     def guarda_parametro(self):
-        par = self.__identificador_atual.parametros[self.__contador_parametros_atribuidos]
-        # if not self.__fp_em_base:
-        #     self.codigo.append("LD FP")
-        #     self.codigo.append("MM BASE")
-        # self.codigo.append("LD {}".format(self.get_const_num_repr(par.posicao)))
-        # self.codigo.append("SC PUSH")
-        # self.codigo.append("SC SET_VECT")
+        par = self.__identificador_atual[-1].parametros[self.__contador_parametros_atribuidos[-1]]
         self.codigo.append("; par %s"%par.nome)
-        self.__contador_parametros_atribuidos += 1
+        self.__contador_parametros_atribuidos[-1] += 1
+
+    def guarda_parametro_e_chamar_funcao(self):
+        self.separa_argumentos()
+        if self.pilha_operadores:
+            self.pilha_operadores.pop()
+        self.chamar_funcao()
     # FIM CHAMADA DE PROCEDIMENTOS
 
     # COMANDO SIMPLES
@@ -388,18 +403,18 @@ class gerar_codigo_assembly(AbstractSimulador):
         s = self.tabela_simbolos.procurar(identificador)
         # se encontrou em algum escopo
         if s is not None:
-            self.__identificador_atual = s
-            self.__identificador_atual.utilizado = True
+            self.__identificador_atual.append(s)
+            self.__identificador_atual[-1].utilizado = True
 
     def comando_atribuicao(self):
         # self.finalizar_expressao_mat()
         if not self.__fp_em_base:
             self.codigo.append("LD FP")
             self.codigo.append("MM BASE")
-        self.codigo.append("LD {}".format(self.get_const_num_repr(self.__identificador_atual.posicao)))
+        self.codigo.append("LD {}".format(self.get_const_num_repr(self.__identificador_atual[-1].posicao)))
         self.codigo.append("SC PUSH")
         self.codigo.append("SC SET_VECT")
-        self.__identificador_atual = None
+        self.__identificador_atual.pop()
 
     def comando_retorno(self):
         if not self.__fp_em_base:
