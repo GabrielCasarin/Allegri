@@ -97,6 +97,7 @@ class gerar_codigo_assembly(AbstractSimulador):
         self.__identificador_atual = []
         self.__contador_parametros_atribuidos = []
         self.inverte = []
+        self.pilha_tipos_resultados_parciais = []
         
         self.__log = log
 
@@ -186,6 +187,7 @@ class gerar_codigo_assembly(AbstractSimulador):
         elif operando.especie == "const":
             self.codigo.append('LD {}'.format(operando.nome))
         self.codigo.append('SC PUSH')
+        self.pilha_tipos_resultados_parciais.append(operando.tipo.s)
     # FIM FUNÇÕES AUXILIARES
 
     # DECLARAÇÃO DE FUNÇÕES
@@ -278,10 +280,13 @@ class gerar_codigo_assembly(AbstractSimulador):
                     self.sai_termo()
             if self.pilha_operadores and self.pilha_operadores[-1] != '(':
                 operador_old = self.pilha_operadores.pop()
-                if operador_old == '+':
-                    self.codigo.append('SC PUSHDOWN_SUM')
-                elif operador_old == '-':
-                    self.codigo.append('SC PUSHDOWN_DIF')
+                if (self.pilha_tipos_resultados_parciais[-1]
+                    == self.pilha_tipos_resultados_parciais[-2]):
+                        if operador_old == '+':
+                            self.codigo.append('SC PUSHDOWN_SUM')
+                        elif operador_old == '-':
+                            self.codigo.append('SC PUSHDOWN_DIF')
+                        self.pilha_tipos_resultados_parciais.pop()
         self.pilha_operadores.append(operador)
 
     def vezes_ou_dividir(self, operador):
@@ -292,12 +297,16 @@ class gerar_codigo_assembly(AbstractSimulador):
             self.inverte[-1] = False
         if self.pilha_operadores:
             operador_old = self.pilha_operadores[-1]
-            if operador_old == '*':
-                self.codigo.append('SC PUSHDOWN_MUL')
-                self.pilha_operadores.pop()
-            elif operador_old == '/':
-                self.codigo.append('SC PUSHDOWN_DIV')
-                self.pilha_operadores.pop()
+            if (self.pilha_tipos_resultados_parciais[-1]
+                == self.pilha_tipos_resultados_parciais[-2]):
+                    if operador_old == '*':
+                        self.codigo.append('SC PUSHDOWN_MUL')
+                        self.pilha_operadores.pop()
+                        self.pilha_tipos_resultados_parciais.pop()
+                    elif operador_old == '/':
+                        self.codigo.append('SC PUSHDOWN_DIV')
+                        self.pilha_operadores.pop()
+                        self.pilha_tipos_resultados_parciais.pop()
         self.pilha_operadores.append(operador)
 
     def recebe_operando_id(self, operando):
@@ -306,7 +315,6 @@ class gerar_codigo_assembly(AbstractSimulador):
             if s.especie == "func":
                 self.__identificador_atual.append(s)
                 self.pilha_operadores.append('(')
-                # print(self.pilha_operadores)
             else:
                 self.load_val(s)
 
@@ -326,10 +334,13 @@ class gerar_codigo_assembly(AbstractSimulador):
                     self.sai_termo()
             if self.pilha_operadores and self.pilha_operadores[-1] != '(':
                 operador_old = self.pilha_operadores.pop()
-                if operador_old == '+':
-                    self.codigo.append('SC PUSHDOWN_SUM')
-                elif operador_old == '-':
-                    self.codigo.append('SC PUSHDOWN_DIF')
+                if (self.pilha_tipos_resultados_parciais[-1]
+                    == self.pilha_tipos_resultados_parciais[-2]):
+                        if operador_old == '+':
+                            self.codigo.append('SC PUSHDOWN_SUM')
+                        elif operador_old == '-':
+                            self.codigo.append('SC PUSHDOWN_DIF')
+                        self.pilha_tipos_resultados_parciais.pop()
 
     def abre_parenteses(self):
         self.pilha_operadores.append('(')
@@ -344,10 +355,13 @@ class gerar_codigo_assembly(AbstractSimulador):
     def sai_termo(self):
         # termina a operacap de * ou /
         operador = self.pilha_operadores.pop()
-        if operador == '*':
-            self.codigo.append('SC PUSHDOWN_MUL')
-        elif operador == '/':
-            self.codigo.append('SC PUSHDOWN_DIV')
+        if (self.pilha_tipos_resultados_parciais[-1]
+            == self.pilha_tipos_resultados_parciais[-2]):
+                if operador == '*':
+                    self.codigo.append('SC PUSHDOWN_MUL')
+                elif operador == '/':
+                    self.codigo.append('SC PUSHDOWN_DIV')
+                self.pilha_tipos_resultados_parciais.pop()
 
     def separa_argumentos(self):
         if self.pilha_operadores:
@@ -422,14 +436,17 @@ class gerar_codigo_assembly(AbstractSimulador):
             self.__identificador_atual[-1].utilizado = True
 
     def comando_atribuicao(self):
-        # self.finalizar_expressao_mat()
+        simb = self.__identificador_atual.pop()
         if not self.__fp_em_base:
             self.codigo.append("LD FP")
             self.codigo.append("MM BASE")
-        self.codigo.append("LD {}".format(self.get_const_num_repr(self.__identificador_atual[-1].posicao)))
-        self.codigo.append("SC PUSH")
-        self.codigo.append("SC SET_VECT")
-        self.__identificador_atual.pop()
+            self.__fp_em_base = True # ?
+        if (self.pilha_tipos_resultados_parciais[-1]
+            == simb.tipo.s):
+                self.codigo.append("LD {}".format(self.get_const_num_repr(simb.posicao)))
+                self.codigo.append("SC PUSH")
+                self.codigo.append("SC SET_VECT")
+                self.pilha_tipos_resultados_parciais.pop()
 
     def comando_retorno(self):
         if not self.__fp_em_base:
