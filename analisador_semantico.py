@@ -105,46 +105,28 @@ class gerar_codigo_assembly(AbstractSimulador):
             print('entrei na sub-rotina de geração de código objeto...')
 
         # EXPRESSÕES MATEMÁTICAS
-        if rotina == 'iniciar_expressao_mat':
-            self.iniciar_expressao_mat()
-        elif rotina == 'mais_ou_menos':
-            self.mais_ou_menos(token)
-        elif rotina == 'vezes_ou_dividir':
-            self.vezes_ou_dividir(token)
-        elif rotina == 'recebe_operando_id':
-            self.recebe_operando_id(token)
-        elif rotina == 'recebe_operando_num':
-            self.recebe_operando_num(token)
-        elif rotina == 'finalizar_expressao_mat':
-            self.finalizar_expressao_mat()
-        elif rotina == 'abre_parenteses':
-            self.abre_parenteses()
-        elif rotina == 'fecha_parenteses':
-            self.fecha_parenteses()
-        elif rotina == 'sai_termo':
-            self.sai_termo()
+        if   rotina == 'iniciar_expressao_mat': self.iniciar_expressao_mat()
+        elif rotina == 'mais_ou_menos': self.mais_ou_menos(token)
+        elif rotina == 'vezes_ou_dividir': self.vezes_ou_dividir(token)
+        elif rotina == 'recebe_operando_id': self.recebe_operando_id(token)
+        elif rotina == 'recebe_operando_num': self.recebe_operando_num(token)
+        elif rotina == 'finalizar_expressao_mat': self.finalizar_expressao_mat()
+        elif rotina == 'abre_parenteses': self.abre_parenteses()
+        elif rotina == 'fecha_parenteses': self.fecha_parenteses()
+        elif rotina == 'sai_termo': self.sai_termo()
         elif rotina == 'inverte_termo': self.inverte_termo()
         # FIM EXPRESSÕES MATEMÁTICAS
 
         # DECLARAÇÃO DE FUNÇÕES
-        elif rotina == 'declaracao_funcao':
-            self.declaracao_funcao(token)
-        elif rotina == 'definir_tipo_funcao':
-            self.definir_tipo_funcao(token)
-        elif rotina == 'inicia_declaracao_parametros':
-            self.inicia_declaracao_parametros()
-        elif rotina == 'novo_par':
-            self.novo_par(token)
-        elif rotina == 'fecha_declaracao_parametro':
-            self.fecha_declaracao_parametro(token)        
-        elif rotina == 'inicia_declaracao_variavel':
-            self.inicia_declaracao_variavel()
-        elif rotina == 'nova_var':
-            self.nova_var(token)
-        elif rotina == 'fecha_declaracao_variavel':
-            self.fecha_declaracao_variavel(token)
-        elif rotina == 'encerra_funcao':
-            self.encerra_funcao()
+        elif rotina == 'declaracao_funcao': self.declaracao_funcao(token)
+        elif rotina == 'definir_tipo_funcao': self.definir_tipo_funcao(token)
+        elif rotina == 'inicia_declaracao_parametros': self.inicia_declaracao_parametros()
+        elif rotina == 'novo_par': self.novo_par(token)
+        elif rotina == 'fecha_declaracao_parametro': self.fecha_declaracao_parametro(token)        
+        elif rotina == 'inicia_declaracao_variavel': self.inicia_declaracao_variavel()
+        elif rotina == 'nova_var': self.nova_var(token)
+        elif rotina == 'fecha_declaracao_variavel': self.fecha_declaracao_variavel(token)
+        elif rotina == 'encerra_funcao': self.encerra_funcao()
         elif rotina == 'calcular_end_parametros': self.calcular_end_parametros()
         # DECLARAÇÃO DE FUNÇÕES
 
@@ -157,12 +139,9 @@ class gerar_codigo_assembly(AbstractSimulador):
         # FIM CHAMADA DE FUNÇÃO
 
         # COMANDO SIMPLES
-        elif rotina == 'inicia_comando_simples':
-            self.inicia_comando_simples(token)
-        elif rotina == 'comando_atribuicao':
-            self.comando_atribuicao()
-        elif rotina == 'comando_retorno':
-            self.comando_retorno()
+        elif rotina == 'inicia_comando_simples': self.inicia_comando_simples(token)
+        elif rotina == 'comando_atribuicao': self.comando_atribuicao()
+        elif rotina == 'comando_retorno': self.comando_retorno()
         # FIM COMANDO SIMPLES
 
         if self.__log:
@@ -333,7 +312,6 @@ class gerar_codigo_assembly(AbstractSimulador):
 
     def recebe_operando_num(self, num):
         label = self.get_const_num_repr(num)
-        # self.pilha_operandos.append(self.tabela_simbolos.procurar(label))
         self.load_val(self.tabela_simbolos.procurar(label))
 
     def finalizar_expressao_mat(self):
@@ -341,7 +319,6 @@ class gerar_codigo_assembly(AbstractSimulador):
             self.codigo.append('LD K_FFFF')
             self.codigo.append('SC PUSH')
             self.codigo.append('SC PUSHDOWN_MUL')
-            # self.inverte[-1] = False
         self.inverte.pop()
         if self.pilha_operadores:
             if (self.pilha_operadores[-1] == '*'
@@ -353,8 +330,6 @@ class gerar_codigo_assembly(AbstractSimulador):
                     self.codigo.append('SC PUSHDOWN_SUM')
                 elif operador_old == '-':
                     self.codigo.append('SC PUSHDOWN_DIF')
-        print(self.pilha_operadores)
-        # self.__fp_em_base = False
 
     def abre_parenteses(self):
         self.pilha_operadores.append('(')
@@ -418,12 +393,15 @@ class gerar_codigo_assembly(AbstractSimulador):
         self.codigo.append("+ WORD_TAM")
         self.codigo.append("MM FP")
         self.codigo.append("SC {}".format(self.__identificador_atual[-1].nome))
-        self.codigo.append("SC POP")
+        self.codigo.append("; volta ao contexto anterior")
+        self.codigo.append("SC POP ; restaura FP")
         self.codigo.append("MM FP")
-        self.codigo.append("SC POP")
+        self.codigo.append("SC POP ; restaura end. de retorno")
         self.codigo.append("MM {}".format(self.__func_atual.nome))
         for i in range(self.__contador_parametros_atribuidos[-1]):
             self.codigo.append("SC POP")
+        self.codigo.append("; termina de desempilhar os parametros passados aa funcao")
+        self.codigo.append("; resta o valor de retorno no topo da pilha")
         self.__fp_em_base = False
         self.__identificador_atual.pop()
         self.__contador_parametros_atribuidos.pop()
