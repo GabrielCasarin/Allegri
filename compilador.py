@@ -33,6 +33,12 @@ tokenizer.add_classificacao('q39', 'enter')
 tokenizer.add_classificacao('q15', 'Identificador')
 tokenizer.add_classificacao('q29', 'NumeroDecimal')
 tokenizer.add_classificacao('q30', 'NumeroDecimal')
+tokenizer.add_classificacao('q4', 'Comparacao')  # ==
+tokenizer.add_classificacao('q7', 'Comparacao')  # >=
+tokenizer.add_classificacao('q20', 'Comparacao') # <=
+tokenizer.add_classificacao('q27', 'Comparacao') # !=
+tokenizer.add_classificacao('q36', 'Comparacao') # >
+tokenizer.add_classificacao('q22', 'Comparacao') # <
 
 # instancia o gerador de codigo MVN
 gca = gerar_codigo_assembly(True)
