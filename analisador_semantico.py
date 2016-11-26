@@ -43,6 +43,7 @@ class gerar_codigo_assembly(AbstractSimulador):
             "K_0000  <",
             "K_0001  <",
             "K_0002  <",
+            "K_FFFF  <",
             "WORD_TAM <",
             "&     /0000",
             "LD    SP",
@@ -84,6 +85,9 @@ class gerar_codigo_assembly(AbstractSimulador):
         self.tabela_simbolos.inserir_simbolo(
             ST.SimboloConst("K_0002", "const", self.tipos["int"], 2)
         )
+        self.tabela_simbolos.inserir_simbolo(
+            ST.SimboloConst("K_FFFF", "const", self.tipos["int"], -1)
+        )
 
         # armazena o código referente a declarações de constantes 
         self.constantes = []
@@ -92,6 +96,7 @@ class gerar_codigo_assembly(AbstractSimulador):
 
         self.__identificador_atual = []
         self.__contador_parametros_atribuidos = []
+        self.inverte = []
         
         self.__log = log
 
@@ -118,6 +123,7 @@ class gerar_codigo_assembly(AbstractSimulador):
             self.fecha_parenteses()
         elif rotina == 'sai_termo':
             self.sai_termo()
+        elif rotina == 'inverte_termo': self.inverte_termo()
         # FIM EXPRESSÕES MATEMÁTICAS
 
         # DECLARAÇÃO DE FUNÇÕES
@@ -270,7 +276,6 @@ class gerar_codigo_assembly(AbstractSimulador):
             par_simb.posicao = self.__func_atual.pilha_parametros_offset
             self.__func_atual.pilha_parametros_offset -= par_simb.tipo.tamanho
         self.__func_atual.offset_valor_retorno = self.__func_atual.pilha_parametros_offset
-
     # FIM DECLARAÇÃO DE FUNÇÕES
 
     # EXPRESSÕES MATEMÁTICAS
@@ -280,8 +285,14 @@ class gerar_codigo_assembly(AbstractSimulador):
             self.codigo.append("LD FP")
             self.codigo.append("MM BASE")
             self.__fp_em_base = True
+        self.inverte.append(False)
 
     def mais_ou_menos(self, operador):
+        if self.inverte[-1]:
+            self.codigo.append('LD K_FFFF')
+            self.codigo.append('SC PUSH')
+            self.codigo.append('SC PUSHDOWN_MUL')
+            self.inverte[-1] = False
         if self.pilha_operadores:
             if (self.pilha_operadores[-1] == '*'
                 or self.pilha_operadores[-1] =='/'):
@@ -295,6 +306,11 @@ class gerar_codigo_assembly(AbstractSimulador):
         self.pilha_operadores.append(operador)
 
     def vezes_ou_dividir(self, operador):
+        if self.inverte[-1]:
+            self.codigo.append('LD K_FFFF')
+            self.codigo.append('SC PUSH')
+            self.codigo.append('SC PUSHDOWN_MUL')
+            self.inverte[-1] = False
         if self.pilha_operadores:
             operador_old = self.pilha_operadores[-1]
             if operador_old == '*':
@@ -321,6 +337,12 @@ class gerar_codigo_assembly(AbstractSimulador):
         self.load_val(self.tabela_simbolos.procurar(label))
 
     def finalizar_expressao_mat(self):
+        if self.inverte[-1]:
+            self.codigo.append('LD K_FFFF')
+            self.codigo.append('SC PUSH')
+            self.codigo.append('SC PUSHDOWN_MUL')
+            # self.inverte[-1] = False
+        self.inverte.pop()
         if self.pilha_operadores:
             if (self.pilha_operadores[-1] == '*'
                 or self.pilha_operadores[-1] =='/'):
@@ -336,6 +358,7 @@ class gerar_codigo_assembly(AbstractSimulador):
 
     def abre_parenteses(self):
         self.pilha_operadores.append('(')
+        self.inverte.append(False)
 
     def fecha_parenteses(self):
         # finaliza a expressão interna
@@ -357,6 +380,20 @@ class gerar_codigo_assembly(AbstractSimulador):
             while self.pilha_operadores[-1] != '(':
                 self.finalizar_expressao_mat()
         self.guarda_parametro()
+
+    def inverte_termo(self):
+        self.inverte[-1] = True
+
+    def guarda_parametro_e_chamar_funcao(self):
+        self.separa_argumentos()
+        if self.pilha_operadores:
+            self.pilha_operadores.pop()
+        self.chamar_funcao()
+        if self.inverte[-1]:
+            self.codigo.append('LD K_FFFF')
+            self.codigo.append('SC PUSH')
+            self.codigo.append('SC PUSHDOWN_MUL')
+            self.inverte[-1] = False
     # FIM EXPRESSÕES MATEMÁTICAS
 
     # CHAMADA DE PROCEDIMENTOS
@@ -395,12 +432,6 @@ class gerar_codigo_assembly(AbstractSimulador):
         par = self.__identificador_atual[-1].parametros[self.__contador_parametros_atribuidos[-1]]
         self.codigo.append("; par %s"%par.nome)
         self.__contador_parametros_atribuidos[-1] += 1
-
-    def guarda_parametro_e_chamar_funcao(self):
-        self.separa_argumentos()
-        if self.pilha_operadores:
-            self.pilha_operadores.pop()
-        self.chamar_funcao()
     # FIM CHAMADA DE PROCEDIMENTOS
 
     # COMANDO SIMPLES
