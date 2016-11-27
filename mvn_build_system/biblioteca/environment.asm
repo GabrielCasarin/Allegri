@@ -26,11 +26,10 @@ BASE 		$ 		=1
 OFFSET 		$		=1
 
 
+
 ; =====================================
 ;  OPERACOES SOBRE POSICOES DE MEMORIA
 ; =====================================
-
-
 
 GET_VECT	  	$ 		=1
 				; desempilha o parametro

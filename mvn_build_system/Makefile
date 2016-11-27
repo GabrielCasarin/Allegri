@@ -4,7 +4,7 @@ JAVA=/usr/bin/java
 SRCDIR=src
 BINDIR=bin
 LIBDIR=biblioteca
-BIB_ARQS = boolean const environment push_pop
+BIB_ARQS = boolean const environment comparacao push_pop
 
 # montador MVN
 MONTADOR=montador.MvnAsm
