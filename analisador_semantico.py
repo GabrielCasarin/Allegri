@@ -39,6 +39,12 @@ class gerar_codigo_assembly(AbstractSimulador):
             "PUSHDOWN_DIF    <",
             "PUSHDOWN_MUL    <",
             "PUSHDOWN_DIV    <",
+            "IGUAL           <",
+            "DIFERENTE       <",
+            "MAIOR           <",
+            "MAIOR_OU_IGUAL  <",
+            "MENOR           <",
+            "MENOR_OU_IGUAL  <",
             "BASE    <",
             "K_0000  <",
             "K_0001  <",
@@ -98,6 +104,7 @@ class gerar_codigo_assembly(AbstractSimulador):
         self.__contador_parametros_atribuidos = []
         self.inverte = []
         self.pilha_tipos_resultados_parciais = []
+        self.pilha_operadores_booleanos = []
         
         self.__log = log
 
@@ -117,6 +124,12 @@ class gerar_codigo_assembly(AbstractSimulador):
         elif rotina == 'sai_termo': self.sai_termo()
         elif rotina == 'inverte_termo': self.inverte_termo()
         # FIM EXPRESSÕES MATEMÁTICAS
+
+        # EXPRESSÕES BOOLEANAS
+        elif rotina == 'recebe_comparador': self.recebe_comparador(token)
+        elif rotina == 'and_op': self.and_op()
+        elif rotina == 'or_op': self.or_op()
+        # FIM DE EXPRESSÕES BOOLEANAS
 
         # DECLARAÇÃO DE FUNÇÕES
         elif rotina == 'declaracao_funcao': self.declaracao_funcao(token)
@@ -341,6 +354,26 @@ class gerar_codigo_assembly(AbstractSimulador):
                         elif operador_old == '-':
                             self.codigo.append('SC PUSHDOWN_DIF')
                         self.pilha_tipos_resultados_parciais.pop()
+        # cuida das comparacoes (eu acho)
+        if self.pilha_operadores_booleanos:
+            comp = self.pilha_operadores_booleanos.pop()
+            if (self.pilha_tipos_resultados_parciais[-1] == 'int'
+                and self.pilha_tipos_resultados_parciais[-2] == 'int'):
+                    if comp == '==':
+                        self.codigo.append('SC IGUAL')
+                    elif comp == '>=':
+                        self.codigo.append('SC MAIOR_OU_IGUAL')
+                    elif comp == '<=':
+                        self.codigo.append('SC MENOR_OU_IGUAL')
+                    elif comp == '!=':
+                        self.codigo.append('SC DIFERENTE')
+                    elif comp == '>':
+                        self.codigo.append('SC MAIOR')
+                    elif comp == '<':
+                        self.codigo.append('SC MENOR')
+                    self.pilha_tipos_resultados_parciais.pop()
+                    self.pilha_tipos_resultados_parciais.pop()
+                    self.pilha_tipos_resultados_parciais.append('bool')
 
     def abre_parenteses(self):
         self.pilha_operadores.append('(')
@@ -384,6 +417,21 @@ class gerar_codigo_assembly(AbstractSimulador):
             self.codigo.append('SC PUSHDOWN_MUL')
             self.inverte[-1] = False
     # FIM EXPRESSÕES MATEMÁTICAS
+
+    # EXPRESSÕES BOOLEANAS
+    def and_op(self):
+        pass
+
+    def or_op(self):
+        pass
+
+    def recebe_comparador(self, comparador):
+        self.finalizar_expressao_mat()
+        if self.pilha_tipos_resultados_parciais[-1] == "int":
+            self.iniciar_expressao_mat()
+            self.pilha_operadores_booleanos.append(comparador)
+
+    # FIM EXPRESSÕES BOOLEANAS
 
     # CHAMADA DE PROCEDIMENTOS
     def iniciar_frame(self):

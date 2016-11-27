@@ -2,7 +2,7 @@
 DefineFunc EXP
 DefineFunc
 <DefineFunc>
-q8 q11 q5 q12 q7 q2 q10 q9 q13 q0 q4 q6 q3 q1 q14 q15 q16 q17 q18
+q8 q11 q5 q12 q7 q2 q10 q9 q13 q0 q4 q6 q3 q1 q14 q15 q16 q17 q18 q19 q20 q21
 q0
 q9
 par var } def = enter { , Identificador int
@@ -10,6 +10,7 @@ par var } def = enter { , Identificador int
 	(q1, 'Identificador') -> q2\declaracao_funcao
 	(q2, '{') -> q4
 	(q2, 'int') -> q3\definir_tipo_funcao
+	(q2, 'bool') -> q3\definir_tipo_funcao
 	(q3, 'enter') -> q5
 	(q3, '{') -> q4\calcular_end_parametros
 	(q4, 'var') -> q10\inicia_declaracao_variavel
@@ -26,10 +27,12 @@ par var } def = enter { , Identificador int
 	(q12, 'enter') -> q13\comando_atribuicao
 	(q7, ',') -> q6
 	(q7, 'int') -> q3\fecha_declaracao_parametro
+	(q7, 'bool') -> q3\fecha_declaracao_parametro
 	(q2, 'enter') -> q5
 	(q10, 'Identificador') -> q14\nova_var
 	(q14, ',') -> q10
 	(q14, 'int') -> q15\fecha_declaracao_variavel
+	(q14, 'bool') -> q15\fecha_declaracao_variavel
 	(q15, 'enter') -> q4
 	(q13, '}') -> q9\encerra_funcao
 	(q13, 'enter') -> q13
@@ -45,15 +48,35 @@ par var } def = enter { , Identificador int
 	(q13, 'return') -> q19
 	q19 => (EXP, q20)\iniciar_expressao_mat
 	(q20, 'enter') -> q13\comando_retorno
+
+	(q4, 'if') -> q21
+	(q13, 'if') -> q21
+	q21 => (EXP, q22)\iniciar_expressao_mat
+	q22 => (Bloco, q23)
+	(q23, 'enter') -> q24
+	(q24, 'enter') -> q24
+	(q24, 'elif') -> q25
+	(q24, 'else') -> q29
+	(q24, 'Identificador') -> q8\inicia_comando_simples
+	(q24, 'if') -> q21
+	q25 => (EXP, q26)\iniciar_expressao_mat
+	q26 => (Bloco, q27)
+	(q27, 'enter') -> q28
+	(q28, 'enter') -> q28
+	(q28, 'elif') -> q25
+	(q28, 'else') -> q29
+	q29 => (Bloco, q30)
+	(q30, 'enter') -> q13
 </DefineFunc>
 <EXP>
 q0 q1 q2 q3 q4 q5 q6
 q0
 q1
-- Numero ) Identificador ( + / * Comparacao
+- Numero ) Identificador ( + / * Comparacao and or not
 	(q0, 'Numero') -> q1\recebe_operando_num
 	(q0, 'Identificador') -> q1\recebe_operando_id
 	(q0, '-') -> q6\inverte_termo
+	(q0, 'not') -> q6
 	(q0, '(') -> q2\abre_parenteses
 	(q6, 'Numero') -> q1\recebe_operando_num
 	(q6, 'Identificador') -> q1\recebe_operando_id
@@ -62,6 +85,9 @@ q1
 	(q1, '+') -> q0\mais_ou_menos
 	(q1, '/') -> q0\vezes_ou_dividir
 	(q1, '*') -> q0\vezes_ou_dividir
+	(q1, 'and') -> q0\and_op
+	(q1, 'or') -> q0\or_op
+	(q1, 'Comparacao') -> q0\recebe_comparador
 	q1 => pop()\finalizar_expressao_mat
 	q2 => (EXP, q3)
 	(q3, ')') -> q1\fecha_parenteses
@@ -71,4 +97,28 @@ q1
 	(q5, ',') -> q4\separa_argumentos
 	(q5, ')') -> q1\guarda_parametro_e_chamar_funcao
 </EXP>
+<Bloco>
+q0 q3 q8 q4 q5 q10 q7 q2 q6 q1 q9
+q0
+q3
+= { if Identificador elif else enter }
+	(q0, '{') -> q1
+	(q1, 'enter') -> q2
+	(q2, 'Identificador') -> q4
+	(q4, '=') -> q10
+	q10 => (EXP, q1)
+	(q2, 'enter') -> q2
+	(q2, 'if') -> q5
+	q5 => (EXP, q6)
+	(q8, 'if') -> q5
+	(q8, 'Identificador') -> q4
+	(q8, 'elif') -> q5
+	(q8, 'else') -> q9
+	q9 => (Bloco, q1)
+	(q8, 'enter') -> q8
+	q6 => (Bloco, q7)
+	(q7, 'enter') -> q8
+	(q8, '}') -> q3
+	(q2, '}') -> q3
+</Bloco>
 </S>
