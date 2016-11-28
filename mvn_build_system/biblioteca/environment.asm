@@ -8,6 +8,7 @@ PUSHDOWN_SUM	>
 PUSHDOWN_DIF 	>
 PUSHDOWN_MUL 	>
 PUSHDOWN_DIV 	>
+GET_LENGTH 		>
 ACC_AUX 		>
 
 ; importacoes
@@ -15,6 +16,7 @@ PUSH 		<
 POP  		<
 K_MM 		<
 K_LD 		<
+WORD_TAM 	<
 
 
 			& 		/0000
@@ -97,6 +99,22 @@ SET_OFFSET 		$ 		=1
 				SC 		POP
 MOVE_OFFSET 	K 		/0000
 				RS 		SET_OFFSET
+
+
+
+GET_LENGTH      $       =1
+				; dim
+				LD 		WORD_TAM
+				SC 		PUSH
+				SC 		PUSHDOWN_MUL
+				; calcula a instrucao
+				SC 		PUSHDOWN_SUM
+				SC 		POP
+				+ 		K_LD
+				MM 		LOAD_GET_LENGTH
+LOAD_GET_LENGTH $ 		=1
+				SC 		PUSH
+				RS 		GET_LENGTH
 
 
 ; =====================================

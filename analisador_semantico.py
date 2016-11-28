@@ -42,6 +42,7 @@ class gerar_codigo_assembly(AbstractSimulador):
             "PUSHDOWN_DIF    <",
             "PUSHDOWN_MUL    <",
             "PUSHDOWN_DIV    <",
+            "GET_LENGTH      <",
             "IGUAL           <",
             "DIFERENTE       <",
             "MAIOR           <",
@@ -190,6 +191,9 @@ class gerar_codigo_assembly(AbstractSimulador):
         elif rotina == 'constroi_while2': self.constroi_while2()
         elif rotina == 'fecha_while': self.fecha_while()
         # FIM COMANDO WHILE
+
+        elif rotina == 'get_len_v': self.get_len_v()
+        elif rotina == 'get_len': self.get_len()
 
         if self.__log:
             print('saí da sub-rotina de geração de código objeto...')
@@ -392,6 +396,8 @@ class gerar_codigo_assembly(AbstractSimulador):
                 self.__identificador_atual.append(s)
                 self.pilha_operadores.append('(')
             else:
+                if s.tipo.s == 'int pointer' or s.tipo.s == 'bool pointer': # q p... de sintaxe :-(
+                    self.__identificador_atual.append(s)
                 self.load_val(s)
 
     def recebe_operando_num(self, num):
@@ -627,3 +633,20 @@ class gerar_codigo_assembly(AbstractSimulador):
         self.codigo.append('{}_END_WHILE_{} + K_0000'.format(self.__func_atual.nome, self.contador_whiles))
         self.contador_whiles -= 1
     # FIM COMANDO WHILE
+
+    def get_len_v(self):
+        v = self.__identificador_atual.pop()
+        if v.tipo.s == 'int pointer' or v.tipo.s == 'bool pointer':
+            self.codigo.append('LD K_0000')
+            self.codigo.append('SC PUSH')
+            self.codigo.append('SC GET_LENGTH')
+            self.pilha_tipos_resultados_parciais.pop()
+            self.pilha_tipos_resultados_parciais.append('int')
+
+    def get_len(self):
+        v = self.__identificador_atual.pop()
+        if v.tipo.s == 'int pointer' or v.tipo.s == 'bool pointer':
+            self.codigo.append('SC GET_LENGTH')
+            self.pilha_tipos_resultados_parciais.pop()
+            self.pilha_tipos_resultados_parciais.pop()
+            self.pilha_tipos_resultados_parciais.append('int')
