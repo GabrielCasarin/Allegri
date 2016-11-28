@@ -1,0 +1,2 @@
+Bloco = "{" "enter" { "Identificador" "=" "EXP" "enter" | "if" IF} "}" "enter" .
+IF = "EXP" Bloco { ["elif" "EXP" Bloco] "enter"} ["else" Bloco].

@@ -1,6 +1,7 @@
 # Copyright (c) 2016 Gabriel Casarin da Silva, All Rights Reserved.
 
-
+import itertools
+import string
 from comum import AbstractSimulador
 import tabela_simbolos as ST
 
@@ -28,11 +29,11 @@ class gerar_codigo_assembly(AbstractSimulador):
             "SP      <",
             "TRUE    <",
             "FALSE   <",
-            "AND   <",
-            "OR    <",
-            "NOT   <",
+            "AND     <",
+            "OR      <",
+            "NOT     <",
             "GET_VECT    <",
-            "SET_VECT     <",
+            "SET_VECT    <",
             "GET_OFFSET  <",
             "SET_OFFSET  <",
             "PUSHDOWN_SUM    <",
@@ -45,12 +46,12 @@ class gerar_codigo_assembly(AbstractSimulador):
             "MAIOR_OU_IGUAL  <",
             "MENOR           <",
             "MENOR_OU_IGUAL  <",
-            "BASE    <",
-            "K_0000  <",
-            "K_0001  <",
-            "K_0002  <",
-            "K_FFFF  <",
-            "WORD_TAM <",
+            "BASE      <",
+            "K_0000    <",
+            "K_0001    <",
+            "K_0002    <",
+            "K_FFFF    <",
+            "WORD_TAM  <",
             "&     /0000",
             "LD    SP",
             "+     WORD_TAM",
@@ -105,6 +106,10 @@ class gerar_codigo_assembly(AbstractSimulador):
         self.inverte = []
         self.pilha_tipos_resultados_parciais = []
         self.pilha_operadores_booleanos = []
+        self.__dummy_labels_generator = itertools.cycle(string.ascii_uppercase)
+        self.labels_a_resolver = []
+        self.pilha_saida_de_if = []
+        self.tem_simbolos_a_resolver = []
         
         self.__log = log
 
@@ -157,6 +162,14 @@ class gerar_codigo_assembly(AbstractSimulador):
         elif rotina == 'comando_atribuicao': self.comando_atribuicao()
         elif rotina == 'comando_retorno': self.comando_retorno()
         # FIM COMANDO SIMPLES
+
+        # COMANDO IF
+        elif rotina == 'constroi_if': self.constroi_if()
+        elif rotina == 'constroi_elif': self.constroi_elif()
+        elif rotina == 'constroi_else': self.constroi_else()
+        elif rotina == 'fecha_if': self.fecha_if()
+        elif rotina == 'fecha_else': self.fecha_else()
+        # FIM COMANDO IF
 
         if self.__log:
             print('saí da sub-rotina de geração de código objeto...')
@@ -211,6 +224,7 @@ class gerar_codigo_assembly(AbstractSimulador):
             self.tabela_simbolos.inserir_simbolo(self.__func_atual)
             self.tabela_simbolos.novo_escopo()
             self.codigo.append("{}\t$ =1".format(self.__func_atual.nome))
+        self.contador_ifs = 0
 
     def definir_tipo_funcao(self, tipo_retorno):
         if tipo_retorno in self.tipos:
@@ -249,7 +263,6 @@ class gerar_codigo_assembly(AbstractSimulador):
 
     def nova_var(self, nome_var):
         self.__lista_variaveis_a_declarar.append(nome_var)
-        # print(self.__lista_variaveis_a_declarar)
 
     def fecha_declaracao_variavel(self, tipo_var):
         for nome_var in self.__lista_variaveis_a_declarar:
@@ -503,4 +516,53 @@ class gerar_codigo_assembly(AbstractSimulador):
         self.codigo.append("LD {}".format(self.get_const_num_repr(self.__func_atual.offset_valor_retorno)))
         self.codigo.append("SC PUSH")
         self.codigo.append("SC SET_VECT")
+        self.codigo.append("JP RET_{}".format(self.__func_atual.nome))
     # FIM COMANDO SIMPLES
+
+    # COMANDO IF
+    def constroi_if(self):
+        self.contador_ifs += 1
+        self.contador_elifs = 0
+        self.codigo.append('{}_IF_{} SC POP'.format(self.__func_atual.nome, self.contador_ifs))
+        self.pilha_tipos_resultados_parciais.pop()
+        dummy_label = next(self.__dummy_labels_generator)
+        self.labels_a_resolver.append((dummy_label, len(self.codigo)))
+        self.codigo.append('JZ {}'.format(dummy_label))
+        # self.pilha_saida_de_if.append('JP {}_END_IF_{}'.format(self.__func_atual.nome, self.contador_ifs))
+
+    def constroi_elif(self):
+        self.contador_elifs += 1
+        dummy_label, indice = self.labels_a_resolver.pop()
+        label_elif = '{}_ELIF_{}_{}'.format(self.__func_atual.nome, self.contador_ifs, self.contador_elifs)
+        self.codigo.append(label_elif + ' SC POP')
+        label_real = self.codigo[indice]
+        label_real = label_real.replace(' {}'.format(dummy_label), ' ' + label_elif)
+        self.codigo[indice] = label_real
+        self.labels_a_resolver.append((dummy_label, len(self.codigo)))
+        self.codigo.append('JZ {}'.format(dummy_label))
+        self.pilha_saida_de_if.append('JP {}_END_IF_{}'.format(self.__func_atual.nome, self.contador_ifs))
+        self.contador_elifs += 1
+
+    def constroi_else(self):
+        self.codigo.append('JP {}_END_IF_{}'.format(self.__func_atual.nome, self.contador_ifs))
+        dummy_label, indice = self.labels_a_resolver.pop()
+        label_else = '{}_ELSE_{}'.format(self.__func_atual.nome, self.contador_ifs)
+        self.codigo.append(label_else + ' + K_0000 ; pseudo NOP')
+        label_real = self.codigo[indice]
+        label_real = label_real.replace(' {}'.format(dummy_label), ' ' + label_else)
+        self.codigo[indice] = label_real
+        self.pilha_saida_de_if.append('JP {}_END_IF_{}'.format(self.__func_atual.nome, self.contador_ifs))
+
+    def fecha_if(self):
+        self.codigo.append('JP {}_END_IF_{}'.format(self.__func_atual.nome, self.contador_ifs))
+        dummy_label, indice = self.labels_a_resolver.pop()
+        label_real = self.codigo[indice]
+        label_real = label_real.replace(' {}'.format(dummy_label), ' {}_END_IF_{}'.format(self.__func_atual.nome, self.contador_ifs))
+        self.codigo[indice] = label_real
+        self.codigo.append('{}_END_IF_{} + K_0000 ; pseudo NOP'.format(self.__func_atual.nome, self.contador_ifs))
+        self.contador_ifs -= 1
+
+    def fecha_else(self):
+        self.codigo.append('{}_END_IF_{} + K_0000 ; pseudo NOP'.format(self.__func_atual.nome, self.contador_ifs))
+        self.contador_ifs -= 1
+    # FIM COMANDO IF
