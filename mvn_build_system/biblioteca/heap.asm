@@ -23,8 +23,9 @@ NEW_ARRAY 	$    =1
 			LD   DIM_1
 X 			$    =1 ; salva a dimensao
 			*    WORD_TAM
+			+    WORD_TAM
 			+    WORD_TAM ; total = (DIM_1  + 1)*WORD_TAM
-			+    HP
+			+    HP ; atualiza para apontar para o próximo endereço vazio
 			MM   HP ; reserva o espaco requerido
 			LD   ACC_AUX ; retorna o resultado no acc
 			RS   NEW_ARRAY

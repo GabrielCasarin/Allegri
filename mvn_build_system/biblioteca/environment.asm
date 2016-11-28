@@ -75,7 +75,7 @@ GET_OFFSET 		$ 		=1
 				MM 		BASE
 
 				LD 		BASE
-				- 		OFFSET
+				+ 		OFFSET
 				+ 		K_LD
 				MM 		LOAD_OFFSET
 LOAD_OFFSET 	K 		/0000
@@ -84,19 +84,22 @@ LOAD_OFFSET 	K 		/0000
 
 
 SET_OFFSET 		$ 		=1
-				; OFFSET
-				SC 		POP
-				MM 		OFFSET
 				; BASE
 				SC 		POP
 				MM 		BASE
-
-				LD 		BASE
-				- 		OFFSET
-				+ 		K_MM
-				MM 		MOVE_OFFSET
 				; desempilha o valor a ser atribuido
 				SC 		POP
+				MM 		ACC_AUX
+				; OFFSET
+				SC 		POP
+				* 		WORD_TAM
+				MM 		OFFSET
+
+				LD 		BASE
+				+ 		OFFSET
+				+ 		K_MM
+				MM 		MOVE_OFFSET
+				LD 		ACC_AUX
 MOVE_OFFSET 	K 		/0000
 				RS 		SET_OFFSET
 
