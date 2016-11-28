@@ -14,6 +14,8 @@ class gerar_codigo_assembly(AbstractSimulador):
                 "int": ST.TipoBasico("int", 2),
                 "char": ST.TipoBasico("char", 2),
                 "bool": ST.TipoBasico("bool", 2),
+                "int pointer": ST.TipoBasico("int pointer", 2),
+                "bool pointer": ST.TipoBasico("bool pointer", 2),
                 "void": ST.TipoBasico("void", 0),
         }
         self.pilha_operandos = []
@@ -52,7 +54,13 @@ class gerar_codigo_assembly(AbstractSimulador):
             "K_0002    <",
             "K_FFFF    <",
             "WORD_TAM  <",
+            "DIM_1     <",
+            "DIM_2     <",
+            "INIT_HEAP      <",
+            "NEW_ARRAY      <",
+            "NEW_MATRIX     <",
             "&     /0000",
+            "SC    INIT_HEAP",
             "LD    SP",
             "+     WORD_TAM",
             "MM    FP",
@@ -108,8 +116,9 @@ class gerar_codigo_assembly(AbstractSimulador):
         self.pilha_operadores_booleanos = []
         self.__dummy_labels_generator = itertools.cycle(string.ascii_uppercase)
         self.labels_a_resolver = []
-        self.pilha_saida_de_if = []
         self.tem_simbolos_a_resolver = []
+
+        self.contador_whiles = 0
         
         self.__log = log
 
@@ -142,12 +151,17 @@ class gerar_codigo_assembly(AbstractSimulador):
         elif rotina == 'inicia_declaracao_parametros': self.inicia_declaracao_parametros()
         elif rotina == 'novo_par': self.novo_par(token)
         elif rotina == 'fecha_declaracao_parametro': self.fecha_declaracao_parametro(token)        
-        elif rotina == 'inicia_declaracao_variavel': self.inicia_declaracao_variavel()
-        elif rotina == 'nova_var': self.nova_var(token)
-        elif rotina == 'fecha_declaracao_variavel': self.fecha_declaracao_variavel(token)
         elif rotina == 'encerra_funcao': self.encerra_funcao()
         elif rotina == 'calcular_end_parametros': self.calcular_end_parametros()
-        # DECLARAÇÃO DE FUNÇÕES
+        # FIM DECLARAÇÃO DE FUNÇÕES
+
+        # DECLARAÇÃO DE VARIÁVEIS
+        elif rotina == 'inicia_declaracao_variavel': self.inicia_declaracao_variavel()
+        elif rotina == 'add_tipo': self.add_tipo(token)
+        elif rotina == 'add_dim': self.add_dim(token)
+        elif rotina == 'nova_var': self.nova_var(token)
+        elif rotina == 'fecha_declaracao_variavel': self.fecha_declaracao_variavel(token)
+        # FIM DECLARAÇÃO DE VARIÁVEIS
 
         # CHAMADA DE FUNÇÃO
         elif rotina == 'iniciar_frame': self.iniciar_frame()
@@ -170,6 +184,12 @@ class gerar_codigo_assembly(AbstractSimulador):
         elif rotina == 'fecha_if': self.fecha_if()
         elif rotina == 'fecha_else': self.fecha_else()
         # FIM COMANDO IF
+
+        # COMANDO WHILE
+        elif rotina == 'constroi_while': self.constroi_while()
+        elif rotina == 'constroi_while2': self.constroi_while2()
+        elif rotina == 'fecha_while': self.fecha_while()
+        # FIM COMANDO WHILE
 
         if self.__log:
             print('saí da sub-rotina de geração de código objeto...')
@@ -260,6 +280,18 @@ class gerar_codigo_assembly(AbstractSimulador):
 
     def inicia_declaracao_variavel(self):
         self.__lista_variaveis_a_declarar = []
+        self.__tipo_atual = None
+        self.__dims = []
+
+    def add_tipo(self, tipo):
+        self.__tipo_atual = self.tipos[tipo]
+
+    def add_dim(self, dim):
+        self.__dims.append(dim)
+        if self.__tipo_atual.s == 'int':
+            self.__tipo_atual = self.tipos['int pointer']
+        elif self.__tipo_atual.s == 'bool':
+            self.__tipo_atual = self.tipos['bool pointer']
 
     def nova_var(self, nome_var):
         self.__lista_variaveis_a_declarar.append(nome_var)
@@ -268,14 +300,32 @@ class gerar_codigo_assembly(AbstractSimulador):
         for nome_var in self.__lista_variaveis_a_declarar:
             variavel_existe = self.tabela_simbolos.existe(nome_var)
             if not variavel_existe:
-                var_simb = ST.Simbolo(nome_var, "var", self.tipos[tipo_var])
+                var_simb = ST.Simbolo(nome_var, "var", self.__tipo_atual)
                 self.__func_atual.pilha_variaveis_offset += var_simb.tipo.tamanho
                 var_simb.posicao = self.__func_atual.pilha_variaveis_offset
+                if self.__dims:
+                    var_simb.dimensoes = list(self.__dims)
                 self.tabela_simbolos.inserir_simbolo(var_simb)
                 self.__func_atual.add_variavel(var_simb)
-                for b in range(0, var_simb.tipo.tamanho, 2):
-                    self.codigo.append('LD K_0000')
-                    self.codigo.append('SC PUSH  ; var %s'%var_simb.nome)
+                if (var_simb.tipo.s == 'int pointer'
+                    or var_simb.tipo.s == 'bool pointer'):
+                        if len(var_simb.dimensoes) == 1:
+                            self.codigo.append('LD {}'.format(self.get_const_num_repr(var_simb.dimensoes[0])))
+                            self.codigo.append('MM DIM_1')
+                            self.codigo.append('SC NEW_ARRAY')
+                        elif len(var_simb.dimensoes) == 2:
+                            self.codigo.append('LD {}'.format(self.get_const_num_repr(var_simb.dimensoes[0])))
+                            self.codigo.append('MM DIM_1')
+                            self.codigo.append('LD {}'.format(self.get_const_num_repr(var_simb.dimensoes[1])))
+                            self.codigo.append('MM DIM_2')
+                            self.codigo.append('SC NEW_MATRIX')
+                        self.codigo.append('SC PUSH  ; var %s'%var_simb.nome)
+
+                else:
+                    for b in range(0, var_simb.tipo.tamanho, 2):
+                        self.codigo.append('LD K_0000')
+                        self.codigo.append('SC PUSH  ; var %s'%var_simb.nome)
+                    
 
     def calcular_end_parametros(self):
         for i in range(len(self.__func_atual.parametros)-1, -1, -1):
@@ -528,7 +578,6 @@ class gerar_codigo_assembly(AbstractSimulador):
         dummy_label = next(self.__dummy_labels_generator)
         self.labels_a_resolver.append((dummy_label, len(self.codigo)))
         self.codigo.append('JZ {}'.format(dummy_label))
-        # self.pilha_saida_de_if.append('JP {}_END_IF_{}'.format(self.__func_atual.nome, self.contador_ifs))
 
     def constroi_elif(self):
         self.contador_elifs += 1
@@ -540,7 +589,6 @@ class gerar_codigo_assembly(AbstractSimulador):
         self.codigo[indice] = label_real
         self.labels_a_resolver.append((dummy_label, len(self.codigo)))
         self.codigo.append('JZ {}'.format(dummy_label))
-        self.pilha_saida_de_if.append('JP {}_END_IF_{}'.format(self.__func_atual.nome, self.contador_ifs))
         self.contador_elifs += 1
 
     def constroi_else(self):
@@ -551,7 +599,6 @@ class gerar_codigo_assembly(AbstractSimulador):
         label_real = self.codigo[indice]
         label_real = label_real.replace(' {}'.format(dummy_label), ' ' + label_else)
         self.codigo[indice] = label_real
-        self.pilha_saida_de_if.append('JP {}_END_IF_{}'.format(self.__func_atual.nome, self.contador_ifs))
 
     def fecha_if(self):
         self.codigo.append('JP {}_END_IF_{}'.format(self.__func_atual.nome, self.contador_ifs))
@@ -566,3 +613,17 @@ class gerar_codigo_assembly(AbstractSimulador):
         self.codigo.append('{}_END_IF_{} + K_0000 ; pseudo NOP'.format(self.__func_atual.nome, self.contador_ifs))
         self.contador_ifs -= 1
     # FIM COMANDO IF
+
+    # COMANDO WHILE
+    def constroi_while(self):
+        self.contador_whiles += 1
+        self.codigo.append('{}_WHILE_{} + K_0000'.format(self.__func_atual.nome, self.contador_whiles))
+    def constroi_while2(self):
+        self.codigo.append('SC POP')
+        self.pilha_tipos_resultados_parciais.pop()
+        self.codigo.append('JZ {}_END_WHILE_{}'.format(self.__func_atual.nome, self.contador_whiles))
+    def fecha_while(self):
+        self.codigo.append('JP {}_WHILE_{}'.format(self.__func_atual.nome, self.contador_whiles))
+        self.codigo.append('{}_END_WHILE_{} + K_0000'.format(self.__func_atual.nome, self.contador_whiles))
+        self.contador_whiles -= 1
+    # FIM COMANDO WHILE

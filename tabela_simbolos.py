@@ -39,24 +39,18 @@ class SimboloFunc(Simbolo):
 		i = len(self.variaveis)
 		self.variaveis[i] = simb
 
+
+class SimboloArray(Simbolo):
+	def __init__(self, nome, especie, tipo, dimensoes=[]):
+		super(SimboloArray, self).__init__(nome, especie, tipo)
+		self.dimensoes = list(dimensoes)
+
+
 class TipoBasico:
 	def __init__(self, s, tamanho):
 		super(TipoBasico, self).__init__()
 		self.s = s
 		self.tamanho = tamanho
-
-
-class TipoArray:
-	def __init__(self, de, comprimento):
-		super(TipoArray, self).__init__()
-		self.de = de
-		self.comprimento = comprimento
-
-
-class TipoStruct:
-	def __init__(self, campos):
-		super(TipoStruct, self).__init__()
-		self.campos = campos
 
 
 class TabelaSimbolos:
