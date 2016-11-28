@@ -49,18 +49,24 @@ analisador_sintatico = analise_sintatica(automato_sintatico, tokenizer, gca, log
 
 
 # Executa a compilação a partir DAQUI
-analisador_sintatico(os.path.join('src', 'main.barber'))
+arquivo_saida = 'aout'
+if len(sys.argv) >= 2:
+    arquivo_fonte = os.path.join('src', sys.argv[1])
+    if len(sys.argv) == 3:
+        arquivo_saida = sys.argv[2]
+
+analisador_sintatico(arquivo_fonte+'.barber')
 
 gca.log_tabela()
 
-with open(os.path.join('mvn_build_system', 'src', 'aout.asm'), 'w') as aout:
-	for line in gca.preambulo:
-		aout.write(line + '\n')
-	aout.write('; declaracao de CONSTANTES\n')
-	for line in gca.constantes:
-		aout.write(line + '\n')
-	aout.write('; declaracao de FUNCOES\n')
-	for line in gca.codigo:
-		aout.write(line + '\n')
-	# aout.write('FIM_MAIN HM FIM_MAIN\n')
-	aout.write('# FIM\n')
+with open(os.path.join('mvn_build_system', 'src', arquivo_saida+'.asm'), 'w') as aout:
+    for line in gca.preambulo:
+        aout.write(line + '\n')
+    aout.write('; declaracao de CONSTANTES\n')
+    for line in gca.constantes:
+        aout.write(line + '\n')
+    aout.write('; declaracao de FUNCOES\n')
+    for line in gca.codigo:
+        aout.write(line + '\n')
+    # aout.write('FIM_MAIN HM FIM_MAIN\n')
+    aout.write('# FIM\n')
