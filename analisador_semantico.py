@@ -238,6 +238,7 @@ class gerar_codigo_assembly(AbstractSimulador):
             self.codigo.append('LD {}'.format(operando.nome))
         self.codigo.append('SC PUSH')
         self.pilha_tipos_resultados_parciais.append(operando.tipo.s)
+        print(self.pilha_tipos_resultados_parciais)
     # FIM FUNÇÕES AUXILIARES
 
     # DECLARAÇÃO DE FUNÇÕES
@@ -349,6 +350,7 @@ class gerar_codigo_assembly(AbstractSimulador):
         self.inverte.append(False)
 
     def mais_ou_menos(self, operador):
+        print(self.pilha_operadores)
         if self.inverte[-1]:
             self.codigo.append('LD K_FFFF')
             self.codigo.append('SC PUSH')
@@ -367,7 +369,9 @@ class gerar_codigo_assembly(AbstractSimulador):
                         elif operador_old == '-':
                             self.codigo.append('SC PUSHDOWN_DIF')
                         self.pilha_tipos_resultados_parciais.pop()
+                        print(self.pilha_tipos_resultados_parciais)
         self.pilha_operadores.append(operador)
+        print(self.pilha_operadores)
 
     def vezes_ou_dividir(self, operador):
         if self.inverte[-1]:
@@ -387,7 +391,9 @@ class gerar_codigo_assembly(AbstractSimulador):
                         self.codigo.append('SC PUSHDOWN_DIV')
                         self.pilha_operadores.pop()
                         self.pilha_tipos_resultados_parciais.pop()
+                    print(self.pilha_tipos_resultados_parciais)
         self.pilha_operadores.append(operador)
+        print(self.pilha_operadores)
 
     def recebe_operando_id(self, operando):
         s = self.tabela_simbolos.procurar(operando)
@@ -398,6 +404,7 @@ class gerar_codigo_assembly(AbstractSimulador):
             else:
                 if s.tipo.s == 'int pointer' or s.tipo.s == 'bool pointer': # q p... de sintaxe :-(
                     self.__identificador_atual.append(s)
+                    self.pilha_operadores.append('(')
                 self.load_val(s)
 
     def recebe_operando_num(self, num):
@@ -423,6 +430,7 @@ class gerar_codigo_assembly(AbstractSimulador):
                         elif operador_old == '-':
                             self.codigo.append('SC PUSHDOWN_DIF')
                         self.pilha_tipos_resultados_parciais.pop()
+                        print(self.pilha_tipos_resultados_parciais)
         # cuida das comparacoes (eu acho)
         if self.pilha_operadores_booleanos:
             comp = self.pilha_operadores_booleanos.pop()
@@ -464,6 +472,7 @@ class gerar_codigo_assembly(AbstractSimulador):
                 elif operador == '/':
                     self.codigo.append('SC PUSHDOWN_DIV')
                 self.pilha_tipos_resultados_parciais.pop()
+                print(self.pilha_tipos_resultados_parciais)
 
     def separa_argumentos(self):
         if self.pilha_operadores:
@@ -564,6 +573,7 @@ class gerar_codigo_assembly(AbstractSimulador):
                 self.codigo.append("SC PUSH")
                 self.codigo.append("SC SET_VECT")
                 self.pilha_tipos_resultados_parciais.pop()
+        print(self.pilha_tipos_resultados_parciais)
 
     def comando_retorno(self):
         if not self.__fp_em_base:
@@ -642,6 +652,7 @@ class gerar_codigo_assembly(AbstractSimulador):
             self.codigo.append('SC GET_LENGTH')
             self.pilha_tipos_resultados_parciais.pop()
             self.pilha_tipos_resultados_parciais.append('int')
+            self.pilha_operadores.pop()
 
     def get_len(self):
         v = self.__identificador_atual.pop()
@@ -650,3 +661,5 @@ class gerar_codigo_assembly(AbstractSimulador):
             self.pilha_tipos_resultados_parciais.pop()
             self.pilha_tipos_resultados_parciais.pop()
             self.pilha_tipos_resultados_parciais.append('int')
+            print(self.pilha_tipos_resultados_parciais)
+            self.pilha_operadores.pop()
