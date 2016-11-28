@@ -118,6 +118,7 @@ class gerar_codigo_assembly(AbstractSimulador):
         self.__dummy_labels_generator = itertools.cycle(string.ascii_uppercase)
         self.labels_a_resolver = []
         self.tem_simbolos_a_resolver = []
+        self.__identificadores_do_len = []
 
         self.contador_whiles = 0
         
@@ -151,6 +152,7 @@ class gerar_codigo_assembly(AbstractSimulador):
         elif rotina == 'definir_tipo_funcao': self.definir_tipo_funcao(token)
         elif rotina == 'inicia_declaracao_parametros': self.inicia_declaracao_parametros()
         elif rotina == 'novo_par': self.novo_par(token)
+        elif rotina == 'parametro_eh_ponteiro': self.parametro_eh_ponteiro()
         elif rotina == 'fecha_declaracao_parametro': self.fecha_declaracao_parametro(token)        
         elif rotina == 'encerra_funcao': self.encerra_funcao()
         elif rotina == 'calcular_end_parametros': self.calcular_end_parametros()
@@ -261,11 +263,17 @@ class gerar_codigo_assembly(AbstractSimulador):
     def novo_par(self, nome_par):
         self.__lista_parametros.append(nome_par)
 
+    def parametro_eh_ponteiro(self):
+        if self.__tipo_atual.s == 'int':
+            self.__tipo_atual = self.tipos['int pointer']
+        elif self.__tipo_atual.s == 'bool':
+            self.__tipo_atual = self.tipos['bool pointer']
+
     def fecha_declaracao_parametro(self, tipo_par):
         for nome_par in self.__lista_parametros:
             parametro_existe = self.tabela_simbolos.existe(nome_par)
             if not parametro_existe:
-                par_simb = ST.Simbolo(nome_par, "par", self.tipos[tipo_par])
+                par_simb = ST.Simbolo(nome_par, "par", self.__tipo_atual)
                 self.tabela_simbolos.inserir_simbolo(par_simb)
                 self.__func_atual.add_parametro(par_simb)
 
@@ -305,11 +313,12 @@ class gerar_codigo_assembly(AbstractSimulador):
         for nome_var in self.__lista_variaveis_a_declarar:
             variavel_existe = self.tabela_simbolos.existe(nome_var)
             if not variavel_existe:
-                var_simb = ST.Simbolo(nome_var, "var", self.__tipo_atual)
+                if self.__dims:
+                    var_simb = ST.SimboloArray(nome_var, "var", self.__tipo_atual, self.__dims)
+                else:
+                    var_simb = ST.Simbolo(nome_var, "var", self.__tipo_atual)
                 self.__func_atual.pilha_variaveis_offset += var_simb.tipo.tamanho
                 var_simb.posicao = self.__func_atual.pilha_variaveis_offset
-                if self.__dims:
-                    var_simb.dimensoes = list(self.__dims)
                 self.tabela_simbolos.inserir_simbolo(var_simb)
                 self.__func_atual.add_variavel(var_simb)
                 if (var_simb.tipo.s == 'int pointer'
@@ -343,10 +352,10 @@ class gerar_codigo_assembly(AbstractSimulador):
     # EXPRESSÕES MATEMÁTICAS
     def iniciar_expressao_mat(self):
         # self.pilha_operadores.append('LD')
-        if not self.__fp_em_base:
-            self.codigo.append("LD FP")
-            self.codigo.append("MM BASE")
-            self.__fp_em_base = True
+        # if not self.__fp_em_base:
+        #     self.codigo.append("LD FP")
+        #     self.codigo.append("MM BASE")
+            # self.__fp_em_base = False
         self.inverte.append(False)
 
     def mais_ou_menos(self, operador):
@@ -403,7 +412,7 @@ class gerar_codigo_assembly(AbstractSimulador):
                 self.pilha_operadores.append('(')
             else:
                 if s.tipo.s == 'int pointer' or s.tipo.s == 'bool pointer': # q p... de sintaxe :-(
-                    self.__identificador_atual.append(s)
+                    self.__identificadores_do_len.append(s)
                     self.pilha_operadores.append('(')
                 self.load_val(s)
 
@@ -563,16 +572,25 @@ class gerar_codigo_assembly(AbstractSimulador):
 
     def comando_atribuicao(self):
         simb = self.__identificador_atual.pop()
-        if not self.__fp_em_base:
-            self.codigo.append("LD FP")
-            self.codigo.append("MM BASE")
-            self.__fp_em_base = True # ?
-        if (self.pilha_tipos_resultados_parciais[-1]
-            == simb.tipo.s):
-                self.codigo.append("LD {}".format(self.get_const_num_repr(simb.posicao)))
-                self.codigo.append("SC PUSH")
-                self.codigo.append("SC SET_VECT")
-                self.pilha_tipos_resultados_parciais.pop()
+        if simb.tipo.s != 'int pointer' and simb.tipo.s != 'bool pointer':
+            if not self.__fp_em_base:
+                self.codigo.append("LD FP")
+                self.codigo.append("MM BASE")
+                self.__fp_em_base = False # ?
+            if (self.pilha_tipos_resultados_parciais[-1]
+                == simb.tipo.s):
+                    self.codigo.append("LD {}".format(self.get_const_num_repr(simb.posicao)))
+                    self.codigo.append("SC PUSH")
+                    self.codigo.append("SC SET_VECT")
+        else:
+                    self.load_val(simb)
+                    self.codigo.append('LD WORD_TAM')
+                    self.codigo.append('SC PUSH')
+                    self.codigo.append('SC PUSHDOWN_SUM')
+                    self.codigo.append('SC SET_OFFSET')
+                    self.__fp_em_base = False
+
+        self.pilha_tipos_resultados_parciais.pop()
         print(self.pilha_tipos_resultados_parciais)
 
     def comando_retorno(self):
@@ -645,7 +663,7 @@ class gerar_codigo_assembly(AbstractSimulador):
     # FIM COMANDO WHILE
 
     def get_len_v(self):
-        v = self.__identificador_atual.pop()
+        v = self.__identificadores_do_len.pop()
         if v.tipo.s == 'int pointer' or v.tipo.s == 'bool pointer':
             self.codigo.append('LD K_0000')
             self.codigo.append('SC PUSH')
@@ -655,7 +673,7 @@ class gerar_codigo_assembly(AbstractSimulador):
             self.pilha_operadores.pop()
 
     def get_len(self):
-        v = self.__identificador_atual.pop()
+        v = self.__identificadores_do_len.pop()
         if v.tipo.s == 'int pointer' or v.tipo.s == 'bool pointer':
             self.codigo.append('SC GET_LENGTH')
             self.pilha_tipos_resultados_parciais.pop()
