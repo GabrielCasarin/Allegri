@@ -8,5 +8,5 @@ mvn_build_system/src/$(fonte).asm: src/$(fonte).barber
 	python compilador.py $(fonte)
 
 salva_no_rela:
-	cp src/$(prog).barber relatorio/
-	cp mvn_build_system/src/$(prog).asm relatorio/
+	cp src/$(fonte).barber relatorio/
+	cp mvn_build_system/src/$(fonte).asm relatorio/
