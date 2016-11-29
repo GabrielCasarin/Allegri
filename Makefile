@@ -1,10 +1,11 @@
-%.asm:
-	python compilador.py $* $*
 
-%: %.asm
-	if [ -e mvn_build_system/src/$< ] ;\
-		then cd mvn_build_system; make $*; make run ;\
+$(fonte): mvn_build_system/src/$(fonte).asm
+	if [ -e $< ] ;\
+		then cd mvn_build_system; make $(fonte); make run ;\
 	fi ;
+
+mvn_build_system/src/$(fonte).asm: src/$(fonte).barber
+	python compilador.py $(fonte)
 
 salva_no_rela:
 	cp src/$(prog).barber relatorio/

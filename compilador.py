@@ -50,16 +50,16 @@ analisador_sintatico = analise_sintatica(automato_sintatico, tokenizer, gca, log
 
 # Executa a compilação a partir DAQUI
 arquivo_saida = 'aout'
-if len(sys.argv) >= 2:
-    arquivo_fonte = os.path.join('src', sys.argv[1])
-    if len(sys.argv) == 3:
-        arquivo_saida = sys.argv[2]
+if len(sys.argv) == 2:
+    arquivo_fonte = os.path.join('src', sys.argv[1]) + '.barber'
+    arquivo_saida = sys.argv[1] + '.asm'
+    print(arquivo_fonte, arquivo_saida)
 
-analisador_sintatico(arquivo_fonte+'.barber')
+analisador_sintatico(arquivo_fonte)
 
 gca.log_tabela()
 
-with open(os.path.join('mvn_build_system', 'src', arquivo_saida+'.asm'), 'w') as aout:
+with open(os.path.join('mvn_build_system', 'src', arquivo_saida), 'w') as aout:
     for line in gca.preambulo:
         aout.write(line + '\n')
     aout.write('; declaracao de CONSTANTES\n')

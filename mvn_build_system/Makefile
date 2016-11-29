@@ -31,3 +31,4 @@ vpath %.asm $(SRCDIR):$(LIBDIR)
 
 run:
 	@$(JAVA) -jar $(BINDIR)/mvn.jar
+
