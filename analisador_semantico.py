@@ -52,7 +52,6 @@ class gerar_codigo_assembly(AbstractSimulador):
             "BASE      <",
             "K_0000    <",
             "K_0001    <",
-            "K_0002    <",
             "K_FFFF    <",
             "WORD_TAM  <",
             "DIM_1     <",
@@ -97,9 +96,6 @@ class gerar_codigo_assembly(AbstractSimulador):
         )
         self.tabela_simbolos.inserir_simbolo(
             ST.SimboloConst("K_0001", "const", self.tipos["int"], 1)
-        )
-        self.tabela_simbolos.inserir_simbolo(
-            ST.SimboloConst("K_0002", "const", self.tipos["int"], 2)
         )
         self.tabela_simbolos.inserir_simbolo(
             ST.SimboloConst("K_FFFF", "const", self.tipos["int"], -1)
