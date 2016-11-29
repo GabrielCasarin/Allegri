@@ -22,10 +22,10 @@ decompositor.add_categoria('Zero', ['0'])
 decompositor.add_categoria('DecAlg', string.digits[1:]) # Decimal Algarismo sem o zero
 
 # cria o automato que reconhece os diversos tokens da linguagem
-automato_transdutor_tokenizador_de_barber = transdutor_finito(os.path.join(ROOT_DIR, 'Barber', 'tokenizer_barber.maquina'))
+automato_transdutor_tokenizador_de_barber = transdutor_finito(os.path.join(ROOT_DIR, BARBER_DIR, 'tokenizer_barber.maquina'))
 
 # palavras reservadas
-palavras_reservadas = tuple(open(os.path.join('Barber', 'barber.tokens')).read().splitlines())
+palavras_reservadas = tuple(open(os.path.join(BARBER_DIR, 'barber.tokens')).read().splitlines())
 
 # analisador léxico
 tokenizer = analisador_lexico(automato_transdutor_tokenizador_de_barber, decompositor, None, log_analise_lexica, palavras_reservadas)
