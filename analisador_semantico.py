@@ -115,8 +115,6 @@ class gerar_codigo_assembly(AbstractSimulador):
         self.labels_a_resolver = []
         self.tem_simbolos_a_resolver = []
         self.__identificadores_do_len = []
-
-        self.contador_whiles = 0
         
         self.__log = log
 
@@ -247,7 +245,11 @@ class gerar_codigo_assembly(AbstractSimulador):
             self.tabela_simbolos.inserir_simbolo(self.__func_atual)
             self.tabela_simbolos.novo_escopo()
             self.codigo.append("{}\t$ =1".format(self.__func_atual.nome))
-        self.contador_ifs = 0
+        self.__contador_ifs = 0
+        self.__pilha_ids_if = []
+        self.__pilha_ids_elif = []
+        self.__contador_whiles = 0
+        self.__pilha_ids_while = []
 
     def definir_tipo_funcao(self, tipo_retorno):
         if tipo_retorno in self.tipos:
@@ -601,61 +603,64 @@ class gerar_codigo_assembly(AbstractSimulador):
 
     # COMANDO IF
     def constroi_if(self):
-        self.contador_ifs += 1
-        self.contador_elifs = 0
-        self.codigo.append('{}_IF_{} SC POP'.format(self.__func_atual.nome, self.contador_ifs))
+        self.__contador_ifs += 1
+        self.__pilha_ids_if.append(self.__contador_ifs)
+        self.__contador_elifs = 0
+        self.__pilha_ids_elif.append([self.__contador_elifs])
+        self.codigo.append('{}_IF_{} SC POP'.format(self.__func_atual.nome, self.__pilha_ids_if[-1]))
         self.pilha_tipos_resultados_parciais.pop()
         dummy_label = next(self.__dummy_labels_generator)
         self.labels_a_resolver.append((dummy_label, len(self.codigo)))
         self.codigo.append('JZ {}'.format(dummy_label))
 
     def constroi_elif(self):
-        self.contador_elifs += 1
+        self.__contador_elifs += 1
+        self.__pilha_ids_elif[-1].append([self.__contador_elifs])
         dummy_label, indice = self.labels_a_resolver.pop()
-        label_elif = '{}_ELIF_{}_{}'.format(self.__func_atual.nome, self.contador_ifs, self.contador_elifs)
+        label_elif = '{}_ELIF_{}_{}'.format(self.__func_atual.nome, self.__pilha_ids_if[-1], self.__contador_elifs)
         self.codigo.append(label_elif + ' SC POP')
         label_real = self.codigo[indice]
         label_real = label_real.replace(' {}'.format(dummy_label), ' ' + label_elif)
         self.codigo[indice] = label_real
         self.labels_a_resolver.append((dummy_label, len(self.codigo)))
         self.codigo.append('JZ {}'.format(dummy_label))
-        self.contador_elifs += 1
 
     def constroi_else(self):
-        self.codigo.append('JP {}_END_IF_{}'.format(self.__func_atual.nome, self.contador_ifs))
+        self.codigo.append('JP {}_END_IF_{}'.format(self.__func_atual.nome, self.__pilha_ids_if[-1]))
         dummy_label, indice = self.labels_a_resolver.pop()
-        label_else = '{}_ELSE_{}'.format(self.__func_atual.nome, self.contador_ifs)
+        label_else = '{}_ELSE_{}'.format(self.__func_atual.nome, self.__pilha_ids_if[-1])
         self.codigo.append(label_else + ' + K_0000 ; pseudo NOP')
         label_real = self.codigo[indice]
         label_real = label_real.replace(' {}'.format(dummy_label), ' ' + label_else)
         self.codigo[indice] = label_real
 
     def fecha_if(self):
-        self.codigo.append('JP {}_END_IF_{}'.format(self.__func_atual.nome, self.contador_ifs))
+        self.codigo.append('JP {}_END_IF_{}'.format(self.__func_atual.nome, self.__pilha_ids_if[-1]))
         dummy_label, indice = self.labels_a_resolver.pop()
         label_real = self.codigo[indice]
-        label_real = label_real.replace(' {}'.format(dummy_label), ' {}_END_IF_{}'.format(self.__func_atual.nome, self.contador_ifs))
+        label_real = label_real.replace(' {}'.format(dummy_label), ' {}_END_IF_{}'.format(self.__func_atual.nome, self.__pilha_ids_if[-1]))
         self.codigo[indice] = label_real
-        self.codigo.append('{}_END_IF_{} + K_0000 ; pseudo NOP'.format(self.__func_atual.nome, self.contador_ifs))
-        self.contador_ifs -= 1
+        self.codigo.append('{}_END_IF_{} + K_0000 ; pseudo NOP'.format(self.__func_atual.nome, self.__pilha_ids_if[-1]))
+        self.__pilha_ids_if.pop()
 
     def fecha_else(self):
-        self.codigo.append('{}_END_IF_{} + K_0000 ; pseudo NOP'.format(self.__func_atual.nome, self.contador_ifs))
-        self.contador_ifs -= 1
+        self.codigo.append('{}_END_IF_{} + K_0000 ; pseudo NOP'.format(self.__func_atual.nome, self.__pilha_ids_if[-1]))
+        self.__pilha_ids_if.pop()
     # FIM COMANDO IF
 
     # COMANDO WHILE
     def constroi_while(self):
-        self.contador_whiles += 1
-        self.codigo.append('{}_WHILE_{} + K_0000'.format(self.__func_atual.nome, self.contador_whiles))
+        self.__contador_whiles += 1
+        self.__pilha_ids_while.append(self.__contador_whiles)
+        self.codigo.append('{}_WHILE_{} + K_0000'.format(self.__func_atual.nome, self.__pilha_ids_while[-1]))
     def constroi_while2(self):
         self.codigo.append('SC POP')
         self.pilha_tipos_resultados_parciais.pop()
-        self.codigo.append('JZ {}_END_WHILE_{}'.format(self.__func_atual.nome, self.contador_whiles))
+        self.codigo.append('JZ {}_END_WHILE_{}'.format(self.__func_atual.nome, self.__pilha_ids_while[-1]))
     def fecha_while(self):
-        self.codigo.append('JP {}_WHILE_{}'.format(self.__func_atual.nome, self.contador_whiles))
-        self.codigo.append('{}_END_WHILE_{} + K_0000'.format(self.__func_atual.nome, self.contador_whiles))
-        self.contador_whiles -= 1
+        self.codigo.append('JP {}_WHILE_{}'.format(self.__func_atual.nome, self.__pilha_ids_while[-1]))
+        self.codigo.append('{}_END_WHILE_{} + K_0000'.format(self.__func_atual.nome, self.__pilha_ids_while[-1]))
+        self.__pilha_ids_while.pop()
     # FIM COMANDO WHILE
 
     def get_len_v(self):
