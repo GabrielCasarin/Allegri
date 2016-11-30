@@ -7,6 +7,7 @@ SP 		>
 K_MM 	<
 K_LD	<
 WORD_TAM 	<
+ACC_AUX     <
 
 
 			&		/0000
@@ -14,16 +15,15 @@ WORD_TAM 	<
 
 SP			K		/0FFE
 SP_MAX 		K 		/1000
-TEMP		K 		/0000
 
 
 
 PUSH 		$ 		/0001
-			MM		TEMP
+			MM		ACC_AUX
 			LD		K_MM
 			+		SP
 			MM 		EMPILHA
-			LD	 	TEMP
+			LD	 	ACC_AUX
 EMPILHA		K 		/0000
 			LD 		SP
 			; atualiza o topo da pilha

@@ -1,15 +1,16 @@
 ; exportacoes
-GET_VECT 	>
-SET_VECT 	>
-GET_OFFSET  >
-SET_OFFSET  >
-BASE 		>
+GET_FROM_FRAME  >
+SET_TO_FRAME 	>
+GET_FROM_VECT   >
+SET_TO_VECT     >
+BASE            >
 PUSHDOWN_SUM	>
 PUSHDOWN_DIF 	>
 PUSHDOWN_MUL 	>
 PUSHDOWN_DIV 	>
 GET_LENGTH 		>
 ACC_AUX 		>
+FP 				>
 
 ; importacoes
 PUSH 		<
@@ -20,6 +21,12 @@ WORD_TAM 	<
 
 
 			& 		/0000
+
+;============================
+;  Registradores Auxiliares
+;============================
+
+FP    		$ 		=1
 
 
 ACC_AUX		$		=1
@@ -33,42 +40,43 @@ OFFSET 		$		=1
 ;  OPERACOES SOBRE POSICOES DE MEMORIA
 ; =====================================
 
-GET_VECT	  	$ 		=1
+GET_FROM_FRAME	$ 		=1
 				; desempilha o parametro
 				; OFFSET
 				SC 		POP
 				MM 		OFFSET
 
 				; corpo da função
-				LD		BASE
+				LD		FP
 				-		OFFSET
 				+		K_LD
 				MM		LOAD
 LOAD			K 		/0000
-				RS 		GET_VECT
+				RS 		GET_FROM_FRAME
 
 
 
-SET_VECT 		$		=1
+SET_TO_FRAME	$		=1
 				; desempilha os parametros
 				; OFFSET
 				SC 		POP
 				MM 		OFFSET
 
-				LD		BASE
+				LD		FP
 				- 		OFFSET
 				+		K_MM
 				MM 		MOVE
 				; desempilha o valor a ser atribuido
 				SC 		POP
 MOVE 			K 		/0000
-				RS 		SET_VECT
+				RS 		SET_TO_FRAME
 
 
 
-GET_OFFSET 		$ 		=1
+GET_FROM_VECT 	$ 		=1
 				; OFFSET
 				SC 		POP
+				* 		WORD_TAM
 				MM 		OFFSET
 				; BASE
 				SC 		POP
@@ -77,13 +85,13 @@ GET_OFFSET 		$ 		=1
 				LD 		BASE
 				+ 		OFFSET
 				+ 		K_LD
-				MM 		LOAD_OFFSET
-LOAD_OFFSET 	K 		/0000
-				RS 		GET_OFFSET
+				MM 		LOAD_2
+LOAD_2 			K 		/0000
+				RS 		GET_FROM_VECT
 
 
 
-SET_OFFSET 		$ 		=1
+SET_TO_VECT 	$ 		=1
 				; BASE
 				SC 		POP
 				MM 		BASE
@@ -98,10 +106,10 @@ SET_OFFSET 		$ 		=1
 				LD 		BASE
 				+ 		OFFSET
 				+ 		K_MM
-				MM 		MOVE_OFFSET
+				MM 		MOVE_2
 				LD 		ACC_AUX
-MOVE_OFFSET 	K 		/0000
-				RS 		SET_OFFSET
+MOVE_2 			K 		/0000
+				RS 		SET_TO_VECT
 
 
 
@@ -114,8 +122,8 @@ GET_LENGTH      $       =1
 				SC 		PUSHDOWN_SUM
 				SC 		POP
 				+ 		K_LD
-				MM 		LOAD_GET_LENGTH
-LOAD_GET_LENGTH $ 		=1
+				MM 		LOAD_3
+LOAD_3 			$ 		=1
 				SC 		PUSH
 				RS 		GET_LENGTH
 
