@@ -22,22 +22,22 @@ class gerar_codigo_assembly(AbstractSimulador):
         self.pilha_operadores = []
         self.__func_atual = None
 
-        self.__fp_em_base = False
 
         # código necessário a todos os programas compilados
         self.preambulo = [
             "PUSH    <",
             "POP     <",
             "SP      <",
+            "FP      <",
             "TRUE    <",
             "FALSE   <",
             "AND     <",
             "OR      <",
             "NOT     <",
-            "GET_VECT    <",
-            "SET_VECT    <",
-            "GET_OFFSET  <",
-            "SET_OFFSET  <",
+            "GET_FROM_FRAME  <",
+            "SET_TO_FRAME    <",
+            "GET_FROM_VECT   <",
+            "SET_TO_VECT     <",
             "PUSHDOWN_SUM    <",
             "PUSHDOWN_DIF    <",
             "PUSHDOWN_MUL    <",
@@ -67,7 +67,6 @@ class gerar_codigo_assembly(AbstractSimulador):
             "MM    FP",
             "SC    main",
             "FIM   HM FIM",
-            "FP    $ =1",
         ]
 
         # insere na tabela de símbolos todos os imports
@@ -228,12 +227,9 @@ class gerar_codigo_assembly(AbstractSimulador):
     def load_val(self, operando):
         if (operando.especie == "var"
             or operando.especie == "par"):
-                if not self.__fp_em_base:
-                    self.codigo.append("LD FP")
-                    self.codigo.append("MM BASE")
                 self.codigo.append('LD {}'.format(self.get_const_num_repr(operando.posicao)))
                 self.codigo.append('SC PUSH')
-                self.codigo.append('SC GET_VECT')
+                self.codigo.append('SC GET_FROM_FRAME')
         elif operando.especie == "const":
             self.codigo.append('LD {}'.format(operando.nome))
         self.codigo.append('SC PUSH')
@@ -291,7 +287,6 @@ class gerar_codigo_assembly(AbstractSimulador):
         self.codigo.append("MM SP")
         self.codigo.append("RET_{0}\tRS\t{0}".format(self.__func_atual.nome))
         self.__func_atual = None
-        self.__fp_em_base = False # ?
 
     def inicia_declaracao_variavel(self):
         self.__lista_variaveis_a_declarar = []
@@ -553,7 +548,6 @@ class gerar_codigo_assembly(AbstractSimulador):
             self.codigo.append("SC POP")
         self.codigo.append("; termina de desempilhar os parametros passados aa funcao")
         self.codigo.append("; resta o valor de retorno no topo da pilha")
-        self.__fp_em_base = False
         self.__identificador_atual.pop()
         self.__contador_parametros_atribuidos.pop()
 
@@ -575,33 +569,25 @@ class gerar_codigo_assembly(AbstractSimulador):
     def comando_atribuicao(self):
         simb = self.__identificador_atual.pop()
         if simb.tipo.s != 'int pointer' and simb.tipo.s != 'bool pointer':
-            if not self.__fp_em_base:
-                self.codigo.append("LD FP")
-                self.codigo.append("MM BASE")
-                self.__fp_em_base = False # ?
             if (self.pilha_tipos_resultados_parciais[-1]
                 == simb.tipo.s):
                     self.codigo.append("LD {}".format(self.get_const_num_repr(simb.posicao)))
                     self.codigo.append("SC PUSH")
-                    self.codigo.append("SC SET_VECT")
+                    self.codigo.append("SC SET_TO_FRAME")
         else:
                     self.load_val(simb)
                     self.codigo.append('LD WORD_TAM')
                     self.codigo.append('SC PUSH')
                     self.codigo.append('SC PUSHDOWN_SUM')
-                    self.codigo.append('SC SET_OFFSET')
-                    self.__fp_em_base = False
+                    self.codigo.append('SC SET_TO_VECT')
 
         self.pilha_tipos_resultados_parciais.pop()
         print(self.pilha_tipos_resultados_parciais)
 
     def comando_retorno(self):
-        if not self.__fp_em_base:
-            self.codigo.append("LD FP")
-            self.codigo.append("MM BASE")
         self.codigo.append("LD {}".format(self.get_const_num_repr(self.__func_atual.offset_valor_retorno)))
         self.codigo.append("SC PUSH")
-        self.codigo.append("SC SET_VECT")
+        self.codigo.append("SC SET_TO_FRAME")
         self.codigo.append("JP RET_{}".format(self.__func_atual.nome))
     # FIM COMANDO SIMPLES
 
