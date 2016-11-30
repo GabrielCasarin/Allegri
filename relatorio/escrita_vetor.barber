@@ -1,0 +1,11 @@
+def main {
+    var v, u int[10]
+    var i int
+    i = 0
+    while i < len(v) {
+        v[i] = i + 5*16
+        u[i] = 2*i + 1
+        i = i + 1
+    }
+}
+

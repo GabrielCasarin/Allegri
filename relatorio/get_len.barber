@@ -1,0 +1,7 @@
+def main {
+	var b, c int
+	var a int[21][45]
+
+	c = len(a, 0)
+	b = len(a, 1)
+}

@@ -1,0 +1,10 @@
+def f int
+    par p1, p2 int {
+    return (p1 + p2)*2
+    }
+
+def main {
+	var a, b int
+	b = 4660
+    a = 3 + 6*f(3 + f(1, 2), 5)
+    }

@@ -1,0 +1,14 @@
+def f int 
+    par p1, p2 int {
+    var v3, v4 int
+
+    v4 = 2
+    v3 = 7
+
+    return (p1 + v3) * (p2 + v4)
+
+	}
+
+def main {
+    f(10, 20)
+    }

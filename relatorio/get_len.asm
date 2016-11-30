@@ -1,0 +1,86 @@
+PUSH    <
+POP     <
+SP      <
+TRUE    <
+FALSE   <
+AND     <
+OR      <
+NOT     <
+GET_VECT    <
+SET_VECT    <
+GET_OFFSET  <
+SET_OFFSET  <
+PUSHDOWN_SUM    <
+PUSHDOWN_DIF    <
+PUSHDOWN_MUL    <
+PUSHDOWN_DIV    <
+GET_LENGTH      <
+IGUAL           <
+DIFERENTE       <
+MAIOR           <
+MAIOR_OU_IGUAL  <
+MENOR           <
+MENOR_OU_IGUAL  <
+BASE      <
+K_0000    <
+K_0001    <
+K_0002    <
+K_FFFF    <
+WORD_TAM  <
+DIM_1     <
+DIM_2     <
+INIT_HEAP      <
+NEW_ARRAY      <
+NEW_MATRIX     <
+&     /0000
+SC    INIT_HEAP
+LD    SP
++     WORD_TAM
+MM    FP
+SC    main
+FIM   HM FIM
+FP    $ =1
+; declaracao de CONSTANTES
+K_0015	K /0015
+K_002D	K /002D
+K_0006	K /0006
+K_0004	K /0004
+; declaracao de FUNCOES
+main	$ =1
+LD K_0000
+SC PUSH  ; var b
+LD K_0000
+SC PUSH  ; var c
+LD K_0015
+MM DIM_1
+LD K_002D
+MM DIM_2
+SC NEW_MATRIX
+SC PUSH  ; var a
+LD FP
+MM BASE
+LD K_0006
+SC PUSH
+SC GET_VECT
+SC PUSH
+LD K_0000
+SC PUSH
+SC GET_LENGTH
+LD K_0004
+SC PUSH
+SC SET_VECT
+LD K_0006
+SC PUSH
+SC GET_VECT
+SC PUSH
+LD K_0001
+SC PUSH
+SC GET_LENGTH
+LD K_0002
+SC PUSH
+SC SET_VECT
+LD FP
+-  WORD_TAM
+MM SP
+RET_main	RS	main
+# FIM

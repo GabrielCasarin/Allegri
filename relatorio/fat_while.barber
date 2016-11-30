@@ -1,0 +1,9 @@
+def main {
+	var a, b int
+	a = 1
+	b = 6
+	while b > 0 {
+		a = a * b
+		b = b - 1
+	}
+}
