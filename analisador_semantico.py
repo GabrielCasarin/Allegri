@@ -49,7 +49,6 @@ class gerar_codigo_assembly(AbstractSimulador):
             "MAIOR_OU_IGUAL  <",
             "MENOR           <",
             "MENOR_OU_IGUAL  <",
-            "BASE      <",
             "K_0000    <",
             "K_0001    <",
             "K_0002    <",
@@ -60,6 +59,7 @@ class gerar_codigo_assembly(AbstractSimulador):
             "INIT_HEAP      <",
             "NEW_ARRAY      <",
             "NEW_MATRIX     <",
+            "\n; inicio do codigo",
             "&     /0000",
             "SC    INIT_HEAP",
             "LD    SP",
@@ -68,6 +68,10 @@ class gerar_codigo_assembly(AbstractSimulador):
             "SC    main",
             "FIM   HM FIM",
         ]
+        # armazena o código referente a declarações de constantes 
+        self.constantes = []
+        # armazena todo o código gerado
+        self.codigo = []
 
         # insere na tabela de símbolos todos os imports
         self.tabela_simbolos.inserir_simbolo(
@@ -103,11 +107,6 @@ class gerar_codigo_assembly(AbstractSimulador):
         self.tabela_simbolos.inserir_simbolo(
             ST.SimboloConst("K_FFFF", "const", self.tipos["int"], -1)
         )
-
-        # armazena o código referente a declarações de constantes 
-        self.constantes = []
-        # armazena todo o código gerado
-        self.codigo = []
 
         self.__identificador_atual = []
         self.__contador_parametros_atribuidos = []

@@ -44,6 +44,7 @@ class SimboloArray(Simbolo):
 	def __init__(self, nome, especie, tipo, dimensoes=[]):
 		super(SimboloArray, self).__init__(nome, especie, tipo)
 		self.dimensoes = list(dimensoes)
+		self.cursor_atual = 0
 
 
 class TipoBasico:
