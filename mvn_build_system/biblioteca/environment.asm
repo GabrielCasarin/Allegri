@@ -92,18 +92,18 @@ LOAD_2 			K 		/0000
 
 
 SET_TO_VECT 	$ 		=1
-				; BASE
-				SC 		POP
-				MM 		BASE
 				; desempilha o valor a ser atribuido
 				SC 		POP
 				MM 		ACC_AUX
 				; OFFSET
 				SC 		POP
-				* 		WORD_TAM
+				;* 		WORD_TAM
 				MM 		OFFSET
+				; BASE
+				SC 		POP
+				;MM 		BASE
 
-				LD 		BASE
+				;LD 		BASE
 				+ 		OFFSET
 				+ 		K_MM
 				MM 		MOVE_2

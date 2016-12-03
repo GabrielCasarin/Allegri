@@ -25,7 +25,8 @@ par var } def = enter { , Identificador int return
 	(q4, 'Identificador') -> q8\inicia_comando_simples
 	(q8, '[') -> q23
 	q23 => (EXP, q24)\iniciar_expressao_mat
-	(q24, ']') -> q8
+	(q24, ',') -> q23\add_indice
+	(q24, ']') -> q8\add_indice_e_mult_word
 	(q8, '=') -> q11
 	q11 => (EXP, q12)\iniciar_expressao_mat
 	(q12, 'enter') -> q13\comando_atribuicao
@@ -40,10 +41,11 @@ par var } def = enter { , Identificador int return
 	(q17, 'enter') -> q13\chamar_funcao
 	(q9, 'enter') -> q9
 	(q9, 'def') -> q1
-	(q4, 'return') -> q19
-	(q13, 'return') -> q19
+	(q4, 'return') -> q19\comando_retorno_carregar_end_ret
+	(q13, 'return') -> q19\comando_retorno_carregar_end_ret
 	q19 => (EXP, q20)\iniciar_expressao_mat
 	(q20, 'enter') -> q13\comando_retorno
+	(q19, 'enter') -> q13\comando_retorno
 
 	(q4, 'if') -> q21
 	(q13, 'if') -> q21
@@ -63,9 +65,9 @@ Identificador , int bool [ ]
 	(q1, 'int') -> q2\add_tipo
 	(q1, 'bool') -> q2\add_tipo
 	(q2, '[') -> q4
-	(q4, ']') -> q5\parametro_eh_ponteiro
+	(q4, ']') -> q5\add_rank_parametro
 	(q5, '[') -> q7
-	(q7, ']') -> q8
+	(q7, ']') -> q8\add_rank_parametro
 	q2 => pop()\fecha_declaracao_parametro
 	q5 => pop()\fecha_declaracao_parametro
 	q8 => pop()\fecha_declaracao_parametro
@@ -90,10 +92,10 @@ Identificador , int bool [ Numero ]
 	q8 => pop()\fecha_declaracao_variavel
 </DeclaraVariaveis>
 <EXP>
-q0 q1 q2 q3 q4 q5 q6 q7 q8 q9 q10 q11
+q0 q1 q2 q3 q4 q5 q6 q7 q8 q9 q10 q11 q12 q13
 q0
 q1
-- Numero ) Identificador ( + / * Comparacao and or not len ] [
+- Numero ) Identificador ( + / * Comparacao and or not len ] [ ,
 	(q0, 'Numero') -> q1\recebe_operando_num
 	(q0, 'Identificador') -> q1\recebe_operando_id
 	(q0, '-') -> q6\inverte_termo
@@ -126,6 +128,12 @@ q1
 	q10 => (EXP, q11)\iniciar_expressao_mat
 	(q11, ')') -> q1\get_len
 
+	(q1, '[') -> q12
+	q12 => (EXP, q13)\iniciar_expressao_mat
+	(q13, ']') -> q1\get_elem
+	(q13, ',') -> q12\add_indice
+
+
 	q1 => pop()\finalizar_expressao_mat
 </EXP>
 <IF>
@@ -155,7 +163,8 @@ q7
 	(q2, 'Identificador') -> q4\inicia_comando_simples
 	(q4, '[') -> q13
 	q13 => (EXP, q14)\iniciar_expressao_mat
-	(q14, ']') -> q4
+	(q14, ',') -> q13\add_indice
+	(q14, ']') -> q4\add_indice_e_mult_word
 	(q4, '=') -> q6
 	q6 => (EXP, q8)\iniciar_expressao_mat
 	(q8, 'enter') -> q2\comando_atribuicao
@@ -167,7 +176,7 @@ q7
 	(q2, '}') -> q3
 	(q3, 'enter') -> q7
 	(q2, 'while') -> q12
-	q12 => (While, q2)
+	q12 => (While, q2)\constroi_while
 </Bloco>
 <While>
 q0 q1 q2
