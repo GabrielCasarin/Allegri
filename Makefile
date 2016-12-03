@@ -10,3 +10,6 @@ mvn_build_system/src/$(fonte).asm: src/$(fonte).barber
 salva_no_rela:
 	cp src/$(fonte).barber relatorio/
 	cp mvn_build_system/src/$(fonte).asm relatorio/
+
+rm:
+	rm mvn_build_system/src/$(fonte).asm
