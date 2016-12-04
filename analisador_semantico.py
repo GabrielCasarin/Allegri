@@ -178,7 +178,6 @@ class gerar_codigo_assembly(AbstractSimulador):
         # COMANDO SIMPLES
         elif rotina == 'inicia_comando_simples': self.inicia_comando_simples(token)
         elif rotina == 'comando_atribuicao': self.comando_atribuicao()
-        elif rotina == 'comando_retorno_carregar_end_ret': self.comando_retorno_carregar_end_ret()
         elif rotina == 'comando_retorno': self.comando_retorno()
         # FIM COMANDO SIMPLES
 
@@ -648,13 +647,12 @@ class gerar_codigo_assembly(AbstractSimulador):
         self.pilha_tipos_resultados_parciais.pop()
         self.pilha_tipos_resultados_parciais.pop()
 
-    def comando_retorno_carregar_end_ret(self):
+
+    def comando_retorno(self):
         if self.__func_atual.tipo != "void":
             self.codigo.append("LD    {}".format(self.get_const_num_repr(self.__func_atual.offset_valor_retorno)))
             self.codigo.append("SC    PUSH")
-
-    def comando_retorno(self):
-        if self.pilha_tipos_resultados_parciais:
+        # if self.pilha_tipos_resultados_parciais:
             self.pilha_tipos_resultados_parciais.pop()
             self.codigo.append("SC    SET_TO_FRAME")
         self.codigo.append("JP    RET_{}".format(self.__func_atual.nome))

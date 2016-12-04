@@ -41,8 +41,8 @@ par var } def = enter { , Identificador int return
 	(q17, 'enter') -> q13\chamar_funcao
 	(q9, 'enter') -> q9
 	(q9, 'def') -> q1
-	(q4, 'return') -> q19\comando_retorno_carregar_end_ret
-	(q13, 'return') -> q19\comando_retorno_carregar_end_ret
+	(q4, 'return') -> q19
+	(q13, 'return') -> q19
 	q19 => (Expressao, q20)\iniciar_expressao_mat
 	(q20, 'enter') -> q13\comando_retorno
 	(q19, 'enter') -> q13\comando_retorno
