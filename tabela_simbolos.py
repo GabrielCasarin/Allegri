@@ -33,7 +33,6 @@ class SimboloFunc(Simbolo):
 	def add_parametro(self, simb):
 		i = len(self.parametros)
 		self.parametros[i] = simb
-		print(self.parametros)
 
 	def add_variavel(self, simb):
 		i = len(self.variaveis)
@@ -52,6 +51,9 @@ class TipoBasico:
 		super(TipoBasico, self).__init__()
 		self.s = s
 		self.tamanho = tamanho
+
+	def __eq__(self, s):
+		return s == self.s
 
 
 class TabelaSimbolos:
