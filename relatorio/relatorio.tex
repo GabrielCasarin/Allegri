@@ -4,7 +4,7 @@
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
 
-\usepackage[top=2.0cm]{geometry}
+\usepackage[top=2cm,bottom=2.5cm,left=2.5cm,right=2cm]{geometry}
 
 \begin{document}
 
@@ -31,10 +31,10 @@
         \end{center}
         
         \vspace{3.0cm}
-        \setlength{\parindent}{8.5cm}
+        \setlength{\parindent}{10.5cm}
         \large Professor Responsável:
 
-        \setlength{\parindent}{8.5cm}
+        \setlength{\parindent}{10.5cm}
         Prof. Dr. João José Neto
         
 
@@ -46,13 +46,42 @@
             
     \end{titlepage}
         
+
     \tableofcontents
-
-    \newpage    
-    \chapter{Introdução}
-    
     % \renewcommand{\labelitemi}{\textendash}
+    \addcontentsline{toc}{section}{Introito}
+    \newpage
+    \chapter*{Introito}
+    Este é o relatório do projeto da disciplina PCS 2508 - Linguagens e Compiladores de 2016.
+    O projeto consistiu em desenvolver uma linguagem de programação e projetar um compilador para ela.
 
+    A linguagem desenvolvida foi denominada Barber. O seu compilador, Allegri.
 
+    Por isso, este documento é divido em duas partes. A primeira descreve a linguagem Barber, sua motivação e aspéctos teóricos. A segunda documenta as etapas do desenvolvimento do compilador Allegri.
 
+    Ao final, trazemos uma série de programas-exemplo e de testes dos códigos de máquina gerados pela compilação realizados no simulador de Máquina de von Neumann (MVN).
+    
+    \addcontentsline{toc}{part}{Um Prelúdio à Linguagem Barber}
+    \part*{Um Prelúdio à Linguagem Barber}
+
+    \addcontentsline{toc}{section}{Motivação}
+    \chapter*{Motivação}
+    
+    \part*{Compilador Allegri\\\textit{Da capo}}
+    \addcontentsline{toc}{part}{Compilador Allegri - Da capo}
+    \chapter*{Arquitetura}
+    \addcontentsline{toc}{section}{Arquitetura}
+    \chapter*{Análise Léxica}
+    \addcontentsline{toc}{section}{Análise Léxica}
+    \chapter*{Análise Sintática}
+    \addcontentsline{toc}{section}{Análise Sintática}
+    \chapter*{Análise Semântica e Geração de Código}
+    \addcontentsline{toc}{section}{Análise Semântica e Geração de Código}
+    \subsection*{Organização da Memória}
+    \addcontentsline{toc}{subsection}{Organização da Memória}
+
+    \part*{Testes e Simulações\\\textit{Scherzo}}
+    \addcontentsline{toc}{part}{Testes e Simulações - Scherzo}
+    \chapter*{Finale}
+    \addcontentsline{toc}{section}{Conclusões}
 \end{document}
