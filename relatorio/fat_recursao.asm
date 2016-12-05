@@ -1,15 +1,16 @@
 PUSH    <
 POP     <
 SP      <
+FP      <
 TRUE    <
 FALSE   <
 AND     <
 OR      <
 NOT     <
-GET_VECT    <
-SET_VECT    <
-GET_OFFSET  <
-SET_OFFSET  <
+GET_FROM_FRAME  <
+SET_TO_FRAME    <
+GET_FROM_VECT   <
+SET_TO_VECT     <
 PUSHDOWN_SUM    <
 PUSHDOWN_DIF    <
 PUSHDOWN_MUL    <
@@ -21,9 +22,9 @@ MAIOR           <
 MAIOR_OU_IGUAL  <
 MENOR           <
 MENOR_OU_IGUAL  <
-BASE      <
 K_0000    <
 K_0001    <
+K_0002    <
 K_FFFF    <
 WORD_TAM  <
 DIM_1     <
@@ -31,6 +32,8 @@ DIM_2     <
 INIT_HEAP      <
 NEW_ARRAY      <
 NEW_MATRIX     <
+
+; inicio do codigo
 &     /0000
 SC    INIT_HEAP
 LD    SP
@@ -38,53 +41,43 @@ LD    SP
 MM    FP
 SC    main
 FIM   HM FIM
-FP    $ =1
 ; declaracao de CONSTANTES
 K_FFFC	K /FFFC
 K_FFFA	K /FFFA
-K_0006	K /0006
 K_0004	K /0004
-K_0002	K /0002
+K_0006	K /0006
 ; declaracao de FUNCOES
 fat	$ =1
-LD FP
-MM BASE
-LD K_FFFC
-SC PUSH
-SC GET_VECT
-SC PUSH
-LD K_0000
-SC PUSH
+LD    K_FFFC
+SC    PUSH
+SC    GET_FROM_FRAME
+SC    PUSH
+LD    K_0000
+SC    PUSH
 SC IGUAL
 fat_IF_1 SC POP
 JZ fat_END_IF_1
-LD K_0001
-SC PUSH
-LD FP
-MM BASE
-LD K_FFFA
-SC PUSH
-SC SET_VECT
-JP RET_fat
+LD    K_0001
+SC    PUSH
+LD    K_FFFA
+SC    PUSH
+SC    SET_TO_FRAME
+JP    RET_fat
 JP fat_END_IF_1
 fat_END_IF_1 + K_0000 ; pseudo NOP
-LD FP
-MM BASE
-LD K_FFFC
-SC PUSH
-SC GET_VECT
-SC PUSH
+LD    K_FFFC
+SC    PUSH
+SC    GET_FROM_FRAME
+SC    PUSH
 ; espaco para valor de retorno
 LD K_0000
 SC PUSH
-LD FP
-MM BASE
-LD K_FFFC
-SC PUSH
-SC GET_VECT
-SC PUSH
-LD K_0001
-SC PUSH
+LD    K_FFFC
+SC    PUSH
+SC    GET_FROM_FRAME
+SC    PUSH
+LD    K_0001
+SC    PUSH
 SC PUSHDOWN_DIF
 ; par n
 LD fat
@@ -105,37 +98,39 @@ SC POP
 ; termina de desempilhar os parametros passados aa funcao
 ; resta o valor de retorno no topo da pilha
 SC PUSHDOWN_MUL
-LD FP
-MM BASE
-LD K_FFFA
-SC PUSH
-SC SET_VECT
-JP RET_fat
-LD FP
--  WORD_TAM
-MM SP
-RET_fat	RS	fat
+LD    K_FFFA
+SC    PUSH
+SC    SET_TO_FRAME
+JP    RET_fat
+RET_fat	LD  FP
+-   WORD_TAM
+MM  SP
+RS	fat
 main	$ =1
 LD K_0000
 SC PUSH  ; var a
 LD K_0000
 SC PUSH  ; var b
-LD K_0006
-SC PUSH
-LD FP
-MM BASE
-LD K_0004
-SC PUSH
-SC SET_VECT
+LD    FP
+SC    PUSH
+LD    K_0004
+*     K_FFFF
+SC    PUSH
+LD    K_0006
+SC    PUSH
+SC    SET_TO_VECT
+LD    FP
+SC    PUSH
+LD    K_0002
+*     K_FFFF
+SC    PUSH
 ; espaco para valor de retorno
 LD K_0000
 SC PUSH
-LD FP
-MM BASE
-LD K_0004
-SC PUSH
-SC GET_VECT
-SC PUSH
+LD    K_0004
+SC    PUSH
+SC    GET_FROM_FRAME
+SC    PUSH
 ; par n
 LD main
 SC PUSH
@@ -154,13 +149,9 @@ MM main
 SC POP
 ; termina de desempilhar os parametros passados aa funcao
 ; resta o valor de retorno no topo da pilha
-LD FP
-MM BASE
-LD K_0002
-SC PUSH
-SC SET_VECT
-LD FP
--  WORD_TAM
-MM SP
-RET_main	RS	main
+SC    SET_TO_VECT
+RET_main	LD  FP
+-   WORD_TAM
+MM  SP
+RS	main
 # FIM
