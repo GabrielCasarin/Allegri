@@ -78,7 +78,6 @@ MENOR 				$ 	=1
 					SC 	POP
 					; compara
 					- 	ACC_AUX
-					JZ 	X4
 					JN 	X4
 					LD 	FALSE
 					JP  FIM_MENOR
@@ -113,6 +112,7 @@ MENOR_OU_IGUAL  	$   =1
 					SC 	POP
 					; compara
 					- 	ACC_AUX
+					JZ  X6
 					JN  X6
 					LD  FALSE
 					JP  FIM_MENOR_OU_IGUAL

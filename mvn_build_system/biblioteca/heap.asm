@@ -7,6 +7,7 @@ DIM_2       >
 WORD_TAM    <
 ACC_AUX     <
 K_MM        <
+K_0002 		<
 
             &   /0000
 
@@ -44,8 +45,8 @@ Y 			$    =1
 			LD   DIM_2
 Z 			$    =1
 			*  	 DIM_1
-			+    WORD_TAM
-			+    WORD_TAM ; total = (DIM_1 * DIM_2 + 2) * WORD_TAM
+			+    K_0002 ; total = (DIM_1 * DIM_2 + 2) * WORD_TAM
+			*    WORD_TAM
 			+    HP
 			MM   HP
 			LD   ACC_AUX
