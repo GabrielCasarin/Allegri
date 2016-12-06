@@ -60,7 +60,6 @@ MAIOR 				$ 	=1
 					SC 	POP
 					; compara
 					- 	ACC_AUX
-					JZ 	X3
 					JN 	X3
 					LD 	TRUE
 					JP  FIM_MAIOR
