@@ -76,7 +76,6 @@ MOVE 			K 		/0000
 GET_FROM_VECT 	$ 		=1
 				; OFFSET
 				SC 		POP
-				* 		WORD_TAM
 				MM 		OFFSET
 				; BASE
 				SC 		POP

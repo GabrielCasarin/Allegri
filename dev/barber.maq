@@ -143,7 +143,7 @@ Identificador [ ] ( ) ,
 
 	(q1, '[') -> q5
 	q5 => (Expressao, q6)\iniciar_expressao_mat
-	(q6, ']') -> q7\get_elem
+	(q6, ']') -> q7\add_indice_e_mult_word
 	(q6, ',') -> q5\add_indice
 
 	q1 => pop()\finaliza_operando_1

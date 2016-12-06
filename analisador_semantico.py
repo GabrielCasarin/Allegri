@@ -123,6 +123,11 @@ class gerar_codigo_assembly(AbstractSimulador):
     def __call__(self, rotina, token=None):
         if self.__log:
             print('entrei na sub-rotina de geração de código objeto...')
+            print('rotina a ser executada:', rotina)
+            print('ANTES:')
+            print(self.pilha_tipos_resultados_parciais)
+            print(self.pilha_operadores)
+            print(self.__identificador_atual)
 
         # EXPRESSÕES MATEMÁTICAS
         if   rotina == 'iniciar_expressao_mat': self.iniciar_expressao_mat()
@@ -200,6 +205,10 @@ class gerar_codigo_assembly(AbstractSimulador):
 
         if self.__log:
             print('saí da sub-rotina de geração de código objeto...')
+            print('DEPOIS:')
+            print(self.pilha_tipos_resultados_parciais)
+            print(self.pilha_operadores)
+            print(self.__identificador_atual)
 
     # FUNÇÕES AUXILIARES
     def hex_repr(num):
@@ -361,7 +370,6 @@ class gerar_codigo_assembly(AbstractSimulador):
     # EXPRESSÕES MATEMÁTICAS
     def iniciar_expressao_mat(self):
         self.inverte.append(False)
-        print('identificadores:', self.__identificador_atual)
 
     def mais_ou_menos(self, operador):
         if self.inverte[-1]:
@@ -408,10 +416,9 @@ class gerar_codigo_assembly(AbstractSimulador):
         s = self.tabela_simbolos.procurar(operando)
         if s is not None:
             if s.especie == "func":
-                # self.__identificador_atual.append(s)
                 self.pilha_operadores.append('(')
             else:
-                if s.tipo == 'int pointer' or s.tipo == 'bool pointer': # q sintaxe pqp :-(
+                if s.tipo == 'int pointer' or s.tipo == 'bool pointer':
                     self.pilha_operadores.append('(')
                 self.load_val(s)
             self.__identificador_atual.append(s)
@@ -432,6 +439,10 @@ class gerar_codigo_assembly(AbstractSimulador):
                     self.sai_termo()
             if self.pilha_operadores and self.pilha_operadores[-1] != '(':
                 operador_old = self.pilha_operadores.pop()
+                print('era pra exectar:', operador_old)
+                print(self.pilha_tipos_resultados_parciais[-1])
+                print(self.pilha_tipos_resultados_parciais[-2])
+                print(self.pilha_tipos_resultados_parciais)
                 if (self.pilha_tipos_resultados_parciais[-1]
                     == self.pilha_tipos_resultados_parciais[-2]):
                         if operador_old == '+':
@@ -439,6 +450,7 @@ class gerar_codigo_assembly(AbstractSimulador):
                         elif operador_old == '-':
                             self.codigo.append('SC PUSHDOWN_DIF')
                         self.pilha_tipos_resultados_parciais.pop()
+                        print('hi')
         # cuida das comparacoes
         if self.pilha_operadores_booleanos:
             comp = self.pilha_operadores_booleanos.pop()
@@ -493,7 +505,6 @@ class gerar_codigo_assembly(AbstractSimulador):
     # A[i1, i2] = 
     # baseA0 + (i x len2 + j ) x w
     def add_indice(self):
-        print('pilha identificadores:', self.__identificador_atual)
         if self.pilha_operadores:
             while self.pilha_operadores[-1] != '(':
                 self.finalizar_expressao_mat()
@@ -530,22 +541,27 @@ class gerar_codigo_assembly(AbstractSimulador):
         self.codigo.append('SC    PUSH')
         self.codigo.append('SC    PUSHDOWN_MUL')
         self.__identificador_atual[-1].cursor_atual = 0
-        self.__identificador_atual.pop() # desempilha o nome do vetor
-        self.pilha_operadores.pop() # desempilha o '('
 
     def finaliza_operando_1(self):
         if self.__identificador_atual:
             simb = self.__identificador_atual.pop()
+            print('desempilhei var:', simb.nome)
             if (simb.tipo == "int pointer"
                 or simb.tipo == "bool pointer"):
                     self.pilha_operadores.pop() # desempilha o '('
 
     def finaliza_operando_7(self):
-        simb = self.__identificador_atual.pop()
-        self.pilha_operadores.pop() # desempilha o '('
+        # simb = self.__identificador_atual.pop()
+        # self.pilha_operadores.pop() # desempilha o '('
+        # print('pilha operadores:', self.pilha_operadores)
 
-    def get_elem(self):
+    # def get_elem(self):
+        simb = self.__identificador_atual.pop() # desempilha o nome do vetor
+        self.pilha_operadores.pop() # desempilha o '('
         self.codigo.append('SC  GET_FROM_VECT')
+        self.pilha_tipos_resultados_parciais.pop()
+        self.pilha_tipos_resultados_parciais.pop()
+        self.pilha_tipos_resultados_parciais.append(simb.tipo.s.split()[0])
         self.codigo.append('SC  PUSH')
     # FIM EXPRESSÕES MATEMÁTICAS
 
@@ -593,14 +609,14 @@ class gerar_codigo_assembly(AbstractSimulador):
         self.codigo.append("MM {}".format(self.__func_atual.nome))
         for i in range(self.__contador_parametros_atribuidos[-1]):
             self.codigo.append("SC POP")
+            self.pilha_tipos_resultados_parciais.pop()
         self.codigo.append("; termina de desempilhar os parametros passados aa funcao")
         self.codigo.append("; resta o valor de retorno no topo da pilha")
+        self.pilha_tipos_resultados_parciais.append(self.__identificador_atual[-1].tipo.s)
         self.__identificador_atual.pop()
         self.__contador_parametros_atribuidos.pop()
 
     def guarda_parametro(self):
-        print(self.pilha_operadores)
-        print(self.__identificador_atual)
         par = self.__identificador_atual[-1].parametros[self.__contador_parametros_atribuidos[-1]]
         self.codigo.append("; par %s"%par.nome)
         self.__contador_parametros_atribuidos[-1] += 1
@@ -636,16 +652,20 @@ class gerar_codigo_assembly(AbstractSimulador):
                     self.codigo.append('SC    PUSH')
                     self.pilha_tipos_resultados_parciais.append(s.tipo.s+' pointer')
                     self.pilha_tipos_resultados_parciais.append('int')
+                    self.__identificador_atual.append(s)
+                    self.pilha_operadores.append('(')
             elif s.especie == "func":
                 self.__identificador_atual.append(s)
                 self.__identificador_atual[-1].utilizado = True
                 self.pilha_operadores.append('(')
-            print(self.__identificador_atual)
+
     def comando_atribuicao(self):
         self.codigo.append('SC    SET_TO_VECT')
         self.pilha_tipos_resultados_parciais.pop()
         self.pilha_tipos_resultados_parciais.pop()
         self.pilha_tipos_resultados_parciais.pop()
+        self.pilha_operadores.pop() # '('
+        self.__identificador_atual.pop()
 
 
     def comando_retorno(self):
