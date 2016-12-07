@@ -756,6 +756,5 @@ class gerar_codigo_assembly(AbstractSimulador):
             self.codigo.append('SC GET_LENGTH')
             self.pilha_tipos_resultados_parciais.pop()
             self.pilha_tipos_resultados_parciais.pop()
-            self.pilha_tipos_resultados_parciais.pop()
             self.pilha_tipos_resultados_parciais.append('int')
             self.pilha_operadores.pop() # '('
