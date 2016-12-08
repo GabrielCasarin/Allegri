@@ -1,2 +1,0 @@
-DefineFunc = "func" "Identificador" "int" "{" "enter" {"Identificador" ("=" EXP | "(" [EXP {"," EXP}] ")") "enter"} "}" .
-EXP = ("Numero" | "Identificador" | "(" EXP ")") {("+"|"-"|"*"|"/") ("Numero" | "Identificador" | "(" EXP ")")} .
