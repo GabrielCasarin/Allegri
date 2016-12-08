@@ -70,14 +70,12 @@
     O desafio de se criar uma nova linguagem de programação está no compromisso que deve ser feito entre os recursos que essa linguagem deve suportar, a complexidade de sua sintaxe, o propósito de utilização, o suporte a um ou vários tipos de hardware, eficiência no desenvolvimento de software, legibilidade do código, etc.
 
     Além disso, deve-se escolher o paradigma (ou paradigmas) que essa linguagem deverá seguir. Um dos paradigmas que obteve grande sucesso desde o seu surgimento é o Paradigma Estrurado. Ele surgiu como reação à necessidade de se desenvolver código com correição, re-utilizável e portável. O projeto de um compilador de uma linguagem estruturada pode ser feito de maneira simplificada, uma vez que há entre a maioria dos comandos daquela e o código de máquina que os implementa traduções diretas.  
-    
-    Porém, com o progresso do hardware e o avanço das técnicas de engenharia de software, surgiram novos tipos de linguagem para explorar esses novos recursos. Essas linguagens de programação desenvolvidas atualmente são, em sua grande maioria, interpretadas \textemdash ~ ou seja, os programas escritos nessas linguagens são feitos para serem executados em um ambiente de simulação de hardware virtual.
 
-    Das linguagens não interpretadas de propósito geral, apenas duas continuam a ser usadas extensivamente \textemdash ~ C e C++. C vem da época dos processadores unicore, de computação não distribuída. Por isso, não incorpora em si a evolução da computação das últimas décadas, tais como processamento paralelo e distribuído. Mesmo assim, ela ainda é utilizada para desenvolvimento de software embarcado e de sistemas operacionais. C++ continua sendo desenvolvida, porém sua sintaxe complexa implica em compilação ineficiente e demorada. Além disso, sua curva de aprendizado é íngreme e impõe obstáculos ao desenvolvimento de grandes projetos de software.
+    Das linguagens não interpretadas de propósito geral, apenas duas continuam a ser usadas extensivamente \textemdash ~ C e C++. C vem da época dos primeiros computadores mono-usuário. Sua sintaxe soa antiquada e o processo de depuração demasiado complexo para as necessidades de desenvolvimento ágil atual. Mesmo assim, ela ainda é utilizada para desenvolvimento de software embarcado e de sistemas operacionais. C++ continua sendo desenvolvida, porém sua sintaxe complexa implica em compilação ineficiente e demorada. Além disso, sua curva de aprendizado é íngreme e impõe obstáculos ao desenvolvimento de grandes projetos de software.
 
-    Nesse contexto surgiu a linguagem Go. Seu objetivo é ter uma sintaxe simplificada  ao mesmo tempo trazer suporte às novas tendências da Computação. Por isso, o processo de desenvolvimento em Go é ágil e sua compilação, eficiente.
+    Nesse contexto surgiu a linguagem Go. Seu objetivo é ser uma linguagem compilada (tal como C e C++), ter uma sintaxe simplificada e ao mesmo tempo trazer suporte às novas tendências da Computação. Por isso, o processo de desenvolvimento em Go é ágil e sua compilação, eficiente.
 
-    A linguagem Barber buscou inspirar-se na filosofia que deu origem à linguagem Go. Ela pretende ser uma linguagem didática, ter uma sintaxe compacta, regular e de fácil aprendizado, permitir o desenvolvimento ágil e ter um código legível. Foi projetada para ser compilada para uma Máquina de von Neumann genérica (MVN). 
+    A linguagem Barber buscou inspirar-se na filosofia que deu origem à linguagem Go. A linguagem aqui apresentada pretende ser didática, ter uma sintaxe compacta, facilmente extensível, regular e de fácil aprendizado, permitir o desenvolvimento ágil e ter um código legível. O seu compilador, Allegri, foi projetado para gerar código assembly para uma Máquina de von Neumann genérica (MVN).
 
     \newpage
     \section*{Sintaxe}
@@ -206,10 +204,56 @@ DeclaraVariavel = "var" Identificador {"," Identificador} Tipo {"[" Numero "]"}.
 
     \subsubsection*{Comandos condicionais}
     \addcontentsline{toc}{subsection}{Comandos condicionais}
+    Os comandos condicionais são formados por blocos de cláusulas if-elif-else:
+
+    \begin{lstlisting}
+    if Condicao_1 {
+        .
+        .
+        .
+    }
+    elif Condicao_2 {
+        .
+        .
+        .
+    }
+    elif Condicao_3 {
+        .
+        .
+        .
+    }
+    .
+    .
+    .
+    else {
+        .
+        .
+        .
+    }
+    \end{lstlisting}
+
+    Esse comando executa o bloco da primeira condição satisfeita. Caso contrário, executa o bloco else.
+
+    Não são necessários parênteses ao redor das condições.\\
+
+    \textit{Exemplo} ~ O Listing 1 traz um exemplo de uma cláusula if única.
 
 
     \subsubsection*{Comando while}
     \addcontentsline{toc}{subsection}{Comando while}
+    O comando \textbf{while} implementa laços de um programa. Sua sintaxe é extremamente simples:
+    \begin{verbatim}
+    WHILE = "while" Teste Bloco . \end{verbatim}
+    Tal comando executa o que estiver dentro de Bloco até que a condição Teste reste falsa.
+    \begin{lstlisting}
+        i = 0
+        while i < 10 {
+            .
+            .
+            .
+            i = i + 1
+        }
+    \end{lstlisting}
 
     % \newpage
     \section*{Como Compilar}
@@ -287,12 +331,134 @@ DeclaraVariavel = "var" Identificador {"," Identificador} Tipo {"[" Numero "]"}.
 
     \part*{Compilador Allegri\\\textit{Da capo}}
     \addcontentsline{toc}{part}{Compilador Allegri - Da capo}
+
+    %%%%%%%%%%%%%%%%%%%%%%%%
+    %      ARQUITETURA     %
+    %%%%%%%%%%%%%%%%%%%%%%%%
+
     \chapter*{Arquitetura}
     \addcontentsline{toc}{section}{Arquitetura}
+    O compilador compõe-se de duas partes: o Front End (analisadores léxico e sintático) e o Gerador de Código Assembly (analisador semântico). O Back End para a geração de código de máquina fica a cargo do montador da MVN.
+
+    A arquitetura básica do compilador é dada pela figura a seguir\footnote{Obs: não há otimização de código como sugere a figura.}: 
+
+    % \begin{figure}[h]
+    %     \centering
+    %     \caption{}
+    %     \includegraphics[scale=1]{}
+    % \end{figure}
+
+    \begin{figure}[h]
+        \caption{Arquitetura do compilador}
+        \centering
+        \includegraphics[scale=.5]{esqueleto}
+    \end{figure}
+
+    Toda a atividade do compilador Allegri orbita o Analisador Sintático. Compiladores que têm o Analisador Léxico como rotina principal são ditos seguir o paradigma de \textit{syntax driven compilation}. Em tais compiladores, os analisadores Léxico e Semântico (dentre outros sub-módulos necessários) são sub-rotinas acionadas por aquele. Isso significa que a atividade de análise léxica é desempenhada apenas nos momentos em que o Analisador Sintático solicitar.
+
+    Ora, a arquitetura escolhida para cada componente do compilador é a de Motor Dirigido por Eventos. Nessa visão, cada sub-rotina reage a certos estímulos, cujos tratamentos alteram o estado do motor e gera saídas condicionadas ao pé da análise. Por exemplo, a sub-rotina de decomposição de texto-fonte deve reagir ao evento de chegada de nova linha. E o Analisador Léxico, ao de chegada de novo caractere, etc.
+
+    Nas próximas seções especificamos o projeto e implementação de cada módulo do compilador.
+
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%
+    %      ANÁLISE LÉXICA     %
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%
+
     \chapter*{Análise Léxica}
     \addcontentsline{toc}{section}{Análise Léxica}
+    O analisador léxico é um dispositivo que - dada linguagem de programação - extrai átomos de um texto-fonte.
+
+    Ele se baseia em uma gramática léxica derivada da gramática principal da linguagem. Seu princípio de funcionamento é o de um autômato finito transdutor. Ele pode operar certas funções semânticas, bem como filtrar tabulações, espaços em branco e comentários.
+
+    No meu projeto, decidi fazer um dispositivo que desempenhasse o seu papel de acordo com as especificações dadas em um autômato finito fornecido à parte, nos moldes daqueles desenvolvidos na disciplina de Lógica Computacional.
+
+    \subsection*{Gramática Léxica}
+    \addcontentsline{toc}{subsection}{Gramática Léxica}
+    A gramática léxica descreve como os caracteres sequenciados a partir do texto-fonte devem ser aglutinados a fim de que tais aglutinações possam ser devidamente fornecidas ao analisador sintático.
+    
+    Na linguagem Barber, os tokens devem obedecer às seguintes formas:
+
+    \begin{lstlisting}
+    Identificador = ("Letra" | "_") {"Letra" | "Algarismo" | "_"} .
+    CifraDecimal  = "Algarismo" {"Algarismo"} .
+    CifraHexadec  = "0x" {CifraDecimal | "A" | "B" | "C" | "D" | "E" | "F"} .
+    Pontuacao = "+" | "-" | "*" | "/" | "{" | "}" | "[" | "]" | "(" | ")" | "=" | ">" | "<" | "!" | ":" | ",".
+    \end{lstlisting}
+
+    \subsection*{Autômato}
+    \addcontentsline{toc}{subsection}{Autômato}
+    O autômato obtido a partir da gramática acima é dado a seguir (note a presença de comentários iniciados com ponto-e-vírgula \verb|';'| e terminados com new line \verb|'\n'|):
+
+    \begin{figure}[h]
+        \centering
+        \caption{Autômato Reconhecedor de Átomos}
+        \includegraphics[scale=.5]{AutomatoGramaticaLexicaWirth}
+    \end{figure}
+
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    %      ANÁLISE SINTÁTICA     %
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
     \chapter*{Análise Sintática}
     \addcontentsline{toc}{section}{Análise Sintática}
+
+    \begin{figure}[h]
+        % \centering
+        \caption{Submáquina Func}
+        \includegraphics[scale=.5]{submaquinas/Func}
+    \end{figure}
+
+    \begin{figure}[h]
+        % \centering
+        \caption{Submáquina Bloco}
+        \includegraphics[scale=.5]{submaquinas/Bloco}
+    \end{figure}
+
+    \subsection*{Expressões}
+    \addcontentsline{toc}{subsection}{Expressões}
+    As expressões aritméticas estão presentes em todas as linguagens de programação. Estas, em sua grande maioria, adotam as convenções e símbolos matemáticos ordinários. Todas suportam o uso de constantes, variáveis e o de valores de retorno provenientes de chamadas a funções.
+
+    A sub-máquina obtida foi:
+
+    \begin{figure}[h]
+        \centering
+        \caption{Submáquina Expressao}    
+        \includegraphics[scale=.8]{submaquinas/Expressao}
+    \end{figure}
+
+    Onde Operando é a seguinte sub-máquina:
+
+    \begin{figure}[h]
+        \centering
+        \caption{Submáquina Operando}    
+        \includegraphics[scale=.7]{submaquinas/Operando}
+    \end{figure}
+
+    Aqui, embora sintaticamente seja possível indexar tensores de \textit{rank n}, no nosso projeto a indexação de arrays foi limitada às de vetor e de matriz. Foram inseridas também tanto as operações booleanas quanto as de comparação a fim de facilitar a análise sintática. Qualquer restrição de tipos fica a cargo do analisador semântico.
+
+    \subsection*{IF}
+    \addcontentsline{toc}{subsection}{IF}
+    Trata-se de uma sub-máquina com a seguinte estrutura:
+    \begin{figure}[h]
+        \centering
+        \caption{Submáquina IF}    
+        \includegraphics[scale=.6]{submaquinas/IF}
+    \end{figure}
+    A análise pode findar-se logo após o bloco de um único if; ou pode continuar por indefinidos elif's, até terminar com um bloco else. Note a ausência do token if na sub-máquina. Isso se deve ao fato de que tal átomo já deve ter sido consumido a fim de que o analisador sintático chame esta sub-máquina.
+
+    \subsection*{While}
+    \addcontentsline{toc}{subsection}{While}
+    Essa sub-máquina é ainda mais simples do que a do IF. Segue abaixo:
+    \begin{figure}[h]
+        \centering
+        \caption{Submáquina While}    
+        \includegraphics[scale=.7]{submaquinas/While}
+    \end{figure}
+
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    %      ANÁLISE SEMÂNTICA     %
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
     \chapter*{Análise Semântica e Geração de Código}
     \addcontentsline{toc}{section}{Análise Semântica e Geração de Código}
     \subsection*{Organização da Memória}
@@ -301,6 +467,11 @@ DeclaraVariavel = "var" Identificador {"," Identificador} Tipo {"[" Numero "]"}.
         \centering
         \includegraphics[scale=0.75]{OrganizacaoMemoria}
     \end{figure}
+
+
+    %%%%%%%%%%%%%%%%%%%%%%%
+    %      SIMULAÇÕES     %
+    %%%%%%%%%%%%%%%%%%%%%%%
 
     \part*{Testes e Simulações\\\textit{Scherzo}}
     \addcontentsline{toc}{part}{Testes e Simulações - Scherzo}
@@ -444,11 +615,13 @@ DeclaraVariavel = "var" Identificador {"," Identificador} Tipo {"[" Numero "]"}.
 
     O resultado foi o mesmo do anterior (ufa!). Nota-se que o uso da pilha foi consideravelmente menor, o que mostra que esse programa é mais eficiente. Note o valor final da variável b. Ele coincide com o da condição de parada do loop, como era de se esperar.
     
-    \subsection*{Atribuição a Elemento de Vetor}
-    \addcontentsline{toc}{section}{Atribuição a Elemento de Vetor}
+    % \subsection*{Atribuição a Elemento de Vetor}
+    % \addcontentsline{toc}{section}{Atribuição a Elemento de Vetor}
     
     \subsection*{Somatório de Elementos de Vetor}
     \addcontentsline{toc}{section}{Somatório de Elements de Vetor}
+
+    A seguir, mostramos como a passagem de vetores e matrizes por referência pode ser útil. Definimos uma função que, dado um certo vetor v de comprimento arbitrário, retorna o somatório dos elementos de v.
 
     \begin{lstlisting}
     def somar int
@@ -483,13 +656,19 @@ DeclaraVariavel = "var" Identificador {"," Identificador} Tipo {"[" Numero "]"}.
     }
     \end{lstlisting}
 
+    A seguir, o resultado da execução:
+
     \begin{figure}[h]
         \centering
         \includegraphics[scale=0.7]{soma_vetor}
     \end{figure}
 
+    Note que não foi preciso passar como parâmetro o comprimento de v (como teríamos que fazê-lo em outras linguagens, como C e C++).
+
+    \newpage
     \subsection*{Multiplicação de Matrizes}
     \addcontentsline{toc}{section}{Multiplicação de Matrizes}
+    E, \textit{last but not least}, eis o exemplo de como pode ser implementada a função de multiplicação de matrizes em Barber.
 
     \begin{lstlisting}
     def mult
@@ -531,6 +710,11 @@ DeclaraVariavel = "var" Identificador {"," Identificador} Tipo {"[" Numero "]"}.
     }
     \end{lstlisting}
 
+    Eis o resultado da multiplicação. O que está destacado em vermelho é a matriz x 2x2; em verde, o vetor y 2x1; em azul, o vetor z 2x1.
+    É mostrado, na figura abaixo, no frame da função \verb|main| os seus respectivos ponteiros para a área de dados.
+    Pode-se notar claramente como os ponteiros foram passados como parâmetro para a função \verb|mult|.
+    Vê-se que o resultado foi calculado e guardado corretamente no vetor z.
+
     \begin{figure}[h]
         \centering
         \includegraphics[scale=0.65]{mult}
@@ -538,4 +722,5 @@ DeclaraVariavel = "var" Identificador {"," Identificador} Tipo {"[" Numero "]"}.
 
     \chapter*{Finale}
     \addcontentsline{toc}{part}{Finale}
+    O desenvolvimento de um compilador é, sem dúvida nenhuma, umas das tarefas mais complexas e desafiantes na área da Computação. A oportunidade de desenvolver um, ainda que didático, resultou em grande aprendizado e experiência com técnicas de análise e tradução de linguagens. 
 \end{document}
