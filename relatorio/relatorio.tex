@@ -385,8 +385,8 @@ DeclaraVariavel = "var" Identificador {"," Identificador} Tipo {"[" Numero "]"}.
     Pontuacao = "+" | "-" | "*" | "/" | "{" | "}" | "[" | "]" | "(" | ")" | "=" | ">" | "<" | "!" | ":" | ",".
     \end{lstlisting}
 
-    \subsection*{Autômato}
-    \addcontentsline{toc}{subsection}{Autômato}
+    \subsection*{Autômato Tokenizador}
+    \addcontentsline{toc}{subsection}{Autômato Tokenizador}
     O autômato obtido a partir da gramática acima é dado a seguir (note a presença de comentários iniciados com ponto-e-vírgula \verb|';'| e terminados com new line \verb|'\n'|):
 
     \begin{figure}[h]
@@ -401,59 +401,102 @@ DeclaraVariavel = "var" Identificador {"," Identificador} Tipo {"[" Numero "]"}.
 
     \chapter*{Análise Sintática}
     \addcontentsline{toc}{section}{Análise Sintática}
+    O objetivo da Análise Sintática é o de verificar se um dado texto pertence ou não à uma linguagem. Um Analisador Sintático pode ser sintetizado de várias formas. Uma dessas formas, e aquela que será utilizada aqui, tem como fundamento o \textit{parsing} por Autômatos de Pilha Estruturados.
+
+    O Analisador Sintático recebe como eventos a chegada de pares (token, valor) vindos do Analisador Léxico. Seu Autômato de Pilha executa suas transições internas de acordo com os tokens recebidos daquele.
 
     \begin{figure}[h]
-        % \centering
+        \centering
+        \includegraphics[scale=.75]{Transducao}
+    \end{figure}
+
+    Acontece que a cada transição uma saída pode ser gerada. Essas saídas (resultados da transdução) são códigos para as rotinas semânticas.
+
+    \begin{figure}[h]
+        \centering
+        \includegraphics[scale=.75]{Transducao2}
+    \end{figure}
+
+    O Analisador Sintático passa então os pares (rotina, valor) para o Analisador Semântico, de modo que a geração de código possa avançar.
+
+    O Autômato de Pilha Estruturado deve ser gerado a partir da gramática. Em particular, as sub-máquinas abaixo apresentadas foram obtidas através do uso da ferramenta de conversão automática de gramáticas em Notação de Wirth para o formato de entrada do simulador de autômatos \textemdash~ferramenta chamada de Meta Compilador.
+
+    Um fato que merece ser registrado é o de que embora fosse possível minimizar diversas sub-máquinas incorporando os estados e transições de uma dentro de outra, deixando no autômato apenas as sub-máquinas essenciais (que são recursivas centralmente), de modo que os autômatos original e minimizado fossem sintaticamente equivalentes, isso não seria interessante desde o ponto de vista semântico. É que modelar o reconhecedor sintático com várias sub-máquinas permite isolar muito bem certos blocos estruturais que são independentes um dos outros. Por exemplo, um comando if pode ser ou não seguido de elif's e/ou else. Caso não houvesse uma sub-máquina IF, seria difícil para o Analisador Semântico saber se ao fechar um if ele deveria executar a rotina que termina o if ou se deveria executar a rotina que prepara o início de elif/else. Com uma sub-máquina a mais, ganha-se um tipo de transição \textemdash~ pop() ou retorno de sub-máquina \textemdash~ que, embora não consuma símbolo, pode gerar uma saída de transdução, a qual pode avisar ao Analisador Semântico o momento de executar uma rotina ou outra.
+
+    São apresentadas a seguir as sub-máquinas que compõem o Autômato de Pilha Estruturado reconhecedor da linguagem Barber.
+
+    % \newpage
+    \subsection*{Declaração de Função}
+    \addcontentsline{toc}{subsection}{Declaração de Função}
+    A sub-máquina que implementa o reconhecimento de funções é a principal do nosso Analisador Sintático. Ela é responsável por coletar o nome da função, seu tipo de valor de retorno, parâmetros formais e variáveis locais. Em seguida, ela chama a sub-máquina Bloco. Sua estrutura está ilustrada na figura \ref{fig:FuncMaq}.
+
+    \begin{figure}[h]
         \caption{Submáquina Func}
-        \includegraphics[scale=.5]{submaquinas/Func}
+        \label{fig:FuncMaq}
+        \includegraphics[scale=.45]{submaquinas/Func}
     \end{figure}
 
     \begin{figure}[h]
-        % \centering
         \caption{Submáquina Bloco}
-        \includegraphics[scale=.5]{submaquinas/Bloco}
+        \label{fig:BlocoMaq}
+        \includegraphics[scale=.40]{submaquinas/Bloco}
     \end{figure}
 
+    % \newpage
+    \subsection*{Bloco de Comandos}
+    \addcontentsline{toc}{subsection}{Bloco de Comandos}
+    Um bloco é composto de zero ou mais comandos. Um comando pode ser:
+    \begin{itemize}
+        \item simples: no caso de chamada de sub-rotina ou atribuição de valor;
+        \item condicional: no caso de blocos formados por sequências de if's, elif's e else's;
+        \item iterativo: no caso de blocos de while, for e do-until;
+    \end{itemize}
+
+    A figura \ref{fig:BlocoMaq} mostra a sub-máquina Bloco.
+
+    Um comando condicional é tratado pela sub-máquina representada na figura \ref{fig:IFMaq}.
+    A análise pode findar-se logo após o bloco de um único if; ou pode continuar por indefinidos elif's, até terminar com um bloco else. Note a ausência do token if na sub-máquina. Isso se deve ao fato de que tal átomo já deve ter sido consumido a fim de que o analisador sintático chame esta sub-máquina.
+
+    \begin{figure}[h]
+        \centering
+        \caption{Submáquina IF}    
+        \label{fig:IFMaq}
+        \includegraphics[scale=.5]{submaquinas/IF}
+    \end{figure}
+
+    Já a sub-máquina de um comando while é ainda mais simples do que a do IF. Segue a sua representação na figura \ref{fig:WhileMaq}.
+
+    \begin{figure}[h]
+        \centering
+        \caption{Submáquina While}    
+        \label{fig:WhileMaq}
+        \includegraphics[scale=.55]{submaquinas/While}
+    \end{figure}
+
+    % \newpage
     \subsection*{Expressões}
     \addcontentsline{toc}{subsection}{Expressões}
     As expressões aritméticas estão presentes em todas as linguagens de programação. Estas, em sua grande maioria, adotam as convenções e símbolos matemáticos ordinários. Todas suportam o uso de constantes, variáveis e o de valores de retorno provenientes de chamadas a funções.
 
-    A sub-máquina obtida foi:
+    A sub-máquina obtida é mostrada na figura \ref{fig:ExpMaq}.
+    \begin{figure}[h]
+        \centering
+        \caption{Submáquina Expressao} 
+        \label{fig:ExpMaq}   
+        \includegraphics[scale=.5]{submaquinas/Expressao}
+    \end{figure}
+
+    Onde Operando é a sub-máquina da figura \ref{fig:OperandoMaq}.
 
     \begin{figure}[h]
         \centering
-        \caption{Submáquina Expressao}    
-        \includegraphics[scale=.8]{submaquinas/Expressao}
+        \caption{Submáquina Operando}
+        \label{fig:OperandoMaq}
+        \includegraphics[scale=.5]{submaquinas/Operando}
     \end{figure}
 
-    Onde Operando é a seguinte sub-máquina:
+    Nessa sub-máquina, embora sintaticamente seja possível indexar tensores de \textit{rank n}, no nosso projeto a indexação de arrays foi limitada às de vetor e de matriz. Foram inseridas também tanto as operações booleanas quanto as de comparação a fim de facilitar a análise sintática. Qualquer restrição de tipos fica a cargo do analisador semântico.
 
-    \begin{figure}[h]
-        \centering
-        \caption{Submáquina Operando}    
-        \includegraphics[scale=.7]{submaquinas/Operando}
-    \end{figure}
-
-    Aqui, embora sintaticamente seja possível indexar tensores de \textit{rank n}, no nosso projeto a indexação de arrays foi limitada às de vetor e de matriz. Foram inseridas também tanto as operações booleanas quanto as de comparação a fim de facilitar a análise sintática. Qualquer restrição de tipos fica a cargo do analisador semântico.
-
-    \subsection*{IF}
-    \addcontentsline{toc}{subsection}{IF}
-    Trata-se de uma sub-máquina com a seguinte estrutura:
-    \begin{figure}[h]
-        \centering
-        \caption{Submáquina IF}    
-        \includegraphics[scale=.6]{submaquinas/IF}
-    \end{figure}
-    A análise pode findar-se logo após o bloco de um único if; ou pode continuar por indefinidos elif's, até terminar com um bloco else. Note a ausência do token if na sub-máquina. Isso se deve ao fato de que tal átomo já deve ter sido consumido a fim de que o analisador sintático chame esta sub-máquina.
-
-    \subsection*{While}
-    \addcontentsline{toc}{subsection}{While}
-    Essa sub-máquina é ainda mais simples do que a do IF. Segue abaixo:
-    \begin{figure}[h]
-        \centering
-        \caption{Submáquina While}    
-        \includegraphics[scale=.7]{submaquinas/While}
-    \end{figure}
 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %      ANÁLISE SEMÂNTICA     %
@@ -461,11 +504,131 @@ DeclaraVariavel = "var" Identificador {"," Identificador} Tipo {"[" Numero "]"}.
 
     \chapter*{Análise Semântica e Geração de Código}
     \addcontentsline{toc}{section}{Análise Semântica e Geração de Código}
-    \subsection*{Organização da Memória}
-    \addcontentsline{toc}{subsection}{Organização da Memória}
+    O objetivo da Análise Semântica é o de verificar certas dependências de contexto que os Analisadores Sintátcos não são capazes de modelar. Dentre elas podemos citar:
+    
+    \begin{itemize}
+        \item Verificar se uma dada variável utilizada em uma parte do código já foi declarada dentro daquele escopo;
+        \item Ou se se trata de uma variável local com mesmo nome de uma global;
+        \item Verificar se os tipos de operandos utilizados em expressões foram utilizados consistentemente; etc.
+    \end{itemize}
+
+    Já o Gerador de Código é o responsável pela tradução do código-fonte em linguagem de montagem. Ele contém uma série de estruturas de dados que auxiliam a gerenciar a compilação.
+
+    A mais notável dessas estruturas é a Tabela de Símbolos. Ela é responsável por armazenar os nomes de funções, variáveis, constantes, labels etc., de modo que não haja inconsistência no uso desses identificadores. Ela tem os seguintes campos:
     \begin{figure}[h]
         \centering
-        \includegraphics[scale=0.75]{OrganizacaoMemoria}
+        \includegraphics[scale=.75]{tabela_simbolos}
+    \end{figure}
+
+    Como dito em uma seção anterior, o compilador Allegri traduz o código diretamente a partir da sintaxe do programa. Isso significa que a cada transição entre estados, chamada ou retorno de sub-máquinas, uma rotina semântica pode ser acionada de modo a o Analisador Semântico atualizar as suas estruturas de dados e o Gerador de Código acrescentar novas instruções ao corpo do código objeto, conforme for possível.
+
+    \subsection*{Organização da Memória}
+    \addcontentsline{toc}{subsection}{Organização da Memória}
+    A organização de memória de um programa determina
+    \begin{itemize}
+        \item sua capacidade de ter código reentrante;
+        \item possibilidade de ter chamadas recursivas;
+        \item o isolamento entre segmentos de código (mais proteção contra ações indevidas que prejudicam o código), etc.
+    \end{itemize}
+
+    O compilador Allegri estrutura o programa gerado em quatro segmentos. O primeiro é o de texto, onde constantes e variáveis globais são armazenados. O segundo é o segmento de código. Nele estão contidas tanto as sub-rotinas compiladas quanto o código linkado das sub-rotinas da biblioteca, as quais formam um ambiente de execução para a MVN. O terceiro é caracterizado por ter uma área que pode ser utilizada para guardar objetos de diferentes tipos e tamanhos tais como structs, vetores, matrizes, etc\footnote{Obs: por não fazer parte do escopo deste presente projeto, não foram incluídas sub-rotinas de \textit{garbage collection}}. A quarta região talvez seja a mais interessante\textemdash a Pilha. Nela são armazenados os parâmetros reais passados a funções e variáveis locais. Nela são executadas as expressões aritméticas e booleanas (ou seja, serve como área de rascunho). É o uso da pilha que permite ao código compilado ser recursivo.
+
+    \begin{figure}[h]
+        \centering
+        \caption{Organização da Memória}
+        \label{fig:OrgMem}
+        \includegraphics[scale=0.65]{OrganizacaoMemoria}
+    \end{figure}
+
+    A figura \ref{fig:OrgMem} ilustra o modo de organização da memória da MVN.
+    Note que a Pilha cresce para baixo (endereços menores), enquanto que a Heap cresce para cima. Um programa pode ter problemas com a colisão entre essas duas áreas. Porém, não foi o objetivo deste projeto gerenciar esse problema, apenas ilustrar a possibilidade de uso dessa configuração de memória.
+
+    \subsection*{Declaração de Função}
+    \addcontentsline{toc}{subsection}{Declaração de Função}
+
+    A declaração de função consiste, basicamente, em abrí-la com uma label do tipo
+    \begin{lstlisting}[frame=none,numbers=none]
+    ID_FUNC        $   =1
+    \end{lstlisting}
+    e fechá-la com uma outra instrução do tipo
+    \begin{lstlisting}[frame=none,numbers=none]
+    FIM_ID_FUNC    RS  ID_FUNC
+    \end{lstlisting}
+
+    A tradução do corpo da função fica a cargo da sub-máquina Bloco.
+
+    As declarações de parâmetros não geram código imediatamente. Porém, é muito importante determinar qual a posição cada um irá ocupar no frame de ativação. Quando uma sub-rotina é chamada, seu argumentos são passados via pilha. Se a ordem dos parâmetros for a mesma em que eles foram declarados, suas posições estarão invertidas na pilha. Por isso, é fundamental que as posições dos parâmetros atribuídas pelo compilador sejam dadas em ordem iversa à de declaração. Assim, a ordem de passagem de parâmetro coincidirá com a da organização do frame da função.
+
+    A figura \ref{fig:FuncSem} dá uma idéia de como uma declaração é tratada pelo compilador.
+
+
+    \begin{figure}[h]
+        % \centering
+        \caption{Rotinas semânticas associadas à declaração de função}
+        \label{fig:FuncSem}
+        \includegraphics[scale=.48]{semanticas/Func}
+    \end{figure}
+
+    \subsection*{Implementação de Expressões}
+    \addcontentsline{toc}{subsection}{Implementação de Expressões}
+    A tradução de expressões de tipo lógico-aritméticas foi, sem dúvida, o maior desafio para a implementação deste compilador. O uso da pilha de execução facilitou em muito a geração de código.
+
+    Basicamente, o compilador utiliza duas pilhas para realizar a gerar o código das expressões:
+    \begin{itemize}
+        \item Pilha de Operadores: responsável por armazenar os símbolos de operações ainda não processadas. É parecida com o conceito de pilha de operadores que há no algoritmo de \textit{shunting yard} (que transforma notação infixa em posfixa). Porém, não estamos convertendo a expressão para RPN, logo são conceitos distintos;
+        \item Pilha de Identificadores: responsável por armazenar os símbolos dos operandos. Ao entrar nessa pilha, o operando espera por ter seu valor carregado e empilhado na pilha de execução. Porém, como no caso de arrays e de chamadas a funções, às vezes ele tem que aguardar outras expressões serem avaliadas (e.g., índices de um array ou parâmetros de uma função). Assim se justifica o uso de uma pilha de operandos.
+    \end{itemize}
+
+    O algoritmo de tradução é, em linhas gerais, como segue:
+
+    \begin{lstlisting}
+    S = []; pilha de operandos
+    T = []; pilha de operadores
+    enquanto Evento != Expressoes.pop() faca
+        se Evento == chegada operando entao
+            S.push(operando)
+            se T nao vazia e T.topo != ( entao
+                operador = T.pop()
+                codigo.append('SC operador')
+        senao se Evento == chegada operador entao
+            T.push(operador)
+        fim se
+    fim enquanto
+    \end{lstlisting}
+
+    Claramente estamos omitindo detalhes do algoritmo, mas a idéia é ir empilhando operandos e ir realizando as operações sobre o topo da pilha. A abertura de parênteses faz com que uma sub-expressão seja avaliada antes que uma outra operação possa ser desempilhada. Por isso o algoritmo sempre verifica se o topo da pilha de operadores não é um abre parênteses.
+
+    O algoritmo abstrai o conceito de operando por meio da sub-máquina Operando (daí mais uma vantagem de se ter várias sub-máquinas independentes). Isso torna o parsing mais lento, mas a implementação das rotinas semânticas tornam-se muito mais genéricas. Poderiamos facilmente estender a linguagem para suportar operações com structs e objetos apenas modificando a sub-máquina Operando, por exemplo.
+
+    A figura \ref{fig:ExpSem} dá uma idéia gráfica de como o código assembly se pareceria no final.
+
+    \begin{figure}[h]
+        \centering
+        \caption{Rotinas semânticas associadas à sub-máquina Expressão}
+        \label{fig:ExpSem}
+        \includegraphics[scale=.75]{semanticas/exp}
+    \end{figure}
+
+    \subsection*{Chamada de Sub-rotina e Recursão}
+    \addcontentsline{toc}{subsection}{Chamada de Sub-rotina e Recursão}
+    Uma sob-rotina pode ser chamada ou dentro de uma expressão ou como um comando simples. Em ambos os casos, o contexto deve ser mudado desde a função chamadora (que vamos chamar de func 1) para a função chamada (func 2) e, após o retorno desta, o contexto deve ser restaurado de modo que tudo fique igual ao que estava antes para func 1, com exceção de um valor de retorno empilhado como resultado da chamada de func 2. 
+
+    A figura \ref{fig:rotinachamadafuncao} ilustra como ocorre essa mudança de contexto.
+
+    \begin{figure}[h]
+        \centering
+        \caption{Rotinas semânticas para chamada de sub-rotina}
+        \label{fig:rotinachamadafuncao}
+        \includegraphics[scale=.65]{semanticas/Operando_semantica}
+    \end{figure}
+
+    Já a figura \ref{fig:Frames} ilustra    a divisão da pilha em regiões de ativação entre duas funções. Ela também ilustra como deve ocorrer a divisão de responsabilidades na construção do novo frame de func 2.
+
+    \begin{figure}[h]
+        \centering
+        \caption{Troca de Contexto por Frames de Ativação}
+        \label{fig:Frames}
+        \includegraphics[scale=.65]{Frames}
     \end{figure}
 
 
@@ -713,7 +876,7 @@ DeclaraVariavel = "var" Identificador {"," Identificador} Tipo {"[" Numero "]"}.
     Eis o resultado da multiplicação. O que está destacado em vermelho é a matriz x 2x2; em verde, o vetor y 2x1; em azul, o vetor z 2x1.
     É mostrado, na figura abaixo, no frame da função \verb|main| os seus respectivos ponteiros para a área de dados.
     Pode-se notar claramente como os ponteiros foram passados como parâmetro para a função \verb|mult|.
-    Vê-se que o resultado foi calculado e guardado corretamente no vetor z.
+    Vê-se que o resultado foi calculado corretamente e guardado no vetor z.
 
     \begin{figure}[h]
         \centering
@@ -722,5 +885,7 @@ DeclaraVariavel = "var" Identificador {"," Identificador} Tipo {"[" Numero "]"}.
 
     \chapter*{Finale}
     \addcontentsline{toc}{part}{Finale}
-    O desenvolvimento de um compilador é, sem dúvida nenhuma, umas das tarefas mais complexas e desafiantes na área da Computação. A oportunidade de desenvolver um, ainda que didático, resultou em grande aprendizado e experiência com técnicas de análise e tradução de linguagens. 
+    O desenvolvimento de um compilador é, sem dúvida nenhuma, umas das tarefas mais complexas e desafiantes na área da Computação. A oportunidade de desenvolver um, ainda que didático, resultou em grande aprendizado e experiência com técnicas de análise e tradução de linguagens.
+
+    Pessoalmente, sempre tive curiosidade de saber como os programas e as estruturas de dados eram mapeadas desde uma linguagem de alto nível para uma de baixo nível. Embora a máquina escolhida (MVN) seja bem precária em termos de conjunto de instruções, verdade seja dita, valeu a pena implementar uma linguagem Go-like para ela. Tive a oportunidade de pesquisar na Teoria quais as técnicas usuais para implementar chamadas recursivas, passagem de parâmetro por valor e referência, como gerenciar memória etc., e além disso, tive a oportunidade de adaptar aquelas soluções da literatura para uma máquina específica. Aprendi muito.
 \end{document}
