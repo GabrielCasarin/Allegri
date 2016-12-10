@@ -11,14 +11,14 @@ class gerar_codigo_assembly(AbstractSimulador):
         super(gerar_codigo_assembly, self).__init__()
         self.tabela_simbolos = ST.TabelaSimbolos()
         self.tipos = {
-                "int": ST.TipoBasico("int", 2),
-                "char": ST.TipoBasico("char", 2),
-                "bool": ST.TipoBasico("bool", 2),
-                "int pointer": ST.TipoBasico("int pointer", 2),
-                "bool pointer": ST.TipoBasico("bool pointer", 2),
-                "void": ST.TipoBasico("void", 0),
+            "int": ST.TipoBasico("int", 2),
+            "char": ST.TipoBasico("char", 2),
+            "bool": ST.TipoBasico("bool", 2),
+            "int pointer": ST.TipoBasico("int pointer", 2),
+            "bool pointer": ST.TipoBasico("bool pointer", 2),
+            "void": ST.TipoBasico("void", 0),
         }
-        self.pilha_operadores = []
+        self.__pilha_operadores = []
         self.__func_atual = None
 
 
@@ -108,15 +108,15 @@ class gerar_codigo_assembly(AbstractSimulador):
         )
 
         # comandos e funções
-        self.__identificador_atual = []
+        self.__pilha_identificadores = []
         self.__contador_parametros_atribuidos = []
         # expressões
         self.inverte = []
-        self.pilha_tipos_resultados_parciais = []
-        self.pilha_operadores_booleanos = []
+        self.__pilha_tipos_resultados_parciais = []
+        self.__pilha_operadores_booleanos = []
         # condicionais
         self.__dummy_labels_generator = itertools.cycle(string.ascii_uppercase)
-        self.labels_a_resolver = []
+        self.__labels_a_resolver = []
         
         self.__log = log
 
@@ -125,9 +125,9 @@ class gerar_codigo_assembly(AbstractSimulador):
             print('entrei na sub-rotina de geração de código objeto...')
             print('rotina a ser executada:', rotina)
             print('ANTES:')
-            print(self.pilha_tipos_resultados_parciais)
-            print(self.pilha_operadores)
-            print(self.__identificador_atual)
+            print(self.__pilha_tipos_resultados_parciais)
+            print(self.__pilha_operadores)
+            print(self.__pilha_identificadores)
 
         # EXPRESSÕES MATEMÁTICAS
         if   rotina == 'iniciar_expressao_mat': self.iniciar_expressao_mat()
@@ -206,9 +206,9 @@ class gerar_codigo_assembly(AbstractSimulador):
         if self.__log:
             print('saí da sub-rotina de geração de código objeto...')
             print('DEPOIS:')
-            print(self.pilha_tipos_resultados_parciais)
-            print(self.pilha_operadores)
-            print(self.__identificador_atual)
+            print(self.__pilha_tipos_resultados_parciais)
+            print(self.__pilha_operadores)
+            print(self.__pilha_identificadores)
 
     # FUNÇÕES AUXILIARES
     def hex_repr(num):
@@ -246,7 +246,7 @@ class gerar_codigo_assembly(AbstractSimulador):
         elif operando.especie == "const":
             self.codigo.append('LD    {}'.format(operando.nome))
         self.codigo.append('SC    PUSH')
-        self.pilha_tipos_resultados_parciais.append(operando.tipo.s)
+        self.__pilha_tipos_resultados_parciais.append(operando.tipo.s)
     # FIM FUNÇÕES AUXILIARES
 
     # DECLARAÇÃO DE FUNÇÕES
@@ -377,20 +377,20 @@ class gerar_codigo_assembly(AbstractSimulador):
             self.codigo.append('SC PUSH')
             self.codigo.append('SC PUSHDOWN_MUL')
             self.inverte[-1] = False
-        if self.pilha_operadores:
-            if (self.pilha_operadores[-1] == '*'
-                or self.pilha_operadores[-1] =='/'):
+        if self.__pilha_operadores:
+            if (self.__pilha_operadores[-1] == '*'
+                or self.__pilha_operadores[-1] =='/'):
                     self.sai_termo()
-            if self.pilha_operadores and self.pilha_operadores[-1] != '(':
-                operador_old = self.pilha_operadores.pop()
-                if (self.pilha_tipos_resultados_parciais[-1]
-                    == self.pilha_tipos_resultados_parciais[-2]):
+            if self.__pilha_operadores and self.__pilha_operadores[-1] != '(':
+                operador_old = self.__pilha_operadores.pop()
+                if (self.__pilha_tipos_resultados_parciais[-1]
+                    == self.__pilha_tipos_resultados_parciais[-2]):
                         if operador_old == '+':
                             self.codigo.append('SC PUSHDOWN_SUM')
                         elif operador_old == '-':
                             self.codigo.append('SC PUSHDOWN_DIF')
-                        self.pilha_tipos_resultados_parciais.pop()
-        self.pilha_operadores.append(operador)
+                        self.__pilha_tipos_resultados_parciais.pop()
+        self.__pilha_operadores.append(operador)
 
     def vezes_ou_dividir(self, operador):
         if self.inverte[-1]:
@@ -398,30 +398,30 @@ class gerar_codigo_assembly(AbstractSimulador):
             self.codigo.append('SC PUSH')
             self.codigo.append('SC PUSHDOWN_MUL')
             self.inverte[-1] = False
-        if self.pilha_operadores:
-            operador_old = self.pilha_operadores[-1]
-            if (self.pilha_tipos_resultados_parciais[-1]
-                == self.pilha_tipos_resultados_parciais[-2]):
+        if self.__pilha_operadores:
+            operador_old = self.__pilha_operadores[-1]
+            if (self.__pilha_tipos_resultados_parciais[-1]
+                == self.__pilha_tipos_resultados_parciais[-2]):
                     if operador_old == '*':
                         self.codigo.append('SC PUSHDOWN_MUL')
-                        self.pilha_operadores.pop()
-                        self.pilha_tipos_resultados_parciais.pop()
+                        self.__pilha_operadores.pop()
+                        self.__pilha_tipos_resultados_parciais.pop()
                     elif operador_old == '/':
                         self.codigo.append('SC PUSHDOWN_DIV')
-                        self.pilha_operadores.pop()
-                        self.pilha_tipos_resultados_parciais.pop()
-        self.pilha_operadores.append(operador)
+                        self.__pilha_operadores.pop()
+                        self.__pilha_tipos_resultados_parciais.pop()
+        self.__pilha_operadores.append(operador)
 
     def recebe_operando_id(self, operando):
         s = self.tabela_simbolos.procurar(operando)
         if s is not None:
             if s.especie == "func":
-                self.pilha_operadores.append('(')
+                self.__pilha_operadores.append('(')
             else:
                 if s.tipo == 'int pointer' or s.tipo == 'bool pointer':
-                    self.pilha_operadores.append('(')
+                    self.__pilha_operadores.append('(')
                 self.load_val(s)
-            self.__identificador_atual.append(s)
+            self.__pilha_identificadores.append(s)
 
     def recebe_operando_num(self, num):
         label = self.get_const_num_repr(num)
@@ -433,29 +433,29 @@ class gerar_codigo_assembly(AbstractSimulador):
             self.codigo.append('SC PUSH')
             self.codigo.append('SC PUSHDOWN_MUL')
         self.inverte.pop()
-        if self.pilha_operadores:
-            if (self.pilha_operadores[-1] == '*'
-                or self.pilha_operadores[-1] =='/'):
+        if self.__pilha_operadores:
+            if (self.__pilha_operadores[-1] == '*'
+                or self.__pilha_operadores[-1] =='/'):
                     self.sai_termo()
-            if self.pilha_operadores and self.pilha_operadores[-1] != '(':
-                operador_old = self.pilha_operadores.pop()
+            if self.__pilha_operadores and self.__pilha_operadores[-1] != '(':
+                operador_old = self.__pilha_operadores.pop()
                 print('era pra exectar:', operador_old)
-                print(self.pilha_tipos_resultados_parciais[-1])
-                print(self.pilha_tipos_resultados_parciais[-2])
-                print(self.pilha_tipos_resultados_parciais)
-                if (self.pilha_tipos_resultados_parciais[-1]
-                    == self.pilha_tipos_resultados_parciais[-2]):
+                print(self.__pilha_tipos_resultados_parciais[-1])
+                print(self.__pilha_tipos_resultados_parciais[-2])
+                print(self.__pilha_tipos_resultados_parciais)
+                if (self.__pilha_tipos_resultados_parciais[-1]
+                    == self.__pilha_tipos_resultados_parciais[-2]):
                         if operador_old == '+':
                             self.codigo.append('SC PUSHDOWN_SUM')
                         elif operador_old == '-':
                             self.codigo.append('SC PUSHDOWN_DIF')
-                        self.pilha_tipos_resultados_parciais.pop()
+                        self.__pilha_tipos_resultados_parciais.pop()
                         print('hi')
         # cuida das comparacoes
-        if self.pilha_operadores_booleanos:
-            comp = self.pilha_operadores_booleanos.pop()
-            if (self.pilha_tipos_resultados_parciais[-1] == 'int'
-                and self.pilha_tipos_resultados_parciais[-2] == 'int'):
+        if self.__pilha_operadores_booleanos:
+            comp = self.__pilha_operadores_booleanos.pop()
+            if (self.__pilha_tipos_resultados_parciais[-1] == 'int'
+                and self.__pilha_tipos_resultados_parciais[-2] == 'int'):
                     if comp == '==':
                         self.codigo.append('SC IGUAL')
                     elif comp == '>=':
@@ -468,34 +468,34 @@ class gerar_codigo_assembly(AbstractSimulador):
                         self.codigo.append('SC MAIOR')
                     elif comp == '<':
                         self.codigo.append('SC MENOR')
-                    self.pilha_tipos_resultados_parciais.pop()
-                    self.pilha_tipos_resultados_parciais.pop()
-                    self.pilha_tipos_resultados_parciais.append('bool')
+                    self.__pilha_tipos_resultados_parciais.pop()
+                    self.__pilha_tipos_resultados_parciais.pop()
+                    self.__pilha_tipos_resultados_parciais.append('bool')
 
     def abre_parenteses(self):
-        self.pilha_operadores.append('(')
+        self.__pilha_operadores.append('(')
         self.inverte.append(False)
 
     def fecha_parenteses(self):
         # finaliza a expressão interna
-        while self.pilha_operadores[-1] != '(':
+        while self.__pilha_operadores[-1] != '(':
             self.finalizar_expressao_mat()
-        self.pilha_operadores.pop() # retira o '('
+        self.__pilha_operadores.pop() # retira o '('
 
     def sai_termo(self):
         # termina a operacap de * ou /
-        operador = self.pilha_operadores.pop()
-        if (self.pilha_tipos_resultados_parciais[-1]
-            == self.pilha_tipos_resultados_parciais[-2]):
+        operador = self.__pilha_operadores.pop()
+        if (self.__pilha_tipos_resultados_parciais[-1]
+            == self.__pilha_tipos_resultados_parciais[-2]):
                 if operador == '*':
                     self.codigo.append('SC PUSHDOWN_MUL')
                 elif operador == '/':
                     self.codigo.append('SC PUSHDOWN_DIV')
-                self.pilha_tipos_resultados_parciais.pop()
+                self.__pilha_tipos_resultados_parciais.pop()
 
     def separa_argumentos(self):
-        if self.pilha_operadores:
-            while self.pilha_operadores[-1] != '(':
+        if self.__pilha_operadores:
+            while self.__pilha_operadores[-1] != '(':
                 self.finalizar_expressao_mat()
         self.guarda_parametro()
 
@@ -505,32 +505,32 @@ class gerar_codigo_assembly(AbstractSimulador):
     # A[i1, i2] = 
     # baseA0 + (i x len2 + j ) x w
     def add_indice(self):
-        if self.pilha_operadores:
-            while self.pilha_operadores[-1] != '(':
+        if self.__pilha_operadores:
+            while self.__pilha_operadores[-1] != '(':
                 self.finalizar_expressao_mat()
-        if len(self.__identificador_atual[-1].dimensoes) == 2:
-            if self.__identificador_atual[-1].cursor_atual == 0:
+        if len(self.__pilha_identificadores[-1].dimensoes) == 2:
+            if self.__pilha_identificadores[-1].cursor_atual == 0:
                 # load len2
                 # pega o valor colunas
-                self.load_val(self.__identificador_atual[-1])
+                self.load_val(self.__pilha_identificadores[-1])
                 self.codigo.append('LD    K_0001')
                 self.codigo.append('SC    PUSH')
                 self.codigo.append('SC    GET_LENGTH')
                 # multiplica pelo indice recém chegado
                 self.codigo.append('SC    PUSHDOWN_MUL') # len2 * i
-                self.__identificador_atual[-1].cursor_atual = 1
-                self.pilha_tipos_resultados_parciais.pop()
-                self.pilha_tipos_resultados_parciais.pop()
-                self.pilha_tipos_resultados_parciais.append('int')
-            elif self.__identificador_atual[-1].cursor_atual == 1:
+                self.__pilha_identificadores[-1].cursor_atual = 1
+                self.__pilha_tipos_resultados_parciais.pop()
+                self.__pilha_tipos_resultados_parciais.pop()
+                self.__pilha_tipos_resultados_parciais.append('int')
+            elif self.__pilha_identificadores[-1].cursor_atual == 1:
                 self.codigo.append('LD    K_0002')
                 self.codigo.append('SC    PUSH')
                 self.codigo.append('SC    PUSHDOWN_SUM')
                 self.codigo.append('SC    PUSHDOWN_SUM') # len2 * i + j + 2 (o 2 é das duas words que guardam as dimensões da matriz)
-                self.pilha_tipos_resultados_parciais.pop()
-                self.pilha_tipos_resultados_parciais.pop()
-                self.pilha_tipos_resultados_parciais.append('int')
-        elif len(self.__identificador_atual[-1].dimensoes) == 1:
+                self.__pilha_tipos_resultados_parciais.pop()
+                self.__pilha_tipos_resultados_parciais.pop()
+                self.__pilha_tipos_resultados_parciais.append('int')
+        elif len(self.__pilha_identificadores[-1].dimensoes) == 1:
             self.codigo.append('LD    K_0001')
             self.codigo.append('SC    PUSH')
             self.codigo.append('SC    PUSHDOWN_SUM')
@@ -540,28 +540,28 @@ class gerar_codigo_assembly(AbstractSimulador):
         self.codigo.append('LD    K_0002')
         self.codigo.append('SC    PUSH')
         self.codigo.append('SC    PUSHDOWN_MUL')
-        self.__identificador_atual[-1].cursor_atual = 0
+        self.__pilha_identificadores[-1].cursor_atual = 0
 
     def finaliza_operando_1(self):
-        if self.__identificador_atual:
-            simb = self.__identificador_atual.pop()
+        if self.__pilha_identificadores:
+            simb = self.__pilha_identificadores.pop()
             print('desempilhei var:', simb.nome)
             if (simb.tipo == "int pointer"
                 or simb.tipo == "bool pointer"):
-                    self.pilha_operadores.pop() # desempilha o '('
+                    self.__pilha_operadores.pop() # desempilha o '('
 
     def finaliza_operando_7(self):
-        # simb = self.__identificador_atual.pop()
-        # self.pilha_operadores.pop() # desempilha o '('
-        # print('pilha operadores:', self.pilha_operadores)
+        # simb = self.__pilha_identificadores.pop()
+        # self.__pilha_operadores.pop() # desempilha o '('
+        # print('pilha operadores:', self.__pilha_operadores)
 
     # def get_elem(self):
-        simb = self.__identificador_atual.pop() # desempilha o nome do vetor
-        self.pilha_operadores.pop() # desempilha o '('
+        simb = self.__pilha_identificadores.pop() # desempilha o nome do vetor
+        self.__pilha_operadores.pop() # desempilha o '('
         self.codigo.append('SC  GET_FROM_VECT')
-        self.pilha_tipos_resultados_parciais.pop()
-        self.pilha_tipos_resultados_parciais.pop()
-        self.pilha_tipos_resultados_parciais.append(simb.tipo.s.split()[0])
+        self.__pilha_tipos_resultados_parciais.pop()
+        self.__pilha_tipos_resultados_parciais.pop()
+        self.__pilha_tipos_resultados_parciais.append(simb.tipo.s.split()[0])
         self.codigo.append('SC  PUSH')
     # FIM EXPRESSÕES MATEMÁTICAS
 
@@ -574,16 +574,16 @@ class gerar_codigo_assembly(AbstractSimulador):
 
     def recebe_comparador(self, comparador):
         self.finalizar_expressao_mat()
-        if self.pilha_tipos_resultados_parciais[-1] == "int":
+        if self.__pilha_tipos_resultados_parciais[-1] == "int":
             self.iniciar_expressao_mat()
-            self.pilha_operadores_booleanos.append(comparador)
+            self.__pilha_operadores_booleanos.append(comparador)
 
     # FIM EXPRESSÕES BOOLEANAS
 
     # CHAMADA DE PROCEDIMENTOS
     def iniciar_frame(self):
         self.codigo.append('; espaco para valor de retorno')
-        for b in range(0, self.__identificador_atual[-1].tipo.tamanho, 2):
+        for b in range(0, self.__pilha_identificadores[-1].tipo.tamanho, 2):
             self.codigo.append('LD K_0000')
             self.codigo.append('SC PUSH')
         # reserva espaço para os parâmetros
@@ -601,7 +601,7 @@ class gerar_codigo_assembly(AbstractSimulador):
         self.codigo.append("LD SP")
         self.codigo.append("+ WORD_TAM")
         self.codigo.append("MM FP")
-        self.codigo.append("SC {}".format(self.__identificador_atual[-1].nome))
+        self.codigo.append("SC {}".format(self.__pilha_identificadores[-1].nome))
         self.codigo.append("; volta ao contexto anterior")
         self.codigo.append("SC POP ; restaura FP")
         self.codigo.append("MM FP")
@@ -609,22 +609,22 @@ class gerar_codigo_assembly(AbstractSimulador):
         self.codigo.append("MM {}".format(self.__func_atual.nome))
         for i in range(self.__contador_parametros_atribuidos[-1]):
             self.codigo.append("SC POP")
-            self.pilha_tipos_resultados_parciais.pop()
+            self.__pilha_tipos_resultados_parciais.pop()
         self.codigo.append("; termina de desempilhar os parametros passados aa funcao")
         self.codigo.append("; resta o valor de retorno no topo da pilha")
-        self.pilha_tipos_resultados_parciais.append(self.__identificador_atual[-1].tipo.s)
-        self.__identificador_atual.pop()
+        self.__pilha_tipos_resultados_parciais.append(self.__pilha_identificadores[-1].tipo.s)
+        self.__pilha_identificadores.pop()
         self.__contador_parametros_atribuidos.pop()
 
     def guarda_parametro(self):
-        par = self.__identificador_atual[-1].parametros[self.__contador_parametros_atribuidos[-1]]
+        par = self.__pilha_identificadores[-1].parametros[self.__contador_parametros_atribuidos[-1]]
         self.codigo.append("; par %s"%par.nome)
         self.__contador_parametros_atribuidos[-1] += 1
 
     def guarda_parametro_e_chamar_funcao(self):
         self.separa_argumentos()
-        if self.pilha_operadores:
-            self.pilha_operadores.pop()
+        if self.__pilha_operadores:
+            self.__pilha_operadores.pop()
         self.chamar_funcao()
         if self.inverte[-1]:
             self.codigo.append('LD K_FFFF')
@@ -640,9 +640,9 @@ class gerar_codigo_assembly(AbstractSimulador):
             if (s.especie == "var" or s.especie == "par"):
                 if (s.tipo == "int pointer" or s.tipo == "bool pointer"):
                     self.load_val(s) # empurra o endereço base
-                    self.__identificador_atual.append(s)
-                    self.__identificador_atual[-1].utilizado = True
-                    self.pilha_operadores.append('(')
+                    self.__pilha_identificadores.append(s)
+                    self.__pilha_identificadores[-1].utilizado = True
+                    self.__pilha_operadores.append('(')
                 else:
                     # empurra o endereço de FP (base da variável) 
                     self.codigo.append('LD    FP')
@@ -650,30 +650,30 @@ class gerar_codigo_assembly(AbstractSimulador):
                     self.codigo.append('LD    {}'.format(self.get_const_num_repr(s.posicao)))
                     self.codigo.append('*     K_FFFF') # pra poder usar a mesma função SET_TO_VECT, mesmo pilha e heap andando em direções opostas
                     self.codigo.append('SC    PUSH')
-                    self.pilha_tipos_resultados_parciais.append(s.tipo.s+' pointer')
-                    self.pilha_tipos_resultados_parciais.append('int')
-                    self.__identificador_atual.append(s)
-                    self.pilha_operadores.append('(')
+                    self.__pilha_tipos_resultados_parciais.append(s.tipo.s+' pointer')
+                    self.__pilha_tipos_resultados_parciais.append('int')
+                    self.__pilha_identificadores.append(s)
+                    self.__pilha_operadores.append('(')
             elif s.especie == "func":
-                self.__identificador_atual.append(s)
-                self.__identificador_atual[-1].utilizado = True
-                self.pilha_operadores.append('(')
+                self.__pilha_identificadores.append(s)
+                self.__pilha_identificadores[-1].utilizado = True
+                self.__pilha_operadores.append('(')
 
     def comando_atribuicao(self):
         self.codigo.append('SC    SET_TO_VECT')
-        self.pilha_tipos_resultados_parciais.pop()
-        self.pilha_tipos_resultados_parciais.pop()
-        self.pilha_tipos_resultados_parciais.pop()
-        self.pilha_operadores.pop() # '('
-        self.__identificador_atual.pop()
+        self.__pilha_tipos_resultados_parciais.pop()
+        self.__pilha_tipos_resultados_parciais.pop()
+        self.__pilha_tipos_resultados_parciais.pop()
+        self.__pilha_operadores.pop() # '('
+        self.__pilha_identificadores.pop()
 
 
     def comando_retorno(self):
         if self.__func_atual.tipo != "void":
             self.codigo.append("LD    {}".format(self.get_const_num_repr(self.__func_atual.offset_valor_retorno)))
             self.codigo.append("SC    PUSH")
-        # if self.pilha_tipos_resultados_parciais:
-            self.pilha_tipos_resultados_parciais.pop()
+        # if self.__pilha_tipos_resultados_parciais:
+            self.__pilha_tipos_resultados_parciais.pop()
             self.codigo.append("SC    SET_TO_FRAME")
         self.codigo.append("JP    RET_{}".format(self.__func_atual.nome))
     # FIM COMANDO SIMPLES
@@ -685,26 +685,26 @@ class gerar_codigo_assembly(AbstractSimulador):
         self.__contador_elifs = 0
         self.__pilha_ids_elif.append([self.__contador_elifs])
         self.codigo.append('{}_IF_{} SC POP'.format(self.__func_atual.nome, self.__pilha_ids_if[-1]))
-        self.pilha_tipos_resultados_parciais.pop()
+        self.__pilha_tipos_resultados_parciais.pop()
         dummy_label = next(self.__dummy_labels_generator)
-        self.labels_a_resolver.append((dummy_label, len(self.codigo)))
+        self.__labels_a_resolver.append((dummy_label, len(self.codigo)))
         self.codigo.append('JZ {}'.format(dummy_label))
 
     def constroi_elif(self):
         self.__contador_elifs += 1
         self.__pilha_ids_elif[-1].append([self.__contador_elifs])
-        dummy_label, indice = self.labels_a_resolver.pop()
+        dummy_label, indice = self.__labels_a_resolver.pop()
         label_elif = '{}_ELIF_{}_{}'.format(self.__func_atual.nome, self.__pilha_ids_if[-1], self.__contador_elifs)
         self.codigo.append(label_elif + ' SC POP')
         label_real = self.codigo[indice]
         label_real = label_real.replace(' {}'.format(dummy_label), ' ' + label_elif)
         self.codigo[indice] = label_real
-        self.labels_a_resolver.append((dummy_label, len(self.codigo)))
+        self.__labels_a_resolver.append((dummy_label, len(self.codigo)))
         self.codigo.append('JZ {}'.format(dummy_label))
 
     def constroi_else(self):
         self.codigo.append('JP {}_END_IF_{}'.format(self.__func_atual.nome, self.__pilha_ids_if[-1]))
-        dummy_label, indice = self.labels_a_resolver.pop()
+        dummy_label, indice = self.__labels_a_resolver.pop()
         label_else = '{}_ELSE_{}'.format(self.__func_atual.nome, self.__pilha_ids_if[-1])
         self.codigo.append(label_else + ' + K_0000 ; pseudo NOP')
         label_real = self.codigo[indice]
@@ -713,7 +713,7 @@ class gerar_codigo_assembly(AbstractSimulador):
 
     def fecha_if(self):
         self.codigo.append('JP {}_END_IF_{}'.format(self.__func_atual.nome, self.__pilha_ids_if[-1]))
-        dummy_label, indice = self.labels_a_resolver.pop()
+        dummy_label, indice = self.__labels_a_resolver.pop()
         label_real = self.codigo[indice]
         label_real = label_real.replace(' {}'.format(dummy_label), ' {}_END_IF_{}'.format(self.__func_atual.nome, self.__pilha_ids_if[-1]))
         self.codigo[indice] = label_real
@@ -732,7 +732,7 @@ class gerar_codigo_assembly(AbstractSimulador):
         self.codigo.append('{}_WHILE_{} + K_0000'.format(self.__func_atual.nome, self.__pilha_ids_while[-1]))
     def constroi_while2(self):
         self.codigo.append('SC POP')
-        self.pilha_tipos_resultados_parciais.pop()
+        self.__pilha_tipos_resultados_parciais.pop()
         self.codigo.append('JZ {}_END_WHILE_{}'.format(self.__func_atual.nome, self.__pilha_ids_while[-1]))
     def fecha_while(self):
         self.codigo.append('JP {}_WHILE_{}'.format(self.__func_atual.nome, self.__pilha_ids_while[-1]))
@@ -741,21 +741,20 @@ class gerar_codigo_assembly(AbstractSimulador):
     # FIM COMANDO WHILE
 
     def get_len_v(self):
-        v = self.__identificador_atual.pop()
+        v = self.__pilha_identificadores.pop()
         if v.tipo == 'int pointer' or v.tipo == 'bool pointer':
             self.codigo.append('LD K_0000')
             self.codigo.append('SC PUSH')
             self.codigo.append('SC GET_LENGTH')
-            self.pilha_tipos_resultados_parciais.pop()
-            self.pilha_tipos_resultados_parciais.append('int')
-            self.pilha_operadores.pop() # '('
+            self.__pilha_tipos_resultados_parciais.pop()
+            self.__pilha_tipos_resultados_parciais.append('int')
+            self.__pilha_operadores.pop() # '('
 
     def get_len(self):
-        v = self.__identificador_atual.pop()
+        v = self.__pilha_identificadores.pop()
         if v.tipo == 'int pointer' or v.tipo == 'bool pointer':
             self.codigo.append('SC GET_LENGTH')
-            self.pilha_tipos_resultados_parciais.pop()
-            self.pilha_tipos_resultados_parciais.pop()
-            self.pilha_tipos_resultados_parciais.pop()
-            self.pilha_tipos_resultados_parciais.append('int')
-            self.pilha_operadores.pop() # '('
+            self.__pilha_tipos_resultados_parciais.pop()
+            self.__pilha_tipos_resultados_parciais.pop()
+            self.__pilha_tipos_resultados_parciais.append('int')
+            self.__pilha_operadores.pop() # '('

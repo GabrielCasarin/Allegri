@@ -44,7 +44,7 @@ tokenizer.add_classificacao('q22', 'Comparacao') # <
 gca = gerar_codigo_assembly(True)
 
 # instancia um analisador sintático
-automato_sintatico = automato_pilha_estruturado(os.path.join(ROOT_DIR, 'dev', 'barber.maq'))
+automato_sintatico = automato_pilha_estruturado(os.path.join(BARBER_DIR, 'barber.maq'))
 analisador_sintatico = analise_sintatica(automato_sintatico, tokenizer, gca, log=log_analise_sintatica)
 
 

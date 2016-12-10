@@ -11,4 +11,4 @@ def f int
 
 def main {
     f(10, 20)
-    }
+}

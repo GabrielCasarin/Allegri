@@ -1,0 +1,18 @@
+def preencher
+	par m1 int[] {
+	var i int
+
+	i = 0
+	while i < len(m1) {
+		m1[i] = 2*i + 1
+		i = i + 1
+	}
+
+}
+
+def main {
+	var x int[11]
+
+	preencher(x)
+
+}

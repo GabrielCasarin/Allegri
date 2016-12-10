@@ -5,7 +5,7 @@
 
     q32 q30 q13 q7 q22 q36 q11 q17 q24 q27 q34 q1 q38 q29 q4 q9 q15 q20 q39 q40 q41 q42 q43
 
-    ( DecAlg HexAlg ) ! , > Zero < ] [ Letra = { : } espaco enter + - * /
+    ( DecAlg HexAlg ) ! , > Zero < ] [ Letra = { : } espaco enter + - * / _
 
     (q37, 'espaco') -> q37\limpa
     (q37, 'enter') -> q39
@@ -50,7 +50,11 @@
     (q37, 'Letra') -> q15
     (q37, 'HexAlg') -> q15
     (q15, 'HexAlg') -> q15
+    (q37, '_') -> q15
     (q15, 'DecAlg') -> q15
     (q15, 'Letra') -> q15
     (q15, 'Zero') -> q15
+    (q15, '_') -> q15
+
+
 </tokenizer>

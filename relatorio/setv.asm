@@ -43,95 +43,89 @@ SC    main
 FIM   HM FIM
 ; declaracao de CONSTANTES
 K_FFFC	K /FFFC
-K_FFFA	K /FFFA
-K_0004	K /0004
-K_0006	K /0006
+K_000B	K /000B
 ; declaracao de FUNCOES
-fat	$ =1
-LD    K_FFFC
+preencher	$ =1
+LD K_0000
+SC PUSH  ; var i
+LD    FP
 SC    PUSH
-SC    GET_FROM_FRAME
+LD    K_0002
+*     K_FFFF
 SC    PUSH
 LD    K_0000
 SC    PUSH
-SC IGUAL
-fat_IF_1 SC POP
-JZ fat_END_IF_1
-LD    K_0001
+SC    SET_TO_VECT
+preencher_WHILE_1 + K_0000
+LD    K_0002
 SC    PUSH
-LD    K_FFFA
+SC    GET_FROM_FRAME
 SC    PUSH
-SC    SET_TO_FRAME
-JP    RET_fat
-JP fat_END_IF_1
-fat_END_IF_1 + K_0000 ; pseudo NOP
 LD    K_FFFC
 SC    PUSH
 SC    GET_FROM_FRAME
 SC    PUSH
-; espaco para valor de retorno
 LD K_0000
 SC PUSH
-LD    K_FFFC
-SC    PUSH
-SC    GET_FROM_FRAME
-SC    PUSH
-LD    K_0001
-SC    PUSH
-SC PUSHDOWN_DIF
-; par n
-LD fat
-SC PUSH
-LD FP
-SC PUSH
-; troca o contexto
-LD SP
-+ WORD_TAM
-MM FP
-SC fat
-; volta ao contexto anterior
-SC POP ; restaura FP
-MM FP
-SC POP ; restaura end. de retorno
-MM fat
+SC GET_LENGTH
+SC MENOR
 SC POP
-; termina de desempilhar os parametros passados aa funcao
-; resta o valor de retorno no topo da pilha
+JZ preencher_END_WHILE_1
+LD    K_FFFC
+SC    PUSH
+SC    GET_FROM_FRAME
+SC    PUSH
+LD    K_0002
+SC    PUSH
+SC    GET_FROM_FRAME
+SC    PUSH
+LD    K_0001
+SC    PUSH
+SC    PUSHDOWN_SUM
+LD    K_0002
+SC    PUSH
+SC    PUSHDOWN_MUL
+LD    K_0002
+SC    PUSH
+LD    K_0002
+SC    PUSH
+SC    GET_FROM_FRAME
+SC    PUSH
 SC PUSHDOWN_MUL
-LD    K_FFFA
+LD    K_0001
 SC    PUSH
-SC    SET_TO_FRAME
-JP    RET_fat
-RET_fat	LD  FP
--   WORD_TAM
-MM  SP
-RS	fat
-main	$ =1
-LD K_0000
-SC PUSH  ; var a
-LD K_0000
-SC PUSH  ; var b
-LD    FP
-SC    PUSH
-LD    K_0004
-*     K_FFFF
-SC    PUSH
-LD    K_0006
-SC    PUSH
+SC PUSHDOWN_SUM
 SC    SET_TO_VECT
 LD    FP
 SC    PUSH
 LD    K_0002
 *     K_FFFF
 SC    PUSH
-; espaco para valor de retorno
-LD K_0000
-SC PUSH
-LD    K_0004
+LD    K_0002
 SC    PUSH
 SC    GET_FROM_FRAME
 SC    PUSH
-; par n
+LD    K_0001
+SC    PUSH
+SC PUSHDOWN_SUM
+SC    SET_TO_VECT
+JP preencher_WHILE_1
+preencher_END_WHILE_1 + K_0000
+RET_preencher	LD  FP
+-   WORD_TAM
+MM  SP
+RS	preencher
+main	$ =1
+LD K_000B
+MM DIM_1
+SC NEW_ARRAY
+SC PUSH  ; var x
+; espaco para valor de retorno
+LD    K_0002
+SC    PUSH
+SC    GET_FROM_FRAME
+SC    PUSH
+; par m1
 LD main
 SC PUSH
 LD FP
@@ -140,7 +134,7 @@ SC PUSH
 LD SP
 + WORD_TAM
 MM FP
-SC fat
+SC preencher
 ; volta ao contexto anterior
 SC POP ; restaura FP
 MM FP
@@ -149,7 +143,6 @@ MM main
 SC POP
 ; termina de desempilhar os parametros passados aa funcao
 ; resta o valor de retorno no topo da pilha
-SC    SET_TO_VECT
 RET_main	LD  FP
 -   WORD_TAM
 MM  SP
