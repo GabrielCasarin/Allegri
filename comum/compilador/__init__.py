@@ -1,0 +1,4 @@
+from .analisador_lexico import decompoe_texto_fonte
+from .analisador_lexico import classificador_lexico
+from .analisador_lexico import analisador_lexico
+from .analisador_sintatico import analise_sintatica

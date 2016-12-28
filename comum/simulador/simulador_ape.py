@@ -1,10 +1,10 @@
 # Copyright (c) 2016 Gabriel Casarin da Silva, All Rights Reserved.
 
 
-from comum import AbstractSimulador
+from comum.simulador.simulador_abstrato import SimuladorAbstrato
 
 
-class SimuladorAutomatoPilhaEstruturado(AbstractSimulador):
+class SimuladorAutomatoPilhaEstruturado(SimuladorAbstrato):
     def __init__(self, automato, log=False):
         super(SimuladorAutomatoPilhaEstruturado, self).__init__()
         self.ap = automato

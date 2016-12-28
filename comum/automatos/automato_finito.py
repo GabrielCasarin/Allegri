@@ -1,10 +1,10 @@
 # Copyright (c) 2016 Gabriel Casarin da Silva, All Rights Reserved.
 
 
-from . import Estado, AbstractAutomato
+from . import Estado, AutomatoAbstrato
 
 
-class AutomatoFinito(AbstractAutomato):
+class AutomatoFinito(AutomatoAbstrato):
     """implementa um Autômato Finito Determinístico"""
     def __init__(self, nome, **kwargs):
         super(AutomatoFinito, self).__init__(deterministico=True)

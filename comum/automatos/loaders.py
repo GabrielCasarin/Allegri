@@ -4,6 +4,8 @@
 import re
 from comum.automatos import AutomatoPilhaEstruturado, TransdutorFinito
 
+__all__ = ['transdutor_finito', 'automato_pilha_estruturado']
+
 
 def parse_tf(espec):
     match_automato = re.compile(r'^[\s\t]*<(?P<nome>\w+)>\n(.*)\s*</(?P=nome)>', re.DOTALL | re.MULTILINE)
@@ -62,7 +64,7 @@ def automato_pilha_estruturado(nome_arquivo):
 
         ape = AutomatoPilhaEstruturado(nome=nome_automato)
 
-        match_transicoes = re.compile(r"\(([a-zA-Z]\w*)\s*,\s*'(.+)'\s*\)\s*->\s*([a-zA-Z]\w*)(?:\s*\\\s*(\w+))?\n")
+        match_transicoes = re.compile(r"\(([a-zA-Z]\w*)\s*,\s*'(.+)'\s*\)\s*->\s*([a-zA-Z]\w*)(?:\s*\\\s*([\(\)\[\]\{\}|\w]+))?\n")
         match_chamadas = re.compile(r"([a-zA-Z]\w*)\s*=>\s*(?:(pop\(\))|(?:\((\w+)\s*,\s*([a-zA-Z]\w*)\)))(?:\s*\\\s*(\w+))?\n")
         def parse_submaquina(spec, nome, ape):
 
@@ -94,7 +96,6 @@ def automato_pilha_estruturado(nome_arquivo):
                 if pop is None:
                     subm.add_chamada_para_submaquina(de=qi, para=Sj, retorno=qj)
                     if saida is not None:
-                        # print('saida ignorada:', saida)
                         subm.add_saida(de=qi, com=Sj, saida=saida)
                 else: # se é pop()
                     if saida is not None:

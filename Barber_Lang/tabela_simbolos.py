@@ -106,3 +106,4 @@ class TabelaSimbolos:
 
 	def inserir_const(self, simbolo):
 		self.escopo_global.simbolos.append(simbolo)
+

@@ -2,11 +2,10 @@
 
 import itertools
 import string
-from comum import AbstractSimulador
 import tabela_simbolos as ST
 
 
-class gerar_codigo_assembly(AbstractSimulador):
+class gerar_codigo_assembly:
     def __init__(self, log=False):
         super(gerar_codigo_assembly, self).__init__()
         self.tabela_simbolos = ST.TabelaSimbolos()

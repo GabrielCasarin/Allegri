@@ -6,10 +6,10 @@ import sys
 import string
 from configuracoes import *
 
-from analisador_lexico import decompoe_texto_fonte, classificador_lexico
-from util.automatos_loaders import transdutor_finito
-from util.meta_reconhecedor import MetaReconhecedor
-from util.minimizador import *
+from comum.compilador.analisador_lexico import decompoe_texto_fonte, classificador_lexico
+from comum.automatos.loaders import transdutor_finito
+from meta_reconhecedor import MetaReconhecedor
+from minimizador import *
 
 
 # leitor e classificador de caracteres do arquivo fonte

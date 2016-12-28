@@ -1,4 +1,4 @@
-<A>
+<TokenizerWirth>
 	q0 q1 q2 NT q4 TERM
 
 	q0
@@ -99,4 +99,4 @@
 	(NT, 'Algarismo') -> NT
 	(NT, 'Letra') -> NT
 
-</A>
+</TokenizerWirth>

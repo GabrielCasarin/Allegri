@@ -1,7 +1,7 @@
-import os
+from os.path import dirname, join
 
-ROOT_DIR = os.path.dirname(__file__)
-BARBER_DIR = os.path.join(ROOT_DIR, 'Barber Lang')
+ROOT_DIR = dirname(dirname(__file__))
+BARBER_DIR = join(ROOT_DIR, 'Barber Lang')
 
 log_decompoe_texto_fonte = False
 log_imprimir_linhas = False

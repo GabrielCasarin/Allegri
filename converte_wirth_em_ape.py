@@ -4,12 +4,11 @@
 import os
 import sys
 import string
-from configuracoes import *
-
-from analisador_lexico import decompoe_texto_fonte, classificador_lexico
-from util.automatos_loaders import transdutor_finito
-from util.meta_reconhecedor import MetaReconhecedor
-from util.minimizador import *
+from comum.automatos.loaders import transdutor_finito, automato_pilha_estruturado
+from comum.compilador import decompoe_texto_fonte, classificador_lexico
+from Meta_Compilador.meta_reconhecedor import MetaReconhecedor
+from Meta_Compilador.minimizador import *
+from comum.configuracoes import *
 
 
 # leitor e classificador de caracteres do arquivo fonte
@@ -23,28 +22,34 @@ for el in string.punctuation:
     decompositor.add_categoria(el, [el])
 
 # cria o automato que reconhece os diversos tokens da linguagem
-automato_transdutor_tokenizador_de_wirth = transdutor_finito(os.path.join(ROOT_DIR, 'Wirth', 'tokenizer_wirth.maquina'))
+automato_tokenizador_de_wirth = transdutor_finito(os.path.join(ROOT_DIR, 'Meta_Compilador', 'tokenizer_wirth.af'))
 
 # analisador léxico
-tokenizer = classificador_lexico(automato_transdutor_tokenizador_de_wirth, decompositor, log_analise_lexica)
+tokenizer = classificador_lexico(automato_tokenizador_de_wirth, decompositor, log_analise_lexica)
 tokenizer.add_classificacao('NT', 'NT')
 tokenizer.add_classificacao('TERM', 'TERM')
 
+# analisador sintático E gerador de representação intermediária
+automato_sintatico = automato_pilha_estruturado(os.path.join(ROOT_DIR, 'Meta_Compilador', 'MetaReconhecedor.ap'))
+
 # meta-reconhecedor, ou analisador sintático
-mr = MetaReconhecedor(tokenizer, log=log_analise_sintatica)
+mr = MetaReconhecedor(automato_sintatico, tokenizer, log=log_analise_sintatica)
 
 # rotina MAIN
 if __name__ == '__main__':
     arquivo_saida = 'out'
     if len(sys.argv) >= 3:
-        mr(os.path.join('.', sys.argv[1]))
+        nome_input = os.path.join('.', 'dev', sys.argv[1] + '.wirth')
         arquivo_saida = sys.argv[2]
     elif len(sys.argv) == 2:
-        mr(os.path.join('.', sys.argv[1]))
+        nome_input = os.path.join('.', 'dev', sys.argv[1] + '.wirth')
     else:
         nome_input = input('Arquivo da Gramática: ')
-        mr(nome_input)
+    
+    # realiza a conversão
+    mr(nome_input)
 
+    # minimiza
     submaquinas_geradas = {}
     for nome_da_submaq, submaquina in mr.submaquinas.items():
         # print('Submaquina atual:', nome_da_submaq)
@@ -80,6 +85,7 @@ if __name__ == '__main__':
 
     mr.eh_ape = True # xD
     
+    # salva
     with open(os.path.join(ROOT_DIR, 'dev', arquivo_saida + '.maq'), 'w') as f:
         if mr.eh_ape:
             f.write('<S>\n')

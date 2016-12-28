@@ -1,7 +1,7 @@
 # Copyright (c) 2016 Gabriel Casarin da Silva, All Rights Reserved.
 
 
-from comum import SimuladorAutomatoPilhaEstruturado
+from comum.simulador import SimuladorAutomatoPilhaEstruturado
 
 
 class analise_sintatica(SimuladorAutomatoPilhaEstruturado):

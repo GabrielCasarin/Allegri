@@ -6,11 +6,11 @@ import sys
 import string
 from configuracoes import *
 
-from analisador_lexico import decompoe_texto_fonte, analisador_lexico
-from analisador_sintatico import analise_sintatica
-from analisador_semantico import gerar_codigo_assembly
+from comum.compilador.analisador_lexico import decompoe_texto_fonte, analisador_lexico
+from comum.compilador.analisador_sintatico import analise_sintatica
+from Barber_Lang.analisador_semantico import gerar_codigo_assembly
 
-from util.automatos_loaders import transdutor_finito, automato_pilha_estruturado
+from comum.automatos.loaders import transdutor_finito, automato_pilha_estruturado
 
 
 decompositor = decompoe_texto_fonte(log_decompoe_texto_fonte, log_imprimir_linhas, log_imprimir_caracteres)
@@ -22,7 +22,7 @@ decompositor.add_categoria('Zero', ['0'])
 decompositor.add_categoria('DecAlg', string.digits[1:]) # Decimal Algarismo sem o zero
 
 # cria o automato que reconhece os diversos tokens da linguagem
-automato_transdutor_tokenizador_de_barber = transdutor_finito(os.path.join(ROOT_DIR, BARBER_DIR, 'tokenizer_barber.maquina'))
+automato_transdutor_tokenizador_de_barber = transdutor_finito(os.path.join(ROOT_DIR, BARBER_DIR, 'tokenizer_barber.af'))
 
 # palavras reservadas
 palavras_reservadas = tuple(open(os.path.join(BARBER_DIR, 'barber.tokens')).read().splitlines())
@@ -44,7 +44,7 @@ tokenizer.add_classificacao('q22', 'Comparacao') # <
 gca = gerar_codigo_assembly(True)
 
 # instancia um analisador sintático
-automato_sintatico = automato_pilha_estruturado(os.path.join(BARBER_DIR, 'barber.maq'))
+automato_sintatico = automato_pilha_estruturado(os.path.join(BARBER_DIR, 'barber.ap'))
 analisador_sintatico = analise_sintatica(automato_sintatico, tokenizer, gca, log=log_analise_sintatica)
 
 
@@ -68,5 +68,4 @@ with open(os.path.join('mvn_build_system', 'src', arquivo_saida), 'w') as aout:
     aout.write('; declaracao de FUNCOES\n')
     for line in gca.codigo:
         aout.write(line + '\n')
-    # aout.write('FIM_MAIN HM FIM_MAIN\n')
     aout.write('# FIM\n')

@@ -2,74 +2,18 @@
 
 
 import itertools
-from comum import SimuladorAutomatoPilhaEstruturado
-from comum.automatos import AbstractAutomato, AutomatoPilhaEstruturado
-__all__ = ['MetaReconhecedor']
+from comum.simulador import SimuladorAutomatoPilhaEstruturado
+from comum.automatos import AutomatoAbstrato, AutomatoPilhaEstruturado
 
 
 def gera_nome(nb_estado):
     return 'q' + str(nb_estado)
 
+
 class MetaReconhecedor(SimuladorAutomatoPilhaEstruturado):
-    def __init__(self, classificador_lexico, log=True):
-        super(MetaReconhecedor, self).__init__(automato=None, log=log)
+    def __init__(self, automato, classificador_lexico, log=True):
+        super(MetaReconhecedor, self).__init__(automato, log)
         self.__classificador_lexico = classificador_lexico
-
-        # Automato de Pilha que direciona o meta-reconhecimento
-        self.ap = AutomatoPilhaEstruturado(nome='wirth', sub_maquinas=['grammar', 'exp'])
-        self.ap['grammar'].add_transicao('q0', 'NT', 'q2')
-        self.ap['grammar'].add_transicao('q2', '=',  'q3')
-        self.ap['grammar'].add_transicao('q4', '.',  'q5')
-        self.ap['grammar'].add_transicao('q5', 'NT', 'q2')
-        self.ap['grammar'].add_chamada_para_submaquina(de='q3', para=self.ap['exp'].nome, retorno='q4')
-        self.ap['grammar'].set_inicial('q0')
-        self.ap['grammar']['q5'].final = True
-
-        self.ap['exp'].add_transicao('q0', '(', 'q5')
-        self.ap['exp'].add_transicao('q0', '[', 'q8')
-        self.ap['exp'].add_transicao('q0', '{', 'q11')
-        self.ap['exp'].add_transicao('q1', '(', 'q5')
-        self.ap['exp'].add_transicao('q1', '[', 'q8')
-        self.ap['exp'].add_transicao('q1', '{', 'q11')
-        self.ap['exp'].add_transicao('q6', ')', 'q1')
-        self.ap['exp'].add_transicao('q9', ']', 'q1')
-        self.ap['exp'].add_transicao('q12', '}', 'q1')
-        self.ap['exp'].add_transicao('q0', 'NT', 'q1')
-        self.ap['exp'].add_transicao('q0', 'TERM', 'q1')
-        self.ap['exp'].add_transicao('q1', 'NT', 'q1')
-        self.ap['exp'].add_transicao('q1', 'TERM', 'q1')
-        self.ap['exp'].add_transicao('q1', '|', 'q0')
-
-        self.ap['exp'].add_chamada_para_submaquina(de='q5', para=self.ap['exp'].nome, retorno='q6')
-        self.ap['exp'].add_chamada_para_submaquina(de='q8', para=self.ap['exp'].nome, retorno='q9')
-        self.ap['exp'].add_chamada_para_submaquina(de='q11', para=self.ap['exp'].nome, retorno='q12')
-        self.ap['exp'].set_inicial('q0')
-        self.ap['exp']['q1'].final = True
-
-        self.ap.set_submaquina_inicial('grammar')
-        self.ap.inicializar()
-
-        self.ap['grammar'].add_saida(de='q0', com='NT', saida='criar_submaquina')
-        self.ap['grammar'].add_saida(de='q5', com='NT', saida='criar_submaquina')
-        self.ap['grammar'].add_saida(de='q2', com='=',  saida='=')
-        self.ap['grammar'].add_saida(de='q4', com='.',  saida='.')
-
-        self.ap['exp'].add_saida(de='q0', com='(', saida='(')
-        self.ap['exp'].add_saida(de='q0', com='[', saida='[')
-        self.ap['exp'].add_saida(de='q0', com='{', saida='{')
-        self.ap['exp'].add_saida(de='q1', com='(', saida='(')
-        self.ap['exp'].add_saida(de='q1', com='[', saida='[')
-        self.ap['exp'].add_saida(de='q1', com='{', saida='{')
-        self.ap['exp'].add_saida(de='q6', com=')', saida=')')
-        self.ap['exp'].add_saida(de='q9', com=']', saida=']')
-        self.ap['exp'].add_saida(de='q12', com='}', saida='}')
-        self.ap['exp'].add_saida(de='q0', com='TERM', saida='terminal')
-        self.ap['exp'].add_saida(de='q1', com='TERM', saida='terminal')
-        self.ap['exp'].add_saida(de='q0', com='NT', saida='chamada')
-        self.ap['exp'].add_saida(de='q1', com='NT', saida='chamada')
-        self.ap['exp'].add_saida(de='q1', com='|', saida='|')
-
-        self.ap.gerar_alfabeto()
 
     def __call__(self, arquivo_fonte):
         # conjunto de submáquinas geradas pelo meta-reconhecedor
@@ -86,15 +30,16 @@ class MetaReconhecedor(SimuladorAutomatoPilhaEstruturado):
         self.eh_ape = False
         super(MetaReconhecedor, self).PartidaInicial()
 
+
     def ExecutarTransducao(self, token):
         rotina = self.ap.saida_gerada
 
         if rotina == 'criar_submaquina':
             self.criar_submaquina(token)
-        elif rotina == '.':
-            self.ponto_final()
-        elif rotina == '=':
+        elif rotina == 'inicio_regra':
             self.igual()
+        elif rotina == 'fim_regra':
+            self.ponto_final()
         elif rotina == '(':
             self.lparen()
         elif rotina == ')':
@@ -127,7 +72,7 @@ class MetaReconhecedor(SimuladorAutomatoPilhaEstruturado):
         # por que criar uma máquina nova, pressupondo que ela já possa existir?
         # simples: ela pode existir apenas por causa de uma referência anterior feita por outra
         if self.submaquina_atual not in self.submaquinas:
-            self.submaquinas[self.submaquina_atual] = AbstractAutomato(deterministico=False)
+            self.submaquinas[self.submaquina_atual] = AutomatoAbstrato(deterministico=False)
         # pilha que determina o escopo em que está o pé da análise
         self.pilha = []
         # conjunto de transições obtido pela análise do conjunto de regras da gramática
@@ -157,7 +102,7 @@ class MetaReconhecedor(SimuladorAutomatoPilhaEstruturado):
 
     def chamada(self, nome_da_submaq):
         # if nome_da_submaq not in self.submaquinas:
-        #     self.submaquinas[nome_da_submaq] = AbstractAutomato(deterministico=False)
+        #     self.submaquinas[nome_da_submaq] = AutomatoAbstrato(deterministico=False)
 
         estado_anterior = self.estado
         self.estado = self.valor_atual

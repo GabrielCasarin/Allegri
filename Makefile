@@ -1,15 +1,20 @@
 
-$(fonte): mvn_build_system/src/$(fonte).asm
+$(fonte): Gerador_Codigo_Executavel/src/$(fonte).asm
 	if [ -e $< ] ;\
-		then cd mvn_build_system; make $(fonte); make run ;\
+		then cd Gerador_Codigo_Executavel;\
+		make $(fonte);\
+		make run ;\
 	fi ;
 
-mvn_build_system/src/$(fonte).asm: src/$(fonte).barber
+Gerador_Codigo_Executavel/src/$(fonte).asm: src/$(fonte).barber
 	python compilador.py $(fonte)
+
+gerar_reconhecedor_sintatico:
+	python converte_wirth_em_ape.py $(fonte) $(fonte)
 
 salva_no_rela:
 	cp src/$(fonte).barber relatorio/
-	cp mvn_build_system/src/$(fonte).asm relatorio/
+	cp Gerador_Codigo_Executavel/src/$(fonte).asm relatorio/
 
 rm:
-	rm mvn_build_system/src/$(fonte).asm
+	rm Gerador_Codigo_Executavel/src/$(fonte).asm

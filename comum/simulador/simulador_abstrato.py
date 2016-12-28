@@ -1,12 +1,12 @@
 # Copyright (c) 2016 Gabriel Casarin da Silva, All Rights Reserved.
 
 
-from . lista_encadeada import ListaEncadeada
+from comum.simulador.lista_encadeada import ListaEncadeada
 
 
-class AbstractSimulador:
+class SimuladorAbstrato:
     def __init__(self):
-        super(AbstractSimulador, self).__init__()
+        super(SimuladorAbstrato, self).__init__()
         self._listaEventos = ListaEncadeada()
 
     def trata_evento(self, evento):

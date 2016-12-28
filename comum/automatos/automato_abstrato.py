@@ -1,12 +1,12 @@
 # Copyright (c) 2016 Gabriel Casarin da Silva, All Rights Reserved.
 
 
-from . import Estado
+from .estado import Estado
 
 
-class AbstractAutomato:
+class AutomatoAbstrato:
     def __init__(self, deterministico=True):
-        super(AbstractAutomato, self).__init__()
+        super(AutomatoAbstrato, self).__init__()
         self.alfabeto = set()
         self.estados = {}
         self.deterministico = deterministico
