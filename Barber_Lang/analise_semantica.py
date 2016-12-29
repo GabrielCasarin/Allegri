@@ -2,20 +2,20 @@
 
 import itertools
 import string
-import tabela_simbolos as ST
+import comum.compilador.tabela_simbolos as TS
 
 
 class gerar_codigo_assembly:
     def __init__(self, log=False):
         super(gerar_codigo_assembly, self).__init__()
-        self.tabela_simbolos = ST.TabelaSimbolos()
+        self.tabela_simbolos = TS.TabelaSimbolos()
         self.tipos = {
-            "int": ST.TipoBasico("int", 2),
-            "char": ST.TipoBasico("char", 2),
-            "bool": ST.TipoBasico("bool", 2),
-            "int pointer": ST.TipoBasico("int pointer", 2),
-            "bool pointer": ST.TipoBasico("bool pointer", 2),
-            "void": ST.TipoBasico("void", 0),
+            "int": TS.TipoBasico("int", 2),
+            "char": TS.TipoBasico("char", 2),
+            "bool": TS.TipoBasico("bool", 2),
+            "int pointer": TS.TipoBasico("int pointer", 2),
+            "bool pointer": TS.TipoBasico("bool pointer", 2),
+            "void": TS.TipoBasico("void", 0),
         }
         self.__pilha_operadores = []
         self.__func_atual = None
@@ -59,12 +59,16 @@ class gerar_codigo_assembly:
             "NEW_MATRIX     <",
             "\n; inicio do codigo",
             "&     /0000",
+            "; preparacao do ambiente de execucao",
             "SC    INIT_HEAP",
+            "; chama a sub-rotina principal",
             "LD    SP",
             "+     WORD_TAM",
             "MM    FP",
             "SC    main",
-            "FIM   HM FIM",
+            "; termino da execucao do programa",
+            "; apos retorno da sub-rotina main",
+            "FIM   HM FIM\n",
         ]
         # armazena o código referente a declarações de constantes 
         self.constantes = []
@@ -73,37 +77,37 @@ class gerar_codigo_assembly:
 
         # insere na tabela de símbolos todos os imports
         self.tabela_simbolos.inserir_simbolo(
-            ST.Simbolo("PUSH", "func", self.tipos["void"])
+            TS.Simbolo("PUSH", "func", self.tipos["void"])
         )
         self.tabela_simbolos.inserir_simbolo(
-            ST.Simbolo("POP", "func", self.tipos["int"])
+            TS.Simbolo("POP", "func", self.tipos["int"])
         )
         self.tabela_simbolos.inserir_simbolo(
-            ST.SimboloConst("TRUE", "const", self.tipos["bool"], 1)
+            TS.SimboloConst("TRUE", "const", self.tipos["bool"], 1)
         )
         self.tabela_simbolos.inserir_simbolo(
-            ST.SimboloConst("FALSE", "const", self.tipos["bool"], 0)
+            TS.SimboloConst("FALSE", "const", self.tipos["bool"], 0)
         )
         self.tabela_simbolos.inserir_simbolo(
-            ST.Simbolo("AND", "func", self.tipos["bool"])
+            TS.Simbolo("AND", "func", self.tipos["bool"])
         )
         self.tabela_simbolos.inserir_simbolo(
-            ST.Simbolo("NOT", "func", self.tipos["bool"])
+            TS.Simbolo("NOT", "func", self.tipos["bool"])
         )
         self.tabela_simbolos.inserir_simbolo(
-            ST.Simbolo("OR", "func", self.tipos["bool"])
+            TS.Simbolo("OR", "func", self.tipos["bool"])
         )
         self.tabela_simbolos.inserir_simbolo(
-            ST.SimboloConst("K_0000", "const", self.tipos["int"], 0)
+            TS.SimboloConst("K_0000", "const", self.tipos["int"], 0)
         )
         self.tabela_simbolos.inserir_simbolo(
-            ST.SimboloConst("K_0001", "const", self.tipos["int"], 1)
+            TS.SimboloConst("K_0001", "const", self.tipos["int"], 1)
         )
         self.tabela_simbolos.inserir_simbolo(
-            ST.SimboloConst("K_0002", "const", self.tipos["int"], 2)
+            TS.SimboloConst("K_0002", "const", self.tipos["int"], 2)
         )
         self.tabela_simbolos.inserir_simbolo(
-            ST.SimboloConst("K_FFFF", "const", self.tipos["int"], -1)
+            TS.SimboloConst("K_FFFF", "const", self.tipos["int"], -1)
         )
 
         # comandos e funções
@@ -220,11 +224,11 @@ class gerar_codigo_assembly:
         label = "K_" + gerar_codigo_assembly.hex_repr(int(num)).upper()
         const_existe = self.tabela_simbolos.existe(label)
         if not const_existe:
-            nova_const = ST.SimboloConst(label, "const", self.tipos["int"], num)
-            nova_const.referenciado = True
-            nova_const.utilizado = True
+            nova_const = TS.SimboloConst(label, "const", self.tipos["int"], num)
+            nova_contS.referenciado = True
+            nova_contS.utilizado = True
             self.tabela_simbolos.inserir_const(nova_const)
-            self.constantes.append("{nome}\tK /{val}".format(nome=nova_const.nome, val=nova_const.nome[2:]))
+            self.constantes.append("{nome}\tK /{val}".format(nome=nova_contS.nome, val=nova_contS.nome[2:]))
         return label
 
     def log_tabela(self):
@@ -252,7 +256,7 @@ class gerar_codigo_assembly:
     def declaracao_funcao(self, nome_func):
         func_existe = self.tabela_simbolos.existe(nome_func)
         if not func_existe:
-            self.__func_atual = ST.SimboloFunc(nome_func, self.tipos["void"]) # toda função é procedimento até que se prove o contrário
+            self.__func_atual = TS.SimboloFunc(nome_func, self.tipos["void"]) # toda função é procedimento até que se prove o contrário
             self.tabela_simbolos.inserir_simbolo(self.__func_atual)
             self.tabela_simbolos.novo_escopo()
             self.codigo.append("{}\t$ =1".format(self.__func_atual.nome))
@@ -286,9 +290,9 @@ class gerar_codigo_assembly:
             parametro_existe = self.tabela_simbolos.existe(nome_par)
             if not parametro_existe:
                 if self.__rank_atual == 0:
-                    par_simb = ST.Simbolo(nome_par, "par", self.__tipo_atual)
+                    par_simb = TS.Simbolo(nome_par, "par", self.__tipo_atual)
                 else:
-                    par_simb = ST.SimboloArray(nome_par, "par", self.__tipo_atual, [0]*self.__rank_atual)
+                    par_simb = TS.SimboloArray(nome_par, "par", self.__tipo_atual, [0]*self.__rank_atual)
                 self.tabela_simbolos.inserir_simbolo(par_simb)
                 self.__func_atual.add_parametro(par_simb)
 
@@ -339,9 +343,9 @@ class gerar_codigo_assembly:
             variavel_existe = self.tabela_simbolos.existe(nome_var)
             if not variavel_existe:
                 if self.__dims:
-                    var_simb = ST.SimboloArray(nome_var, "var", self.__tipo_atual, self.__dims)
+                    var_simb = TS.SimboloArray(nome_var, "var", self.__tipo_atual, self.__dims)
                 else:
-                    var_simb = ST.Simbolo(nome_var, "var", self.__tipo_atual)
+                    var_simb = TS.Simbolo(nome_var, "var", self.__tipo_atual)
                 self.__func_atual.pilha_variaveis_offset += var_simb.tipo.tamanho
                 var_simb.posicao = self.__func_atual.pilha_variaveis_offset
                 self.tabela_simbolos.inserir_simbolo(var_simb)

@@ -4,15 +4,15 @@
 from comum.simulador import SimuladorAutomatoPilhaEstruturado
 
 
-class analise_sintatica(SimuladorAutomatoPilhaEstruturado):
+class analisador_sintatico(SimuladorAutomatoPilhaEstruturado):
     def __init__(self, automato, analisador_lexico, gerador_codigo, log=False):
-        super(analise_sintatica, self).__init__(automato, log)
+        super(analisador_sintatico, self).__init__(automato, log)
         self.__analisador_lexico = analisador_lexico
         self.__gerador_codigo = gerador_codigo
 
     def PartidaInicial(self):
         self._tokens = iter(self.__analisador_lexico.tokens)
-        super(analise_sintatica, self).PartidaInicial()
+        super(analisador_sintatico, self).PartidaInicial()
 
     def ExecutarTransducao(self, token):
         rotina = self.ap.saida_gerada
