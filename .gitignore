@@ -91,16 +91,13 @@ ENV/
 # texto
 *.txt
 
-# Imagens
-saida/
-
-*.jar
+#*.jar
 *.mvn
 *.run
 *.lst
 
-# Pasta src de códigos-fonte testes
-src/
+# Pasta dev de códigos-fonte testes
+dev/
 
 ### IPythonNotebook ###
 # Temporary data
@@ -131,4 +128,4 @@ src/
 # *.pdf
 
 ## Generated if empty string is given at "Please type another file name for output:"
-.pdf
+#.pdf
